@@ -519,12 +519,12 @@ Rule: `obsidianmd/settings-tab/no-manual-html-headings`
 
 ❌ **INCORRECT**:
 ```typescript
-containerEl.createEl('h3', { text: 'General settings' });
+containerEl.createEl('h3', { text: 'Appearance' });
 ```
 
 ✅ **CORRECT**:
 ```typescript
-new Setting(containerEl).setName('General settings').setHeading();
+new Setting(containerEl).setName('Appearance').setHeading();
 ```
 
 Rationale: Use Obsidian's built-in heading API for consistency.
