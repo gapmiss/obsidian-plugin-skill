@@ -6,16 +6,16 @@ A comprehensive Claude Code skill for developing high-quality Obsidian plugins t
 
 This skill provides Claude with deep knowledge of Obsidian plugin development standards, including:
 
-- **32 ESLint rules** from `eslint-plugin-obsidianmd`
-- **Official Plugin Guidelines** from Obsidian documentation
-- **Submission requirements** for the community plugins directory
-- **Memory management** and lifecycle best practices
-- **Security guidelines** and XSS prevention
-- **Platform compatibility** (including iOS considerations)
+- 32 ESLint rules from `eslint-plugin-obsidianmd`
+- Official Plugin Guidelines from Obsidian documentation
+- Submission requirements for the community plugins directory
+- Memory management and lifecycle best practices
+- Security guidelines and XSS prevention
+- Platform compatibility (including iOS considerations)
 
 ## Installation
 
-This skill is located in `.claude/skills/obsidian-plugin-dev.md` and works automatically with Claude Code CLI.
+This skill is located in `.claude/skills/obsidian-plugin-dev.md` and works with Claude Code CLI.
 
 ### Prerequisites
 
@@ -32,9 +32,13 @@ This skill is located in `.claude/skills/obsidian-plugin-dev.md` and works autom
 
 2. Copy the skill to your project:
    ```bash
-   # Option 1: Copy to your project's .claude/skills directory
+   # Option 1: Copy to your project's .claude directory
    mkdir -p your-project/.claude/skills
    cp .claude/skills/obsidian-plugin-dev.md your-project/.claude/skills/
+
+   # Also copy the slash command
+   mkdir -p your-project/.claude/commands
+   cp .claude/commands/obsidian.md your-project/.claude/commands/
 
    # Option 2: Use as a standalone skill repository
    # Just open this directory with Claude Code
@@ -98,67 +102,67 @@ Following the Obsidian plugin guidelines in .claude/skills/obsidian-plugin-dev.m
 ## What's Covered
 
 ### Memory Management & Lifecycle
--  Use `registerEvent()` and `addCommand()` for cleanup
--  Don't store view references in plugin
--  Don't use plugin as component
--  Don't detach leaves in onunload
+- Use `registerEvent()` and `addCommand()` for cleanup
+- Don't store view references in plugin
+- Don't use plugin as component
+- Don't detach leaves in onunload
 
 ### Type Safety
--  Avoid type casting to TFile/TFolder (use `instanceof`)
--  Avoid TypeScript `any` (use specific types or `unknown`)
--  Prefer `const` and `let` over `var`
+- Avoid type casting to TFile/TFolder (use `instanceof`)
+- Avoid TypeScript `any` (use specific types or `unknown`)
+- Prefer `const` and `let` over `var`
 
 ### Command Best Practices
--  No redundant "command" in names
--  No plugin ID/name in command IDs
--  No default hotkeys
--  Appropriate callback types (callback vs checkCallback vs editorCallback)
+- No redundant "command" in names
+- No plugin ID/name in command IDs
+- No default hotkeys
+- Appropriate callback types (callback vs checkCallback vs editorCallback)
 
 ### UI/UX Standards
--  Sentence case for all UI text (auto-fixable)
--  Use `.setHeading()` instead of `<h1>`, `<h2>`, `<h3>`
--  No "General", "settings", or plugin name in settings headings
+- Sentence case for all UI text (auto-fixable)
+- Use `.setHeading()` instead of `<h1>`, `<h2>`, `<h3>`
+- No "General", "settings", or plugin name in settings headings
 
 ### File & Vault Operations
--  Use `getActiveViewOfType()` for view access
--  Prefer Editor API over `Vault.modify()` for active files
--  Use `Vault.process()` for background modifications
--  Use `FileManager.processFrontMatter()` for YAML
--  Prefer Vault API over Adapter API
--  Use `normalizePath()` for user-defined paths
--  Use `fileManager.trashFile()` for deletions
--  Avoid full vault iteration (use direct lookups)
+- Use `getActiveViewOfType()` for view access
+- Prefer Editor API over `Vault.modify()` for active files
+- Use `Vault.process()` for background modifications
+- Use `FileManager.processFrontMatter()` for YAML
+- Prefer Vault API over Adapter API
+- Use `normalizePath()` for user-defined paths
+- Use `fileManager.trashFile()` for deletions
+- Avoid full vault iteration (use direct lookups)
 
 ### Code Quality
--  Remove all sample code and template class names
--  Object.assign must have 3 parameters
--  Avoid regex lookbehind (iOS < 16.4 incompatibility)
--  Avoid innerHTML/outerHTML (XSS security risk)
--  Move styles to CSS (no inline styles)
--  Don't create `<link>` or `<style>` elements
--  Use Platform API (not navigator.platform)
--  Use AbstractInputSuggest (not custom TextInputSuggest)
+- Remove all sample code and template class names
+- Object.assign must have 3 parameters
+- Avoid regex lookbehind (iOS < 16.4 incompatibility)
+- Avoid innerHTML/outerHTML (XSS security risk)
+- Move styles to CSS (no inline styles)
+- Don't create `<link>` or `<style>` elements
+- Use Platform API (not navigator.platform)
+- Use AbstractInputSuggest (not custom TextInputSuggest)
 
 ### API Best Practices
--  Don't use global `app` (use `this.app`)
--  Minimize console logging
--  Organize multi-file plugins into folders
--  Use `window.setTimeout/setInterval` with `number` type
--  Prefer async/await over Promise chains
--  Use Obsidian DOM helpers (createDiv, createSpan, createEl)
--  Don't hardcode config directory (use `vault.configDir`)
+- Don't use global `app` (use `this.app`)
+- Minimize console logging
+- Organize multi-file plugins into folders
+- Use `window.setTimeout/setInterval` with `number` type
+- Prefer async/await over Promise chains
+- Use Obsidian DOM helpers (createDiv, createSpan, createEl)
+- Don't hardcode config directory (use `vault.configDir`)
 
 ### Validation & Submission
--  Validate manifest.json structure
--  Include LICENSE file
--  Follow repository structure requirements
--  Follow submission process to obsidian-releases
+- Validate manifest.json structure
+- Include LICENSE file
+- Follow repository structure requirements
+- Follow submission process to obsidian-releases
 
 ## Examples
 
 ### Before (Incorrect)
 ```typescript
-// L Multiple issues
+// Multiple issues
 class MyPlugin extends Plugin {
   view: CustomView;
 
@@ -185,7 +189,7 @@ class MyPlugin extends Plugin {
 
 ### After (Correct)
 ```typescript
-//  Following all guidelines
+// Following all guidelines
 class TodoPlugin extends Plugin {
   async onload() {
     this.registerView(VIEW_TYPE, (leaf) => {
@@ -271,11 +275,11 @@ npx eslint --fix .
 
 ## Resources
 
-- **Obsidian API Docs**: https://docs.obsidian.md
-- **ESLint Plugin**: https://github.com/obsidianmd/eslint-plugin
-- **Sample Plugin**: https://github.com/obsidianmd/obsidian-sample-plugin
-- **Plugin Guidelines**: https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines
-- **Submission Repo**: https://github.com/obsidianmd/obsidian-releases
+- Obsidian API Docs: https://docs.obsidian.md
+- ESLint Plugin: https://github.com/obsidianmd/eslint-plugin
+- Sample Plugin: https://github.com/obsidianmd/obsidian-sample-plugin
+- Plugin Guidelines: https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines
+- Submission Repo: https://github.com/obsidianmd/obsidian-releases
 
 ## Contributing
 
@@ -299,4 +303,4 @@ This skill is based on:
 
 ---
 
-**Note**: The ESLint plugin is under active development. Guidelines in this skill reflect current best practices but may evolve as the Obsidian API matures.
+Note: The ESLint plugin is under active development. Guidelines in this skill reflect current best practices but may evolve as the Obsidian API matures.
