@@ -15,7 +15,7 @@ This skill provides Claude with deep knowledge of Obsidian plugin development st
 
 ## Installation
 
-This skill is located in `.claude/skills/obsidian-plugin-dev.md` and works with Claude Code CLI.
+This skill is located in `.claude/skills/obsidian/SKILL.md` and works with Claude Code CLI.
 
 ### Prerequisites
 
@@ -33,8 +33,8 @@ This skill is located in `.claude/skills/obsidian-plugin-dev.md` and works with 
 2. Copy the skill to your project:
    ```bash
    # Option 1: Copy to your project's .claude directory
-   mkdir -p your-project/.claude/skills
-   cp .claude/skills/obsidian-plugin-dev.md your-project/.claude/skills/
+   mkdir -p your-project/.claude/skills/obsidian
+   cp .claude/skills/obsidian/SKILL.md your-project/.claude/skills/obsidian/
 
    # Also copy the slash command
    mkdir -p your-project/.claude/commands
@@ -48,26 +48,30 @@ This skill is located in `.claude/skills/obsidian-plugin-dev.md` and works with 
 
 ## Usage
 
-### Invoking the Skill
+### How Skills Work
 
-After restarting Claude Code in this directory, invoke the skill using the slash command:
+**Skills are automatically invoked by Claude** - you don't need to explicitly call them. When you work on Obsidian plugin development in a directory containing this skill, Claude will automatically load and apply these guidelines based on your requests.
 
-```
-/obsidian
-```
-
-This loads all the Obsidian plugin development guidelines into the session. Then you can ask:
+Just ask Claude naturally:
 
 ```
 Help me implement a new command for my Obsidian plugin
 ```
 
-Claude will apply all the guidelines from the skill while helping you write code.
+Claude will automatically use the Obsidian skill guidelines while helping you write code.
 
-Alternatively, you can reference the skill content directly in your prompts:
+### Optional: Manual Invocation
+
+If you want to explicitly load the skill, you can use the slash command:
 
 ```
-Following the Obsidian plugin guidelines in .claude/skills/obsidian-plugin-dev.md, help me refactor this code...
+/obsidian
+```
+
+Or reference the skill directly:
+
+```
+Following the Obsidian plugin guidelines, help me refactor this code...
 ```
 
 ### What the Skill Helps With
@@ -286,7 +290,7 @@ npx eslint --fix .
 Found a missing guideline or rule? Please contribute!
 
 1. Fork this repository
-2. Add the guideline to `.claude/skills/obsidian-plugin-dev.md`
+2. Add the guideline to `.claude/skills/obsidian/SKILL.md`
 3. Update this README if needed
 4. Submit a pull request
 

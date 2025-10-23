@@ -2,6 +2,6 @@
 description: Load Obsidian plugin development guidelines and best practices
 ---
 
-Load and apply the comprehensive Obsidian plugin development guidelines from `.claude/skills/obsidian-plugin-dev.md`.
+Use the Skill tool to invoke the "obsidian" skill, which contains comprehensive Obsidian plugin development guidelines including ESLint rules, memory management, type safety, API usage, and submission requirements.
 
-Follow all the best practices, ESLint rules, and official guidelines when helping with Obsidian plugin development.
+After loading the skill, be ready to help with Obsidian plugin development following all the guidelines.

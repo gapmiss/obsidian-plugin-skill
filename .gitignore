@@ -1,6 +1,3 @@
-# macOS                                                                                                                                                                               │ │
-.DS_Store                                                                                                                                                                             │ │
-
 # Editor                                                                                                                                                                              │ │
 .idea/                                                                                                                                                                                │ │
 .vscode/                                                                                                                                                                              │ │
@@ -12,3 +9,6 @@ dist/                                                                           
 
 # CLAUDE settings
 .claude/settings.local.json
+
+# macOS                                                                                                                                                                               │ │
+.DS_Store
