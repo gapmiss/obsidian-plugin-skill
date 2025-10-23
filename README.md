@@ -24,7 +24,28 @@ This skill is located in `.claude/skills/obsidian/` and works with Claude Code C
 
 ### Setup
 
-1. Clone or download this repository:
+#### Option 1: Quick Install (Recommended)
+
+1. Clone this repository:
+   ```bash
+   git clone <repository-url>
+   cd obsidian-plugin-skill
+   ```
+
+2. Run the installer:
+   ```bash
+   ./install-skill.sh
+   ```
+
+3. Choose installation option:
+   - **Option 1**: Install to current directory
+   - **Option 2**: Specify a custom directory path
+
+The installer will copy all skill files and the slash command to your project's `.claude` directory.
+
+#### Option 2: Manual Install
+
+1. Clone this repository:
    ```bash
    git clone <repository-url>
    cd obsidian-plugin-skill
@@ -32,19 +53,18 @@ This skill is located in `.claude/skills/obsidian/` and works with Claude Code C
 
 2. Copy the skill to your project:
    ```bash
-   # Option 1: Copy to your project's .claude directory
+   # Copy to your project's .claude directory
    mkdir -p your-project/.claude/skills/obsidian
    cp -r .claude/skills/obsidian/* your-project/.claude/skills/obsidian/
 
    # Also copy the slash command
    mkdir -p your-project/.claude/commands
    cp .claude/commands/obsidian.md your-project/.claude/commands/
-
-   # Option 2: Use as a standalone skill repository
-   # Just open this directory with Claude Code
    ```
 
-3. The skill is now available to Claude Code!
+#### Option 3: Use as Standalone
+
+Just open this directory with Claude Code - no installation needed!
 
 ### Skill Structure
 
