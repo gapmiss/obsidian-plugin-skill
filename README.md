@@ -87,6 +87,14 @@ Following the Obsidian plugin guidelines, help me refactor this code...
 - Prevents redundant naming patterns
 - Ensures consistent settings UI
 
+#### Accessibility (A11y)
+- **MANDATORY keyboard navigation** for all interactive elements
+- **MANDATORY ARIA labels** for icon buttons and controls
+- **MANDATORY focus indicators** with proper CSS styling
+- Touch target size requirements (44×44px minimum)
+- Screen reader support and announcements
+- Tooltip positioning with `data-tooltip-position`
+
 #### Security
 - Prevents XSS vulnerabilities (no innerHTML/outerHTML)
 - Validates manifest structure
@@ -242,6 +250,11 @@ Use this checklist before submitting your plugin:
 - [ ] manifest.json valid and version correct
 - [ ] LICENSE file included
 - [ ] No security issues (innerHTML, XSS vulnerabilities)
+- [ ] **All interactive elements keyboard accessible (Tab, Enter, Space)**
+- [ ] **ARIA labels on all icon buttons (`aria-label`)**
+- [ ] **Clear focus indicators (`:focus-visible` with proper CSS)**
+- [ ] **Touch targets at least 44×44px (mobile)**
+- [ ] **Tooltips positioned with `data-tooltip-position`**
 - [ ] Mobile tested (if not desktop-only)
 
 ## ESLint Integration
