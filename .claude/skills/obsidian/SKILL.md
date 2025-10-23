@@ -1,5 +1,6 @@
 ---
 name: obsidian
+version: 1.0.0
 description: Comprehensive guidelines for Obsidian.md plugin development including TypeScript, memory management, API usage, ESLint rules, UI/UX standards, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 ---
 
