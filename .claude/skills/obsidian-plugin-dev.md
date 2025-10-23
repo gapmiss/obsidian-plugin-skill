@@ -680,15 +680,258 @@ element.setAttribute('style', 'margin: 10px;');
 // Add class in TypeScript
 element.addClass('my-custom-element');
 
-// Define styles in styles.css
+// Define styles in styles.css using Obsidian CSS variables
 .my-custom-element {
-  color: red;
-  font-size: 14px;
-  margin: 10px;
+  color: var(--text-error);
+  font-size: var(--font-ui-small);
+  margin: var(--size-4-2);
 }
 ```
 
-Rationale: Move all styles to CSS for better theme/snippet adaptability.
+Rationale: Move all styles to CSS for better theme/snippet adaptability. Use Obsidian's CSS variables for theme consistency.
+
+---
+
+## CSS Styling Best Practices
+
+### Use Obsidian CSS Variables
+Rule: Theme consistency and user customization
+
+Always use Obsidian's CSS variables instead of hardcoded values to ensure your plugin respects user themes and customization.
+
+❌ **INCORRECT**:
+```css
+.my-plugin-modal {
+  background: #1e1e1e;
+  color: #dadada;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+```
+
+✅ **CORRECT**:
+```css
+.my-plugin-modal {
+  background: var(--modal-background);
+  color: var(--text-normal);
+  padding: var(--size-4-4);
+  border-radius: var(--radius-m);
+  font-size: var(--font-ui-medium);
+}
+```
+
+### Common CSS Variables by Category
+
+**Colors**:
+- `--text-normal`, `--text-muted`, `--text-faint` - Text colors
+- `--text-accent`, `--text-accent-hover` - Accent colors for links/buttons
+- `--text-error`, `--text-success`, `--text-warning` - Status colors
+- `--background-primary`, `--background-secondary` - Background colors
+- `--interactive-normal`, `--interactive-hover`, `--interactive-accent` - Interactive elements
+- `--background-modifier-border` - Border colors
+
+**Spacing** (4px grid):
+- `--size-4-1` (4px), `--size-4-2` (8px), `--size-4-3` (12px)
+- `--size-4-4` (16px), `--size-4-6` (24px), `--size-4-8` (32px)
+
+**Typography**:
+- `--font-text-theme` - Editor text font
+- `--font-interface-theme` - UI font
+- `--font-monospace-theme` - Code font
+- `--font-ui-small` (13px), `--font-ui-medium` (15px), `--font-ui-large` (20px)
+- `--font-bold`, `--font-normal` - Font weights
+
+**Borders & Radius**:
+- `--radius-s`, `--radius-m`, `--radius-l` - Border radius
+- `--border-width` - Standard border thickness
+
+**Modal/Dialog**:
+- `--modal-background`, `--modal-border-color`
+- `--modal-max-width`, `--modal-max-height`
+
+---
+
+### Scope Plugin Styles
+Rule: Avoid conflicts with Obsidian and other plugins
+
+Always scope your CSS to your plugin's specific elements to prevent style conflicts.
+
+❌ **INCORRECT**:
+```css
+/* Too broad - affects all buttons everywhere */
+button {
+  background: blue;
+}
+
+/* Conflicts with Obsidian */
+.modal {
+  width: 600px;
+}
+```
+
+✅ **CORRECT**:
+```css
+/* Scoped to your plugin's view */
+.my-plugin-view button {
+  background: var(--interactive-accent);
+}
+
+/* Scoped to your plugin's modal */
+.modal.my-plugin-modal {
+  max-width: var(--modal-max-width);
+}
+
+/* Or use unique class names */
+.my-plugin-custom-button {
+  background: var(--interactive-accent);
+}
+```
+
+Rationale: Scoping prevents your styles from affecting Obsidian's UI or other plugins. Use unique class names or scope to your plugin's containers (views, modals, settings).
+
+---
+
+### Scope to Plugin Containers
+Rule: Use view and modal class names
+
+Obsidian automatically adds class names to your plugin's elements. Use these for scoping:
+
+```css
+/* Scope to your custom view */
+.view-type-my-plugin {
+  /* Styles only affect your view */
+}
+
+/* Scope to your modal */
+.modal.my-plugin-settings-modal {
+  /* Styles only affect your modal */
+}
+
+/* Scope to settings tab */
+.my-plugin-settings-tab {
+  /* Styles only affect your settings */
+}
+```
+
+Add these classes in your TypeScript:
+
+```typescript
+// In your view
+export class MyPluginView extends ItemView {
+  getViewType() {
+    return "my-plugin";
+  }
+
+  async onOpen() {
+    const container = this.containerEl.children[1];
+    container.addClass('view-type-my-plugin');
+  }
+}
+
+// In your modal
+export class MyModal extends Modal {
+  onOpen() {
+    this.modalEl.addClass('my-plugin-settings-modal');
+  }
+}
+```
+
+---
+
+### Support Light and Dark Themes
+Rule: Respect user theme preference
+
+Test your plugin in both light and dark themes. Obsidian's CSS variables automatically adjust.
+
+```css
+/* ✅ CORRECT - Variables adapt automatically */
+.my-plugin-element {
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+}
+
+/* ❌ AVOID - Manual theme switching */
+.theme-dark .my-plugin-element {
+  background: #1e1e1e;
+  color: #dadada;
+}
+.theme-light .my-plugin-element {
+  background: #ffffff;
+  color: #222222;
+}
+```
+
+Rationale: Using CSS variables ensures your plugin works with any theme, including community themes. Manual theme detection is fragile and doesn't support custom themes.
+
+---
+
+### Use Consistent Spacing
+Rule: Follow Obsidian's 4px grid system
+
+Use Obsidian's spacing variables for consistent layouts:
+
+```css
+.my-plugin-container {
+  padding: var(--size-4-4);        /* 16px */
+  margin-bottom: var(--size-4-6);  /* 24px */
+  gap: var(--size-4-2);             /* 8px */
+}
+
+.my-plugin-compact {
+  padding: var(--size-4-2);        /* 8px */
+  gap: var(--size-4-1);             /* 4px */
+}
+```
+
+Rationale: Obsidian uses a 4px grid for spacing. Following this ensures your plugin feels native and works well across different DPI screens.
+
+---
+
+### Example: Complete Modal Styling
+
+```css
+/* Scope to plugin modal */
+.modal.my-todo-plugin-modal {
+  /* Use modal variables */
+  background: var(--modal-background);
+  border: var(--modal-border-width) solid var(--modal-border-color);
+  border-radius: var(--modal-radius);
+  max-width: var(--modal-max-width);
+
+  /* Use spacing variables */
+  padding: var(--size-4-6);
+}
+
+.modal.my-todo-plugin-modal .modal-title {
+  /* Use typography variables */
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-bold);
+  color: var(--text-normal);
+  margin-bottom: var(--size-4-4);
+}
+
+.modal.my-todo-plugin-modal .modal-content {
+  /* Use text and spacing */
+  color: var(--text-muted);
+  font-size: var(--font-ui-medium);
+  line-height: var(--line-height-normal);
+  padding: var(--size-4-4);
+}
+
+.modal.my-todo-plugin-modal button {
+  /* Use interactive colors */
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-radius: var(--radius-m);
+  padding: var(--size-4-2) var(--size-4-4);
+}
+
+.modal.my-todo-plugin-modal button:hover {
+  background: var(--interactive-accent-hover);
+}
+```
 
 ---
 
@@ -1121,14 +1364,18 @@ your-plugin/
 9. Use `vault.configDir` to access config directory
 10. Use `.setHeading()` instead of `<h1>`, `<h2>`, `<h3>`
 11. Move all styles to CSS (better theme adaptability)
-12. Use specific types or `unknown` instead of `any`
-13. Use Platform API for OS detection (`Platform.isMacOS`, etc.)
-14. Use `AbstractInputSuggest` for autocomplete suggestions
-15. Let Obsidian handle leaf cleanup automatically
-16. Remove all sample/template code and class names
-17. Test on mobile (if not desktop-only)
-18. Use direct file lookups instead of vault iteration
-19. Follow semantic versioning
+12. Use Obsidian CSS variables for all styling
+13. Scope CSS to plugin containers (views, modals, settings)
+14. Support both light and dark themes via CSS variables
+15. Follow Obsidian's 4px spacing grid
+16. Use specific types or `unknown` instead of `any`
+17. Use Platform API for OS detection (`Platform.isMacOS`, etc.)
+18. Use `AbstractInputSuggest` for autocomplete suggestions
+19. Let Obsidian handle leaf cleanup automatically
+20. Remove all sample/template code and class names
+21. Test on mobile (if not desktop-only)
+22. Use direct file lookups instead of vault iteration
+23. Follow semantic versioning
 
 ### Don'ts ❌
 1. Don't use regex lookbehind (iOS < 16.4 incompatibility)
@@ -1136,24 +1383,27 @@ your-plugin/
 3. Don't cast to TFile/TFolder (use `instanceof`)
 4. Don't use innerHTML/outerHTML (security risk - XSS)
 5. Don't assign styles via JavaScript (move to CSS)
-6. Don't create `<link>` or `<style>` elements (use `styles.css` file)
-7. Don't include "command" in command names/IDs
-8. Don't use Title Case in UI (use sentence case)
-9. Don't use bare `setTimeout/setInterval` (use `window.` prefix)
-10. Don't create manual HTML headings (use `.setHeading()`)
-11. Don't use "General", "settings", or plugin name in settings headings
-12. Don't use `any` type (use specific types or `unknown`)
-13. Don't use Promise chains (use async/await)
-14. Don't use `document.createElement` (use Obsidian helpers)
-15. Don't use `navigator.platform/userAgent` (use Platform API)
-16. Don't use custom TextInputSuggest (use AbstractInputSuggest)
-17. Don't keep sample class names (MyPlugin, SampleModal, etc.)
-18. Don't store view references in plugin properties
-19. Don't pass plugin as component to MarkdownRenderer
-20. Don't detach leaves in `onunload()`
-21. Don't duplicate plugin ID in command IDs
-22. Don't set default hotkeys
-23. Don't iterate vault when direct lookup exists
+6. Don't hardcode colors, sizes, or spacing (use CSS variables)
+7. Don't use broad CSS selectors (scope to plugin containers)
+8. Don't manually switch themes (CSS variables adapt automatically)
+9. Don't create `<link>` or `<style>` elements (use `styles.css` file)
+10. Don't include "command" in command names/IDs
+11. Don't use Title Case in UI (use sentence case)
+12. Don't use bare `setTimeout/setInterval` (use `window.` prefix)
+13. Don't create manual HTML headings (use `.setHeading()`)
+14. Don't use "General", "settings", or plugin name in settings headings
+15. Don't use `any` type (use specific types or `unknown`)
+16. Don't use Promise chains (use async/await)
+17. Don't use `document.createElement` (use Obsidian helpers)
+18. Don't use `navigator.platform/userAgent` (use Platform API)
+19. Don't use custom TextInputSuggest (use AbstractInputSuggest)
+20. Don't keep sample class names (MyPlugin, SampleModal, etc.)
+21. Don't store view references in plugin properties
+22. Don't pass plugin as component to MarkdownRenderer
+23. Don't detach leaves in `onunload()`
+24. Don't duplicate plugin ID in command IDs
+25. Don't set default hotkeys
+26. Don't iterate vault when direct lookup exists
 
 ---
 
