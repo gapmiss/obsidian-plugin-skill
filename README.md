@@ -15,7 +15,7 @@ This skill provides Claude with deep knowledge of Obsidian plugin development st
 
 ## Installation
 
-This skill is located in `.claude/skills/obsidian/SKILL.md` and works with Claude Code CLI.
+This skill is located in `.claude/skills/obsidian/` and works with Claude Code CLI.
 
 ### Prerequisites
 
@@ -34,7 +34,7 @@ This skill is located in `.claude/skills/obsidian/SKILL.md` and works with Claud
    ```bash
    # Option 1: Copy to your project's .claude directory
    mkdir -p your-project/.claude/skills/obsidian
-   cp .claude/skills/obsidian/SKILL.md your-project/.claude/skills/obsidian/
+   cp -r .claude/skills/obsidian/* your-project/.claude/skills/obsidian/
 
    # Also copy the slash command
    mkdir -p your-project/.claude/commands
@@ -45,6 +45,26 @@ This skill is located in `.claude/skills/obsidian/SKILL.md` and works with Claud
    ```
 
 3. The skill is now available to Claude Code!
+
+### Skill Structure
+
+The skill uses **progressive disclosure** for optimal performance:
+
+```
+.claude/skills/obsidian/
+├── SKILL.md                          # Main overview (312 lines)
+└── reference/                        # Detailed documentation
+    ├── memory-management.md          # Lifecycle & cleanup patterns
+    ├── type-safety.md                # Type narrowing & safety
+    ├── ui-ux.md                      # UI standards & commands
+    ├── file-operations.md            # Vault & file API
+    ├── css-styling.md                # Theming & styling
+    ├── accessibility.md              # A11y requirements (MANDATORY)
+    ├── code-quality.md               # Best practices & security
+    └── submission.md                 # Publishing guidelines
+```
+
+SKILL.md provides a concise overview with the top 20 critical rules, while reference files contain comprehensive details on specific topics.
 
 ## Usage
 
@@ -113,62 +133,84 @@ Following the Obsidian plugin guidelines, help me refactor this code...
 
 ## What's Covered
 
-### Memory Management & Lifecycle
-- Use `registerEvent()` and `addCommand()` for cleanup
-- Don't store view references in plugin
-- Don't use plugin as component
-- Don't detach leaves in onunload
+### Top 20 Most Critical Rules (Quick Reference)
 
-### Type Safety
-- Avoid type casting to TFile/TFolder (use `instanceof`)
-- Avoid TypeScript `any` (use specific types or `unknown`)
-- Prefer `const` and `let` over `var`
+The main SKILL.md file highlights the most important rules:
 
-### Command Best Practices
-- No redundant "command" in names
-- No plugin ID/name in command IDs
-- No default hotkeys
-- Appropriate callback types (callback vs checkCallback vs editorCallback)
+1. Use `registerEvent()` for automatic cleanup
+2. Use `instanceof` instead of type casting
+3. Use sentence case for all UI text
+4. Don't store view references in plugin
+5. Use Editor API for active file edits
+6. Use Obsidian CSS variables
+7. Scope CSS to plugin containers
+8. Make all interactive elements keyboard accessible
+9. Provide ARIA labels for icon buttons
+10. Don't use `innerHTML`/`outerHTML`
+11. No "command" in command names/IDs
+12. No plugin ID in command IDs
+13. No default hotkeys
+14. Use `.setHeading()` for settings headings
+15. Use `Vault.process()` for background file mods
+16. Use `normalizePath()` for user paths
+17. Avoid regex lookbehind
+18. Use `Platform` API for OS detection
+19. Remove all sample/template code
+20. Define clear focus indicators
 
-### UI/UX Standards
-- Sentence case for all UI text (auto-fixable)
-- Use `.setHeading()` instead of `<h1>`, `<h2>`, `<h3>`
-- No "General", "settings", or plugin name in settings headings
+### Detailed Coverage by Topic
 
-### File & Vault Operations
-- Use `getActiveViewOfType()` for view access
-- Prefer Editor API over `Vault.modify()` for active files
-- Use `Vault.process()` for background modifications
-- Use `FileManager.processFrontMatter()` for YAML
-- Prefer Vault API over Adapter API
-- Use `normalizePath()` for user-defined paths
-- Use `fileManager.trashFile()` for deletions
-- Avoid full vault iteration (use direct lookups)
+**[Memory Management & Lifecycle](/.claude/skills/obsidian/reference/memory-management.md)**
+- Using `registerEvent()`, `addCommand()`, `registerDomEvent()`, `registerInterval()`
+- Avoiding view references in plugin
+- Not using plugin as component
+- Proper leaf cleanup
 
-### Code Quality
-- Remove all sample code and template class names
-- Object.assign must have 3 parameters
-- Avoid regex lookbehind (iOS < 16.4 incompatibility)
-- Avoid innerHTML/outerHTML (XSS security risk)
-- Move styles to CSS (no inline styles)
-- Don't create `<link>` or `<style>` elements
-- Use Platform API (not navigator.platform)
-- Use AbstractInputSuggest (not custom TextInputSuggest)
+**[Type Safety](/.claude/skills/obsidian/reference/type-safety.md)**
+- Using `instanceof` instead of type casting
+- Avoiding `any` type
+- Using `const` and `let` over `var`
 
-### API Best Practices
-- Don't use global `app` (use `this.app`)
-- Minimize console logging
-- Organize multi-file plugins into folders
-- Use `window.setTimeout/setInterval` with `number` type
-- Prefer async/await over Promise chains
-- Use Obsidian DOM helpers (createDiv, createSpan, createEl)
-- Don't hardcode config directory (use `vault.configDir`)
+**[UI/UX Standards](/.claude/skills/obsidian/reference/ui-ux.md)**
+- Sentence case enforcement
+- Command naming conventions
+- Settings and configuration best practices
 
-### Validation & Submission
-- Validate manifest.json structure
-- Include LICENSE file
-- Follow repository structure requirements
-- Follow submission process to obsidian-releases
+**[File & Vault Operations](/.claude/skills/obsidian/reference/file-operations.md)**
+- View access patterns
+- Editor vs Vault API
+- Atomic file operations (Vault.process, processFrontMatter)
+- File management and path handling
+
+**[CSS Styling Best Practices](/.claude/skills/obsidian/reference/css-styling.md)**
+- Avoiding inline styles
+- Using Obsidian CSS variables
+- Scoping plugin styles
+- Theme support (light/dark)
+- Spacing and layout (4px grid)
+
+**[Accessibility (A11y)](/.claude/skills/obsidian/reference/accessibility.md)** - MANDATORY
+- Keyboard navigation for all interactive elements
+- ARIA labels and roles
+- Tooltips with proper positioning
+- Focus management
+- Focus visible styles (`:focus-visible`)
+- Screen reader support
+- Mobile and touch accessibility (44×44px minimum)
+
+**[Code Quality & Best Practices](/.claude/skills/obsidian/reference/code-quality.md)**
+- Removing sample code
+- Security best practices (XSS prevention)
+- Platform compatibility (iOS, mobile)
+- API usage patterns
+- Async/await patterns
+- DOM helpers
+
+**[Plugin Submission Requirements](/.claude/skills/obsidian/reference/submission.md)**
+- Repository structure
+- Submission process
+- Semantic versioning
+- Testing checklist
 
 ## Examples
 
@@ -303,9 +345,19 @@ npx eslint --fix .
 Found a missing guideline or rule? Please contribute!
 
 1. Fork this repository
-2. Add the guideline to `.claude/skills/obsidian/SKILL.md`
+2. Add the guideline to the appropriate file:
+   - Main overview: `.claude/skills/obsidian/SKILL.md`
+   - Detailed coverage: `.claude/skills/obsidian/reference/*.md`
 3. Update this README if needed
 4. Submit a pull request
+
+### Adding New Guidelines
+
+When adding new content:
+- Keep SKILL.md under 500 lines (progressive disclosure principle)
+- Add detailed content to appropriate reference files
+- Use consistent formatting and examples
+- Include both ❌ incorrect and ✅ correct examples
 
 ## License
 
@@ -317,6 +369,21 @@ This skill is based on:
 - The official Obsidian Plugin Guidelines
 - The `eslint-plugin-obsidianmd` package (not yet production-ready)
 - Community best practices from plugin developers
+- Anthropic's best practices for agent skills (progressive disclosure pattern)
+
+---
+
+## Design Philosophy
+
+This skill follows **Anthropic's best practices for agent skills**:
+
+- **Progressive Disclosure**: Main SKILL.md (312 lines) provides overview; reference files contain details
+- **Context Window Efficiency**: "The context window is a public good" - optimized token usage
+- **One-Level-Deep References**: All reference files directly under `reference/` (no nesting)
+- **Topic-Based Organization**: Each reference file focuses on a specific domain
+- **Consistent Terminology**: Same terms used throughout for clarity
+
+This structure allows Claude to load the essential information quickly while having access to comprehensive details when needed.
 
 ---
 
