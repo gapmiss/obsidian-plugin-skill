@@ -86,6 +86,67 @@ The skill uses **progressive disclosure** for optimal performance:
 
 SKILL.md provides a concise overview with the top 20 critical rules, while reference files contain comprehensive details on specific topics.
 
+## Quick Start: Creating a New Plugin
+
+### Interactive Boilerplate Generator
+
+The fastest way to start a new Obsidian plugin with all best practices built-in:
+
+```bash
+node /path/to/obsidian-plugin-skill/tools/create-plugin.js
+```
+
+**Features:**
+- ✅ Generates clean TypeScript boilerplate with **no sample code**
+- ✅ Creates `src/` directory structure with `main.ts` and `settings.ts`
+- ✅ **Validates plugin metadata in real-time** against Obsidian's submission bot rules
+- ✅ Detects existing projects and only adds missing files
+- ✅ All generated code follows the skill's best practices automatically
+
+**What it creates:**
+```
+your-plugin/
+├── src/
+│   ├── main.ts           # Plugin class with settings integration
+│   └── settings.ts       # Settings interface, defaults, and tab
+├── manifest.json         # Validated plugin metadata
+├── styles.css           # CSS with Obsidian variables
+├── tsconfig.json        # TypeScript configuration
+├── package.json         # Dependencies
+├── esbuild.config.mjs   # Build configuration
+├── version-bump.mjs     # Version management script
+├── versions.json        # Version tracking
+└── .gitignore          # Git ignore rules
+```
+
+**Interactive prompts:**
+1. Plugin name (validates: no "Obsidian", can't end with "Plugin")
+2. Plugin ID (validates: no "obsidian", can't end with "plugin", lowercase only)
+3. Description (validates: no "Obsidian"/"This plugin", must end with punctuation)
+4. Author name
+5. GitHub username (optional, auto-generates authorUrl)
+6. Minimum Obsidian version
+
+**Real-time validation catches common mistakes:**
+```
+❌ Validation Errors:
+   • Plugin ID cannot contain "obsidian"
+   • Plugin name cannot end with "Plugin"
+   • Description must end with punctuation: . ? ! or )
+```
+
+### Using the Slash Command
+
+For guided plugin creation with Claude's help:
+
+```
+/create-plugin
+```
+
+Claude will guide you through the setup process and help customize the generated code.
+
+---
+
 ## Usage
 
 ### How Skills Work
@@ -153,30 +214,52 @@ Following the Obsidian plugin guidelines, help me refactor this code...
 
 ## What's Covered
 
-### Top 20 Most Critical Rules (Quick Reference)
+### Top 25 Most Critical Rules (Quick Reference)
 
-The main SKILL.md file highlights the most important rules:
+The main SKILL.md file highlights the most important rules organized by category:
 
-1. Use `registerEvent()` for automatic cleanup
-2. Use `instanceof` instead of type casting
-3. Use sentence case for all UI text
-4. Don't store view references in plugin
-5. Use Editor API for active file edits
-6. Use Obsidian CSS variables
-7. Scope CSS to plugin containers
-8. Make all interactive elements keyboard accessible
-9. Provide ARIA labels for icon buttons
-10. Don't use `innerHTML`/`outerHTML`
-11. No "command" in command names/IDs
-12. No plugin ID in command IDs
-13. No default hotkeys
-14. Use `.setHeading()` for settings headings
+**Submission & Naming:**
+1. Plugin ID: no "obsidian", can't end with "plugin"
+2. Plugin name: no "Obsidian", can't end with "Plugin"
+3. Plugin name: can't start with "Obsi" or end with "dian"
+4. Description: no "Obsidian", "This plugin", etc.
+5. Description must end with `.?!)` punctuation
+
+**Memory & Lifecycle:**
+6. Use `registerEvent()` for automatic cleanup
+7. Don't store view references in plugin
+
+**Type Safety:**
+8. Use `instanceof` instead of type casting
+
+**UI/UX:**
+9. Use sentence case for all UI text
+10. No "command" in command names/IDs
+11. No plugin ID in command IDs
+12. No default hotkeys
+13. Use `.setHeading()` for settings headings
+
+**API Best Practices:**
+14. Use Editor API for active file edits
 15. Use `Vault.process()` for background file mods
 16. Use `normalizePath()` for user paths
-17. Avoid regex lookbehind
-18. Use `Platform` API for OS detection
-19. Remove all sample/template code
-20. Define clear focus indicators
+17. Use `Platform` API for OS detection
+
+**Styling:**
+18. Use Obsidian CSS variables
+19. Scope CSS to plugin containers
+
+**Accessibility (MANDATORY):**
+20. Make all interactive elements keyboard accessible
+21. Provide ARIA labels for icon buttons
+22. Define clear focus indicators
+
+**Security & Compatibility:**
+23. Don't use `innerHTML`/`outerHTML`
+24. Avoid regex lookbehind
+
+**Code Quality:**
+25. Remove all sample/template code
 
 ### Detailed Coverage by Topic
 
@@ -227,8 +310,10 @@ The main SKILL.md file highlights the most important rules:
 - DOM helpers
 
 **[Plugin Submission Requirements](/.claude/skills/obsidian/reference/submission.md)**
-- Repository structure
-- Submission process
+- **Naming and description validation rules** (enforced by Obsidian's release bot)
+- Plugin ID, name, and description requirements
+- Repository structure and manifest synchronization
+- Submission process to obsidianmd/obsidian-releases
 - Semantic versioning
 - Testing checklist
 
@@ -302,6 +387,16 @@ class TodoPlugin extends Plugin {
 
 Use this checklist before submitting your plugin:
 
+**Submission Validation (will fail bot checks if incorrect):**
+- [ ] Plugin ID: no "obsidian", doesn't end with "plugin", lowercase only
+- [ ] Plugin name: no "Obsidian", doesn't end with "Plugin"
+- [ ] Plugin name: doesn't start with "Obsi" or end with "dian"
+- [ ] Description: no "Obsidian" or "This plugin" phrases
+- [ ] Description ends with proper punctuation (. ? ! or ))
+- [ ] Description under 250 characters (recommended)
+- [ ] manifest.json ID, name, description match submission entry
+
+**Code Quality:**
 - [ ] No memory leaks (views/components properly managed)
 - [ ] Type safety (using `instanceof` instead of casts)
 - [ ] All UI text in sentence case
@@ -309,15 +404,20 @@ Use this checklist before submitting your plugin:
 - [ ] Using preferred APIs (Editor API, Vault.process, etc.)
 - [ ] No iOS-incompatible features (regex lookbehind)
 - [ ] All sample code removed (MyPlugin, SampleModal, etc.)
-- [ ] manifest.json valid and version correct
-- [ ] LICENSE file included
 - [ ] No security issues (innerHTML, XSS vulnerabilities)
+
+**Accessibility (MANDATORY):**
 - [ ] **All interactive elements keyboard accessible (Tab, Enter, Space)**
 - [ ] **ARIA labels on all icon buttons (`aria-label`)**
 - [ ] **Clear focus indicators (`:focus-visible` with proper CSS)**
 - [ ] **Touch targets at least 44×44px (mobile)**
 - [ ] **Tooltips positioned with `data-tooltip-position`**
+
+**Release Requirements:**
+- [ ] manifest.json valid and version correct
+- [ ] LICENSE file included
 - [ ] Mobile tested (if not desktop-only)
+- [ ] Repository has issues enabled
 
 ## ESLint Integration
 

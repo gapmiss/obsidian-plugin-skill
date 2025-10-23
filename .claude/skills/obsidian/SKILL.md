@@ -8,6 +8,25 @@ description: Comprehensive guidelines for Obsidian.md plugin development includi
 
 You are assisting with Obsidian plugin development. Follow these comprehensive guidelines derived from the official Obsidian ESLint plugin rules, submission requirements, and best practices.
 
+## Getting Started
+
+### Quick Start Tool
+
+For new plugin projects, an interactive boilerplate generator is available:
+- **Script**: `tools/create-plugin.js` in the skill repository
+- **Slash command**: `/create-plugin` for guided setup
+- Generates minimal, best-practice boilerplate with no sample code
+- Detects existing projects and only adds missing files
+- All generated code follows these guidelines automatically
+
+### When to Suggest the Tool
+
+Recommend the boilerplate generator when users:
+- Ask "how do I create a new Obsidian plugin?"
+- Want to start a new plugin project
+- Need help setting up the basic structure
+- Want to ensure they start with best practices
+
 ## Core Principles
 
 1. **Memory Safety**: Prevent memory leaks through proper resource management
@@ -21,28 +40,50 @@ You are assisting with Obsidian plugin development. Follow these comprehensive g
 
 ## Quick Reference
 
-### Top 20 Most Critical Rules
+### Top 25 Most Critical Rules
 
-1. **Use `registerEvent()` for automatic cleanup** - Prevents memory leaks
-2. **Use `instanceof` instead of type casting** - Type safety for TFile/TFolder
-3. **Use sentence case for all UI text** - "Advanced settings" not "Advanced Settings"
-4. **Don't store view references in plugin** - Causes memory leaks
-5. **Use Editor API for active file edits** - Preserves cursor position
-6. **Use Obsidian CSS variables** - Respects user themes
-7. **Scope CSS to plugin containers** - Prevents style conflicts
-8. **Make all interactive elements keyboard accessible** - Accessibility (MANDATORY)
-9. **Provide ARIA labels for icon buttons** - Accessibility (MANDATORY)
-10. **Don't use `innerHTML`/`outerHTML`** - Security risk (XSS)
-11. **No "command" in command names/IDs** - Redundant
-12. **No plugin ID in command IDs** - Obsidian auto-namespaces
-13. **No default hotkeys** - Avoid conflicts
-14. **Use `.setHeading()` for settings headings** - Not manual HTML
+**Submission & Naming:**
+1. **Plugin ID: no "obsidian", can't end with "plugin"** - Validation bot enforced
+2. **Plugin name: no "Obsidian", can't end with "Plugin"** - Validation bot enforced
+3. **Plugin name: can't start with "Obsi" or end with "dian"** - Validation bot enforced
+4. **Description: no "Obsidian", "This plugin", etc.** - Validation bot enforced
+5. **Description must end with `.?!)` punctuation** - Validation bot enforced
+
+**Memory & Lifecycle:**
+6. **Use `registerEvent()` for automatic cleanup** - Prevents memory leaks
+7. **Don't store view references in plugin** - Causes memory leaks
+
+**Type Safety:**
+8. **Use `instanceof` instead of type casting** - Type safety for TFile/TFolder
+
+**UI/UX:**
+9. **Use sentence case for all UI text** - "Advanced settings" not "Advanced Settings"
+10. **No "command" in command names/IDs** - Redundant
+11. **No plugin ID in command IDs** - Obsidian auto-namespaces
+12. **No default hotkeys** - Avoid conflicts
+13. **Use `.setHeading()` for settings headings** - Not manual HTML
+
+**API Best Practices:**
+14. **Use Editor API for active file edits** - Preserves cursor position
 15. **Use `Vault.process()` for background file mods** - Prevents conflicts
 16. **Use `normalizePath()` for user paths** - Cross-platform compatibility
-17. **Avoid regex lookbehind** - iOS < 16.4 incompatibility
-18. **Use `Platform` API for OS detection** - Not navigator
-19. **Remove all sample/template code** - MyPlugin, SampleModal, etc.
-20. **Define clear focus indicators** - Use `:focus-visible` (MANDATORY)
+17. **Use `Platform` API for OS detection** - Not navigator
+
+**Styling:**
+18. **Use Obsidian CSS variables** - Respects user themes
+19. **Scope CSS to plugin containers** - Prevents style conflicts
+
+**Accessibility (MANDATORY):**
+20. **Make all interactive elements keyboard accessible** - Accessibility required
+21. **Provide ARIA labels for icon buttons** - Accessibility required
+22. **Define clear focus indicators** - Use `:focus-visible`
+
+**Security & Compatibility:**
+23. **Don't use `innerHTML`/`outerHTML`** - Security risk (XSS)
+24. **Avoid regex lookbehind** - iOS < 16.4 incompatibility
+
+**Code Quality:**
+25. **Remove all sample/template code** - MyPlugin, SampleModal, etc.
 
 ---
 
