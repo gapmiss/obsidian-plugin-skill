@@ -6,12 +6,13 @@ A comprehensive Claude Code skill for developing high-quality Obsidian plugins t
 
 This skill provides Claude with deep knowledge of Obsidian plugin development standards, including:
 
-- 32 ESLint rules from `eslint-plugin-obsidianmd`
+- All 27 ESLint rules from `eslint-plugin-obsidianmd`
 - Official Plugin Guidelines from Obsidian documentation
 - Submission requirements for the community plugins directory
 - Memory management and lifecycle best practices
 - Security guidelines and XSS prevention
 - Platform compatibility (including iOS considerations)
+- Network request best practices (requestUrl vs fetch)
 
 ## Installation
 
@@ -214,7 +215,7 @@ Following the Obsidian plugin guidelines, help me refactor this code...
 
 ## What's Covered
 
-### Top 25 Most Critical Rules (Quick Reference)
+### Top 27 Most Critical Rules (Quick Reference)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
@@ -244,22 +245,24 @@ The main SKILL.md file highlights the most important rules organized by category
 15. Use `Vault.process()` for background file mods
 16. Use `normalizePath()` for user paths
 17. Use `Platform` API for OS detection
+18. Use `requestUrl()` instead of `fetch()`
+19. No console.log in onload/onunload in production
 
 **Styling:**
-18. Use Obsidian CSS variables
-19. Scope CSS to plugin containers
+20. Use Obsidian CSS variables
+21. Scope CSS to plugin containers
 
 **Accessibility (MANDATORY):**
-20. Make all interactive elements keyboard accessible
-21. Provide ARIA labels for icon buttons
-22. Define clear focus indicators
+22. Make all interactive elements keyboard accessible
+23. Provide ARIA labels for icon buttons
+24. Define clear focus indicators
 
 **Security & Compatibility:**
-23. Don't use `innerHTML`/`outerHTML`
-24. Avoid regex lookbehind
+25. Don't use `innerHTML`/`outerHTML`
+26. Avoid regex lookbehind
 
 **Code Quality:**
-25. Remove all sample/template code
+27. Remove all sample/template code
 
 ### Detailed Coverage by Topic
 

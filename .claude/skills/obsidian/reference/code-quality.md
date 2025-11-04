@@ -179,28 +179,63 @@ Rationale: Always use `this.app` from your plugin instance instead of the global
 
 ---
 
+### Use requestUrl() Instead of fetch()
+Rule: Best practice from official guidelines
+
+❌ **INCORRECT**:
+```typescript
+// Don't use fetch()
+const response = await fetch('https://api.example.com/data');
+const data = await response.json();
+```
+
+✅ **CORRECT**:
+```typescript
+import { requestUrl } from 'obsidian';
+
+// Use Obsidian's requestUrl() to bypass CORS
+const response = await requestUrl('https://api.example.com/data');
+const data = response.json;
+```
+
+Rationale: Don't use `fetch()`. Use Obsidian's `requestUrl()` instead to bypass CORS restrictions. The browser's fetch API is subject to CORS policies, but `requestUrl()` bypasses these restrictions.
+
+---
+
 ### Minimize Console Logging
 Rule: Best practice from official guidelines
 
 ❌ **INCORRECT**:
 ```typescript
-console.log('Plugin loaded');
-console.log('Processing file:', file.path);
-console.log('Settings updated:', settings);
+async onload() {
+  console.log('Plugin loaded');
+  console.log('Processing file:', file.path);
+  console.log('Settings updated:', settings);
+}
+
+onunload() {
+  console.log('Plugin unloaded');
+}
 ```
 
 ✅ **CORRECT**:
 ```typescript
-// Only log errors by default
-console.error('Failed to process file:', error);
+async onload() {
+  // Only log errors by default
+  console.error('Failed to process file:', error);
 
-// Use debug mode for development
-if (this.settings.debugMode) {
-  console.log('Processing file:', file.path);
+  // Use debug mode for development logging
+  if (this.settings.debugMode) {
+    console.log('Processing file:', file.path);
+  }
+}
+
+onunload() {
+  // No console.log in production
 }
 ```
 
-Rationale: The developer console should display errors by default, not debug messages. Minimize unnecessary console output.
+Rationale: The developer console should display errors by default, not debug messages. Minimize unnecessary console output. **In production, do not use console.log in onload and onunload** - these methods are called frequently and pollute the console. Use debug mode flags for development logging.
 
 ---
 

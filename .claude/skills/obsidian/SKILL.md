@@ -1,7 +1,7 @@
 ---
 name: obsidian
-version: 1.0.0
-description: Comprehensive guidelines for Obsidian.md plugin development including TypeScript, memory management, API usage, ESLint rules, UI/UX standards, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+version: 1.1.0
+description: Comprehensive guidelines for Obsidian.md plugin development including all 27 ESLint rules, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -40,7 +40,7 @@ Recommend the boilerplate generator when users:
 
 ## Quick Reference
 
-### Top 25 Most Critical Rules
+### Top 27 Most Critical Rules
 
 **Submission & Naming:**
 1. **Plugin ID: no "obsidian", can't end with "plugin"** - Validation bot enforced
@@ -68,22 +68,24 @@ Recommend the boilerplate generator when users:
 15. **Use `Vault.process()` for background file mods** - Prevents conflicts
 16. **Use `normalizePath()` for user paths** - Cross-platform compatibility
 17. **Use `Platform` API for OS detection** - Not navigator
+18. **Use `requestUrl()` instead of `fetch()`** - Bypasses CORS restrictions
+19. **No console.log in onload/onunload in production** - Pollutes console
 
 **Styling:**
-18. **Use Obsidian CSS variables** - Respects user themes
-19. **Scope CSS to plugin containers** - Prevents style conflicts
+20. **Use Obsidian CSS variables** - Respects user themes
+21. **Scope CSS to plugin containers** - Prevents style conflicts
 
 **Accessibility (MANDATORY):**
-20. **Make all interactive elements keyboard accessible** - Accessibility required
-21. **Provide ARIA labels for icon buttons** - Accessibility required
-22. **Define clear focus indicators** - Use `:focus-visible`
+22. **Make all interactive elements keyboard accessible** - Accessibility required
+23. **Provide ARIA labels for icon buttons** - Accessibility required
+24. **Define clear focus indicators** - Use `:focus-visible`
 
 **Security & Compatibility:**
-23. **Don't use `innerHTML`/`outerHTML`** - Security risk (XSS)
-24. **Avoid regex lookbehind** - iOS < 16.4 incompatibility
+25. **Don't use `innerHTML`/`outerHTML`** - Security risk (XSS)
+26. **Avoid regex lookbehind** - iOS < 16.4 incompatibility
 
 **Code Quality:**
-25. **Remove all sample/template code** - MyPlugin, SampleModal, etc.
+27. **Remove all sample/template code** - MyPlugin, SampleModal, etc.
 
 ---
 
@@ -170,6 +172,7 @@ For comprehensive information on specific topics, see the reference files:
 - Use `Platform` API for OS detection
 - Use `AbstractInputSuggest` for autocomplete
 - Use direct file lookups (not vault iteration)
+- Use `requestUrl()` instead of `fetch()` for network requests
 
 **UI/UX**:
 - Use sentence case for all UI text
@@ -198,6 +201,7 @@ For comprehensive information on specific topics, see the reference files:
 - Remove all sample/template code
 - Test on mobile (if not desktop-only)
 - Follow semantic versioning
+- Minimize console logging (no console.log in onload/onunload in production)
 
 ### Don'ts ❌
 
@@ -217,6 +221,7 @@ For comprehensive information on specific topics, see the reference files:
 - Don't hardcode `.obsidian` path (use `vault.configDir`)
 - Don't use `navigator.platform/userAgent` (use Platform API)
 - Don't iterate vault when direct lookup exists
+- Don't use `fetch()` (use `requestUrl()` instead)
 
 **UI/UX**:
 - Don't use Title Case in UI (use sentence case)
@@ -247,6 +252,7 @@ For comprehensive information on specific topics, see the reference files:
 - Don't use Promise chains (use async/await)
 - Don't use `document.createElement` (use Obsidian helpers)
 - Don't keep sample class names (MyPlugin, SampleModal, etc.)
+- Don't use console.log in onload/onunload (pollutes console in production)
 
 ---
 
