@@ -29,7 +29,7 @@ This skill is located in `.claude/skills/obsidian/` and works with Claude Code C
 
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/gapmiss/obsidian-plugin-skill.git
    cd obsidian-plugin-skill
    ```
 
@@ -48,7 +48,7 @@ The installer will copy all skill files and the slash command to your project's 
 
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/gapmiss/obsidian-plugin-skill.git
    cd obsidian-plugin-skill
    ```
 
