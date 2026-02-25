@@ -208,13 +208,17 @@ function generatePackageJson(id, name, version, description, author) {
     "license": "MIT",
     "devDependencies": {
       "@types/node": "^16.11.6",
-      "@typescript-eslint/eslint-plugin": "^5.29.0",
-      "@typescript-eslint/parser": "^5.29.0",
-      "builtin-modules": "^3.3.0",
-      "esbuild": "0.17.3",
-      "obsidian": "latest",
+      "esbuild": "0.25.5",
+      "eslint-plugin-obsidianmd": "0.1.9",
+      "globals": "14.0.0",
       "tslib": "2.4.0",
-      "typescript": "4.7.4"
+      "typescript": "5.9.3",
+      "typescript-eslint": "8.35.1",
+      "@eslint/js": "9.30.1",
+		  "jiti": "2.6.1"
+    },
+    "dependencies": {
+      "obsidian": "latest"
     }
   }, null, 2) + '\n';
 }
