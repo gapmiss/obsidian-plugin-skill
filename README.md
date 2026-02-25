@@ -6,7 +6,7 @@ A comprehensive Claude Code skill for developing high-quality Obsidian plugins t
 
 This skill provides Claude with deep knowledge of Obsidian plugin development standards, including:
 
-- All 27 ESLint rules from `eslint-plugin-obsidianmd`
+- All 27 ESLint rules from `eslint-plugin-obsidianmd` v0.1.9
 - Official Plugin Guidelines from Obsidian documentation
 - Submission requirements for the community plugins directory
 - Memory management and lifecycle best practices
@@ -215,7 +215,7 @@ Following the Obsidian plugin guidelines, help me refactor this code...
 
 ## What's Covered
 
-### Top 27 Most Critical Rules (Quick Reference)
+### Most Critical Rules (eslint-plugin-obsidianmd v0.1.9)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
@@ -235,34 +235,39 @@ The main SKILL.md file highlights the most important rules organized by category
 
 **UI/UX:**
 9. Use sentence case for all UI text
-10. No "command" in command names/IDs
-11. No plugin ID in command IDs
-12. No default hotkeys
-13. Use `.setHeading()` for settings headings
+10. Sentence case in locale JSON files
+11. Sentence case in TS/JS locale modules
+12. No "command" in command names/IDs
+13. No plugin ID/name in command IDs/names
+14. No default hotkeys
+15. Use `.setHeading()` for settings headings
 
 **API Best Practices:**
-14. Use Editor API for active file edits
-15. Use `Vault.process()` for background file mods
-16. Use `normalizePath()` for user paths
-17. Use `Platform` API for OS detection
-18. Use `requestUrl()` instead of `fetch()`
-19. No console.log in onload/onunload in production
+16. Use Editor API for active file edits
+17. Use `Vault.process()` for background file mods
+18. Use `normalizePath()` for user paths
+19. Use `Platform` API for OS detection
+20. Use `requestUrl()` instead of `fetch()`
+21. No console.log in onload/onunload in production
 
 **Styling:**
-20. Use Obsidian CSS variables
-21. Scope CSS to plugin containers
+22. Use Obsidian CSS variables
+23. Scope CSS to plugin containers
+24. Don't create `<link>` or `<style>` elements
 
 **Accessibility (MANDATORY):**
-22. Make all interactive elements keyboard accessible
-23. Provide ARIA labels for icon buttons
-24. Define clear focus indicators
+25. Make all interactive elements keyboard accessible
+26. Provide ARIA labels for icon buttons
+27. Define clear focus indicators
 
 **Security & Compatibility:**
-25. Don't use `innerHTML`/`outerHTML`
-26. Avoid regex lookbehind
+28. Don't use `innerHTML`/`outerHTML`
+29. Avoid regex lookbehind
 
 **Code Quality:**
-27. Remove all sample/template code
+30. Remove all sample/template code
+31. Don't mutate defaults with `Object.assign`
+32. Validate LICENSE copyright holder and year
 
 ### Detailed Coverage by Topic
 
@@ -436,6 +441,8 @@ Create `eslint.config.js`:
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default [
+  // Use recommended for TypeScript source files only.
+  // Use recommendedWithLocalesEn to also lint en*.json / en*.ts locale files.
   ...obsidianmd.configs.recommended,
   {
     rules: {
@@ -510,4 +517,4 @@ This structure allows Claude to load the essential information quickly while hav
 
 ---
 
-Note: The ESLint plugin is under active development. Guidelines in this skill reflect current best practices but may evolve as the Obsidian API matures.
+Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.1.9. The plugin is under active development and rules may evolve.

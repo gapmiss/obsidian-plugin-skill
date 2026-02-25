@@ -132,9 +132,7 @@ Rationale: Prefer the Vault API over the Adapter API for better performance and 
 ---
 
 ### Prefer FileManager for Deletion
-Rules:
-- `obsidianmd/prefer-file-manager-trash`
-- `obsidianmd/prefer-file-manager-trash-file`
+Rule: `obsidianmd/prefer-file-manager-trash-file`
 
 ❌ **INCORRECT**:
 ```typescript

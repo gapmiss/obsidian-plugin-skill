@@ -359,18 +359,27 @@ Rationale: Obsidian's helper functions (`createDiv()`, `createSpan()`, `createEl
 
 ## Miscellaneous Rules
 
-### Object.assign Must Have 3 Parameters
+### Don't Mutate Defaults with Object.assign
 Rule: `obsidianmd/object-assign`
+
+Avoid calling `Object.assign` with exactly two arguments where the first argument is a variable with "default" in its name. This mutates the defaults object unexpectedly.
 
 ❌ **INCORRECT**:
 ```typescript
-Object.assign(settings);  // Missing target
+// Mutates DEFAULT_SETTINGS - subsequent calls see modified defaults!
+Object.assign(DEFAULT_SETTINGS, userSettings);
 ```
 
 ✅ **CORRECT**:
 ```typescript
-Object.assign({}, DEFAULT_SETTINGS, settings);
+// Merge into a fresh object - defaults stay intact
+Object.assign({}, DEFAULT_SETTINGS, userSettings);
+
+// Or use spread syntax (preferred):
+const settings = { ...DEFAULT_SETTINGS, ...userSettings };
 ```
+
+Rationale: When the target of `Object.assign` is a variable holding default values (name contains "default"), the defaults object itself is mutated. Pass an empty `{}` as the first argument or use spread syntax to avoid unexpected side-effects.
 
 ---
 
@@ -417,4 +426,27 @@ Ensure your `manifest.json` is valid:
 ### Validate LICENSE
 Rule: `obsidianmd/validate-license`
 
-Must include a valid LICENSE file (MIT recommended).
+Your plugin must include a valid LICENSE file. The rule checks two things:
+
+1. **Copyright holder**: The holder must not be "Dynalist Inc." (the Obsidian sample plugin's default). Change it to your name.
+2. **Copyright year**: The year must be current. Update it when the year changes.
+
+❌ **INCORRECT** (unchanged sample plugin LICENSE):
+```
+Copyright (C) 2021 by Dynalist Inc.
+```
+
+✅ **CORRECT**:
+```
+Copyright (C) 2024 by Your Name
+```
+
+Rule options:
+```javascript
+"obsidianmd/validate-license": ["error", {
+  currentYear: 2026,           // Override the year check (defaults to current year)
+  disableUnchangedYear: false, // Set true to skip year validation
+}]
+```
+
+Rationale: The Obsidian sample plugin ships with Dynalist Inc. as copyright holder and an old year. Forgetting to update this before submission is a common mistake.

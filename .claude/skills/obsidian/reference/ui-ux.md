@@ -4,6 +4,7 @@ Consistent UI/UX is essential for a native-feeling Obsidian plugin experience.
 
 ## Table of Contents
 - [Sentence Case for UI Text](#sentence-case-for-ui-text)
+- [Sentence Case for Locale Files](#sentence-case-for-locale-files)
 - [Command Naming Conventions](#command-naming-conventions)
 - [Settings & Configuration](#settings--configuration)
 
@@ -49,6 +50,78 @@ Applies to:
 - `addCommand()` names
 - `.setAttribute()` for `aria-label`, `aria-description`, `title`, `placeholder`
 - `textContent`, `innerText` assignments
+
+---
+
+## Sentence Case for Locale Files
+
+Plugins that externalize UI strings into locale files must also enforce sentence case.
+
+### Sentence Case for JSON Locale Files
+Rule: `obsidianmd/ui/sentence-case-json` (auto-fixable)
+
+Enforces sentence case for English locale strings stored in JSON files (e.g. `en.json`, `locales/en.json`).
+
+❌ **INCORRECT** (`en.json`):
+```json
+{
+  "openSettings": "Open Settings",
+  "saveChanges": "Save Changes",
+  "deleteFile": "Delete File"
+}
+```
+
+✅ **CORRECT** (`en.json`):
+```json
+{
+  "openSettings": "Open settings",
+  "saveChanges": "Save changes",
+  "deleteFile": "Delete file"
+}
+```
+
+---
+
+### Sentence Case for TypeScript/JavaScript Locale Modules
+Rule: `obsidianmd/ui/sentence-case-locale-module` (auto-fixable)
+
+Enforces sentence case for English locale strings exported from TS/JS modules (e.g. `en.ts`, `locales/en.js`).
+
+❌ **INCORRECT** (`en.ts`):
+```typescript
+export default {
+  openSettings: "Open Settings",
+  saveChanges: "Save Changes",
+};
+```
+
+✅ **CORRECT** (`en.ts`):
+```typescript
+export default {
+  openSettings: "Open settings",
+  saveChanges: "Save changes",
+};
+```
+
+---
+
+### Enable Locale Checks with recommendedWithLocalesEn
+
+To enable all three sentence-case rules (TypeScript sources + JSON + TS/JS locale modules), use the `recommendedWithLocalesEn` config instead of `recommended`:
+
+```javascript
+// eslint.config.mjs
+import obsidianmd from "eslint-plugin-obsidianmd";
+
+export default [
+  // Use this config to also lint en*.json, en*.ts, en*.js locale files
+  ...obsidianmd.configs.recommendedWithLocalesEn,
+];
+```
+
+The `recommended` config only checks `ui/sentence-case` (inline TypeScript strings). The `recommendedWithLocalesEn` config additionally enables:
+- `ui/sentence-case-json` — checks `en*.json` and `en/**/*.json`
+- `ui/sentence-case-locale-module` — checks `en*.ts`, `en*.js`, and `en/**/*`
 
 ---
 

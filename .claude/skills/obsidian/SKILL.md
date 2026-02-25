@@ -1,7 +1,8 @@
 ---
 name: obsidian
-version: 1.1.0
-description: Comprehensive guidelines for Obsidian.md plugin development including all 27 ESLint rules, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including all 27 ESLint rules from eslint-plugin-obsidianmd v0.1.9, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+metadata: 
+  version: 1.2.0
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -40,7 +41,7 @@ Recommend the boilerplate generator when users:
 
 ## Quick Reference
 
-### Top 27 Most Critical Rules
+### Most Critical Rules (eslint-plugin-obsidianmd v0.1.9)
 
 **Submission & Naming:**
 1. **Plugin ID: no "obsidian", can't end with "plugin"** - Validation bot enforced
@@ -58,34 +59,39 @@ Recommend the boilerplate generator when users:
 
 **UI/UX:**
 9. **Use sentence case for all UI text** - "Advanced settings" not "Advanced Settings"
-10. **No "command" in command names/IDs** - Redundant
-11. **No plugin ID in command IDs** - Obsidian auto-namespaces
-12. **No default hotkeys** - Avoid conflicts
-13. **Use `.setHeading()` for settings headings** - Not manual HTML
+10. **Enforce sentence case in JSON locale files** - `ui/sentence-case-json` (use `recommendedWithLocalesEn`)
+11. **Enforce sentence case in TS/JS locale modules** - `ui/sentence-case-locale-module`
+12. **No "command" in command names/IDs** - Redundant
+13. **No plugin ID/name in command IDs/names** - Obsidian auto-namespaces
+14. **No default hotkeys** - Avoid conflicts
+15. **Use `.setHeading()` for settings headings** - Not manual HTML
 
 **API Best Practices:**
-14. **Use Editor API for active file edits** - Preserves cursor position
-15. **Use `Vault.process()` for background file mods** - Prevents conflicts
-16. **Use `normalizePath()` for user paths** - Cross-platform compatibility
-17. **Use `Platform` API for OS detection** - Not navigator
-18. **Use `requestUrl()` instead of `fetch()`** - Bypasses CORS restrictions
-19. **No console.log in onload/onunload in production** - Pollutes console
+16. **Use Editor API for active file edits** - Preserves cursor position
+17. **Use `Vault.process()` for background file mods** - Prevents conflicts
+18. **Use `normalizePath()` for user paths** - Cross-platform compatibility
+19. **Use `Platform` API for OS detection** - Not navigator
+20. **Use `requestUrl()` instead of `fetch()`** - Bypasses CORS restrictions
+21. **No console.log in onload/onunload in production** - Pollutes console
 
 **Styling:**
-20. **Use Obsidian CSS variables** - Respects user themes
-21. **Scope CSS to plugin containers** - Prevents style conflicts
+22. **Use Obsidian CSS variables** - Respects user themes
+23. **Scope CSS to plugin containers** - Prevents style conflicts
+24. **Don't create `<link>` or `<style>` elements** - Use `styles.css` file instead (`no-forbidden-elements`)
 
 **Accessibility (MANDATORY):**
-22. **Make all interactive elements keyboard accessible** - Accessibility required
-23. **Provide ARIA labels for icon buttons** - Accessibility required
-24. **Define clear focus indicators** - Use `:focus-visible`
+25. **Make all interactive elements keyboard accessible** - Accessibility required
+26. **Provide ARIA labels for icon buttons** - Accessibility required
+27. **Define clear focus indicators** - Use `:focus-visible`
 
 **Security & Compatibility:**
-25. **Don't use `innerHTML`/`outerHTML`** - Security risk (XSS)
-26. **Avoid regex lookbehind** - iOS < 16.4 incompatibility
+28. **Don't use `innerHTML`/`outerHTML`** - Security risk (XSS)
+29. **Avoid regex lookbehind** - iOS < 16.4 incompatibility
 
 **Code Quality:**
-27. **Remove all sample/template code** - MyPlugin, SampleModal, etc.
+30. **Remove all sample/template code** - MyPlugin, SampleModal, etc.
+31. **Don't mutate defaults with Object.assign** - Use `Object.assign({}, defaults, overrides)` (`object-assign`)
+32. **Validate LICENSE copyright holder and year** - Must not be "Dynalist Inc.", year must be current (`validate-license`)
 
 ---
 
@@ -105,8 +111,9 @@ For comprehensive information on specific topics, see the reference files:
 - Using `const` and `let` over `var`
 
 ### [UI/UX Standards](reference/ui-ux.md)
-- Sentence case enforcement
-- Command naming conventions
+- Sentence case enforcement (TypeScript, JSON locale, TS/JS locale modules)
+- `recommendedWithLocalesEn` config for locale file checks
+- Command naming conventions (no "command", no plugin name, no plugin ID)
 - Settings and configuration best practices
 
 ### [File & Vault Operations](reference/file-operations.md)
@@ -175,7 +182,7 @@ For comprehensive information on specific topics, see the reference files:
 - Use `requestUrl()` instead of `fetch()` for network requests
 
 **UI/UX**:
-- Use sentence case for all UI text
+- Use sentence case for all UI text (and locale JSON/TS files via `recommendedWithLocalesEn`)
 - Use `.setHeading()` for settings headings
 - Use Obsidian DOM helpers (`createDiv()`, `createSpan()`, `createEl()`)
 - Use `window.setTimeout/setInterval` with `number` type
@@ -253,6 +260,8 @@ For comprehensive information on specific topics, see the reference files:
 - Don't use `document.createElement` (use Obsidian helpers)
 - Don't keep sample class names (MyPlugin, SampleModal, etc.)
 - Don't use console.log in onload/onunload (pollutes console in production)
+- Don't use `Object.assign(defaultsVar, other)` — mutates defaults; use `Object.assign({}, defaults, other)` instead
+- Don't leave "Dynalist Inc." as LICENSE copyright holder or an outdated copyright year
 
 ---
 
@@ -352,7 +361,7 @@ button.addEventListener('keydown', (e) => {
 
 ## Important Notes
 
-- These guidelines are based on `eslint-plugin-obsidianmd` which is under active development
+- These guidelines are based on `eslint-plugin-obsidianmd` v0.1.9
 - Rules marked as auto-fixable can be automatically corrected with ESLint's `--fix` flag
 - **Accessibility is NOT optional** - all interactive elements must be keyboard accessible
 - Always test on mobile devices if your plugin is not desktop-only
