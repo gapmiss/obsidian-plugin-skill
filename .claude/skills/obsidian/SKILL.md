@@ -1,13 +1,14 @@
 ---
 name: obsidian
 description: Comprehensive guidelines for Obsidian.md plugin development including all 27 ESLint rules from eslint-plugin-obsidianmd v0.1.9, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+license: MIT
 metadata: 
-  version: 1.2.0
+  version: 1.3.0
 ---
 
 # Obsidian Plugin Development Guidelines
 
-You are assisting with Obsidian plugin development. Follow these comprehensive guidelines derived from the official Obsidian ESLint plugin rules, submission requirements, and best practices.
+Follow these comprehensive guidelines derived from the official Obsidian ESLint plugin rules, submission requirements, and best practices.
 
 ## Getting Started
 
@@ -18,80 +19,81 @@ For new plugin projects, an interactive boilerplate generator is available:
 - **Slash command**: `/create-plugin` for guided setup
 - Generates minimal, best-practice boilerplate with no sample code
 - Detects existing projects and only adds missing files
-- All generated code follows these guidelines automatically
 
-### When to Suggest the Tool
-
-Recommend the boilerplate generator when users:
-- Ask "how do I create a new Obsidian plugin?"
-- Want to start a new plugin project
-- Need help setting up the basic structure
-- Want to ensure they start with best practices
-
-## Core Principles
-
-1. **Memory Safety**: Prevent memory leaks through proper resource management
-2. **Type Safety**: Use proper type narrowing and avoid unsafe casts
-3. **API Best Practices**: Follow Obsidian's recommended patterns
-4. **User Experience**: Maintain consistency in UI/UX across plugins
-5. **Platform Compatibility**: Ensure cross-platform support (including iOS)
-6. **Accessibility**: Make all features keyboard and screen reader accessible
+Recommend the boilerplate generator when users ask how to create a new plugin, want to start a new project, or need help setting up the basic structure.
 
 ---
 
-## Quick Reference
+## Rules Reference (eslint-plugin-obsidianmd v0.1.9)
 
-### Most Critical Rules (eslint-plugin-obsidianmd v0.1.9)
+### Submission & Naming
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 1 | Plugin ID | Omit "obsidian"; don't end with "plugin" | Include "obsidian" or end with "plugin" |
+| 2 | Plugin name | Omit "Obsidian"; don't end with "Plugin" | Include "Obsidian" or end with "Plugin" |
+| 3 | Plugin name | Don't start with "Obsi" or end with "dian" | Start with "Obsi" or end with "dian" |
+| 4 | Description | Omit "Obsidian", "This plugin", etc. | Use "Obsidian" or "This plugin" |
+| 5 | Description | End with `.?!)` punctuation | Leave description without terminal punctuation |
 
-**Submission & Naming:**
-1. **Plugin ID: no "obsidian", can't end with "plugin"** - Validation bot enforced
-2. **Plugin name: no "Obsidian", can't end with "Plugin"** - Validation bot enforced
-3. **Plugin name: can't start with "Obsi" or end with "dian"** - Validation bot enforced
-4. **Description: no "Obsidian", "This plugin", etc.** - Validation bot enforced
-5. **Description must end with `.?!)` punctuation** - Validation bot enforced
+### Memory & Lifecycle
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 6 | Event cleanup | Use `registerEvent()` for automatic cleanup | Register events without cleanup |
+| 7 | View references | Return views/components directly | Store view references in plugin properties or pass plugin as component to `MarkdownRenderer` |
 
-**Memory & Lifecycle:**
-6. **Use `registerEvent()` for automatic cleanup** - Prevents memory leaks
-7. **Don't store view references in plugin** - Causes memory leaks
+### Type Safety
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 8 | TFile/TFolder | Use `instanceof` for type checking | Cast to TFile/TFolder; use `any`; use `var` |
 
-**Type Safety:**
-8. **Use `instanceof` instead of type casting** - Type safety for TFile/TFolder
+### UI/UX
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 9 | UI text | Sentence case — "Advanced settings" | Title Case — "Advanced Settings" |
+| 10 | JSON locale | Sentence case in JSON locale files (`recommendedWithLocalesEn`) | Title case in locale JSON |
+| 11 | TS/JS locale | Sentence case in TS/JS locale modules | Title case in locale modules |
+| 12 | Command names | Omit "command" in command names/IDs | Include "command" in names/IDs |
+| 13 | Command IDs | Omit plugin ID/name from command IDs/names | Duplicate plugin ID in command IDs |
+| 14 | Hotkeys | No default hotkeys | Set default hotkeys |
+| 15 | Settings headings | Use `.setHeading()` | Create manual HTML headings; use "General", "settings", or plugin name in headings |
 
-**UI/UX:**
-9. **Use sentence case for all UI text** - "Advanced settings" not "Advanced Settings"
-10. **Enforce sentence case in JSON locale files** - `ui/sentence-case-json` (use `recommendedWithLocalesEn`)
-11. **Enforce sentence case in TS/JS locale modules** - `ui/sentence-case-locale-module`
-12. **No "command" in command names/IDs** - Redundant
-13. **No plugin ID/name in command IDs/names** - Obsidian auto-namespaces
-14. **No default hotkeys** - Avoid conflicts
-15. **Use `.setHeading()` for settings headings** - Not manual HTML
+### API Best Practices
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 16 | Active file edits | Use Editor API | Use `Vault.modify()` for active file edits |
+| 17 | Background file mods | Use `Vault.process()` | Use `Vault.modify()` for background modifications |
+| 18 | User paths | Use `normalizePath()` | Hardcode `.obsidian` path; use raw user paths |
+| 19 | OS detection | Use `Platform` API | Use `navigator.platform`/`userAgent` |
+| 20 | Network requests | Use `requestUrl()` | Use `fetch()` |
+| 21 | Logging | Minimize console logging; none in `onload`/`onunload` in production | Use `console.log` in `onload`/`onunload` |
 
-**API Best Practices:**
-16. **Use Editor API for active file edits** - Preserves cursor position
-17. **Use `Vault.process()` for background file mods** - Prevents conflicts
-18. **Use `normalizePath()` for user paths** - Cross-platform compatibility
-19. **Use `Platform` API for OS detection** - Not navigator
-20. **Use `requestUrl()` instead of `fetch()`** - Bypasses CORS restrictions
-21. **No console.log in onload/onunload in production** - Pollutes console
+### Styling
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 22 | CSS variables | Use Obsidian CSS variables for all styling | Hardcode colors, sizes, or spacing |
+| 23 | CSS scope | Scope CSS to plugin containers | Use broad CSS selectors |
+| 24 | Style elements | Use `styles.css` file (`no-forbidden-elements`) | Create `<link>` or `<style>` elements; assign styles via JavaScript |
 
-**Styling:**
-22. **Use Obsidian CSS variables** - Respects user themes
-23. **Scope CSS to plugin containers** - Prevents style conflicts
-24. **Don't create `<link>` or `<style>` elements** - Use `styles.css` file instead (`no-forbidden-elements`)
+### Accessibility (MANDATORY)
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 25 | Keyboard access | Make all interactive elements keyboard accessible; Tab through all elements | Create inaccessible interactive elements |
+| 26 | ARIA labels | Provide ARIA labels for icon buttons; use `data-tooltip-position` for tooltips | Use icon buttons without ARIA labels |
+| 27 | Focus indicators | Use `:focus-visible` with Obsidian CSS variables; touch targets ≥ 44×44px | Remove focus indicators; make touch targets < 44×44px |
 
-**Accessibility (MANDATORY):**
-25. **Make all interactive elements keyboard accessible** - Accessibility required
-26. **Provide ARIA labels for icon buttons** - Accessibility required
-27. **Define clear focus indicators** - Use `:focus-visible`
+### Security & Compatibility
+| Rule | ✅ Do | ❌ Don't |
+|------|--------|----------|
+| DOM safety | Use Obsidian DOM helpers (`createDiv()`, `createSpan()`, `createEl()`) | Use `innerHTML`/`outerHTML` or `document.createElement` |
+| iOS compat | Avoid regex lookbehind (iOS < 16.4 incompatibility) | Use regex lookbehind |
 
-**Security & Compatibility:**
-28. **Don't use `innerHTML`/`outerHTML`** - Security risk (XSS)
-29. **Avoid regex lookbehind** - iOS < 16.4 incompatibility
-
-**Code Quality:**
-30. **Remove all sample/template code** - MyPlugin, SampleModal, etc.
-31. **Don't mutate defaults with Object.assign** - Use `Object.assign({}, defaults, overrides)` (`object-assign`)
-32. **Validate LICENSE copyright holder and year** - Must not be "Dynalist Inc.", year must be current (`validate-license`)
+### Code Quality
+| Rule | ✅ Do | ❌ Don't |
+|------|--------|----------|
+| Sample code | Remove all sample/template code | Keep class names like MyPlugin, SampleModal |
+| Object.assign | `Object.assign({}, defaults, overrides)` (`object-assign`) | `Object.assign(defaultsVar, other)` — mutates defaults |
+| LICENSE | Copyright holder must not be "Dynalist Inc."; year must be current (`validate-license`) | Leave "Dynalist Inc." as holder or use an outdated year |
+| Async | Use async/await | Use Promise chains |
 
 ---
 
@@ -153,115 +155,22 @@ For comprehensive information on specific topics, see the reference files:
 - Submission process
 - Semantic versioning
 - Testing checklist
+- Additional resources and important notes
 
 ---
 
-## Essential Do's and Don'ts
+## Plugin Submission Validation Workflow
 
-### Do's ✅
+Before submitting a plugin, follow this sequence:
 
-**Memory & Lifecycle**:
-- Use `registerEvent()`, `addCommand()`, `registerDomEvent()`, `registerInterval()`
-- Return views/components directly (don't store unnecessarily)
+1. **Run ESLint** — `npx eslint .` using `eslint-plugin-obsidianmd`; fix all errors (warnings are informational)
+2. **Validate manifest** — Confirm `id`, `name`, `description`, `version`, and `minAppVersion` meet naming and formatting rules (rules 1–5)
+3. **Check LICENSE** — Copyright holder must not be "Dynalist Inc." and the year must be current
+4. **Test on mobile** — Verify no regex lookbehind, no `fetch()`, and touch targets ≥ 44×44px (skip only if plugin is declared desktop-only)
+5. **Keyboard accessibility audit** — Tab through all interactive elements; confirm focus indicators and ARIA labels are present
+6. **Submit** — Open a PR to the community plugins repository with the updated `manifest.json` and `community-plugins.json` entry
 
-**Type Safety**:
-- Use `instanceof` for type checking (not type casting)
-- Use specific types or `unknown` instead of `any`
-- Use `const` and `let` (not `var`)
-
-**API Usage**:
-- Use `this.app` (not global `app`)
-- Use Editor API for active file edits
-- Use `Vault.process()` for background file modifications
-- Use `FileManager.processFrontMatter()` for YAML
-- Use `fileManager.trashFile()` for deletions
-- Use `normalizePath()` for user-defined paths
-- Use `Platform` API for OS detection
-- Use `AbstractInputSuggest` for autocomplete
-- Use direct file lookups (not vault iteration)
-- Use `requestUrl()` instead of `fetch()` for network requests
-
-**UI/UX**:
-- Use sentence case for all UI text (and locale JSON/TS files via `recommendedWithLocalesEn`)
-- Use `.setHeading()` for settings headings
-- Use Obsidian DOM helpers (`createDiv()`, `createSpan()`, `createEl()`)
-- Use `window.setTimeout/setInterval` with `number` type
-
-**Styling**:
-- Move all styles to CSS
-- Use Obsidian CSS variables for all styling
-- Scope CSS to plugin containers
-- Support both light and dark themes via CSS variables
-- Follow Obsidian's 4px spacing grid
-
-**Accessibility (MANDATORY)**:
-- Make all interactive elements keyboard accessible
-- Provide ARIA labels for icon buttons
-- Define clear focus indicators using `:focus-visible`
-- Use `data-tooltip-position` for tooltips
-- Ensure minimum touch target size (44×44px)
-- Manage focus properly in modals
-- Test with keyboard navigation
-
-**Code Quality**:
-- Use async/await (not Promise chains)
-- Remove all sample/template code
-- Test on mobile (if not desktop-only)
-- Follow semantic versioning
-- Minimize console logging (no console.log in onload/onunload in production)
-
-### Don'ts ❌
-
-**Memory & Lifecycle**:
-- Don't store view references in plugin properties
-- Don't pass plugin as component to MarkdownRenderer
-- Don't detach leaves in `onunload()`
-
-**Type Safety**:
-- Don't cast to TFile/TFolder (use `instanceof`)
-- Don't use `any` type
-- Don't use `var`
-
-**API Usage**:
-- Don't use global `app` object
-- Don't use `Vault.modify()` for active file edits
-- Don't hardcode `.obsidian` path (use `vault.configDir`)
-- Don't use `navigator.platform/userAgent` (use Platform API)
-- Don't iterate vault when direct lookup exists
-- Don't use `fetch()` (use `requestUrl()` instead)
-
-**UI/UX**:
-- Don't use Title Case in UI (use sentence case)
-- Don't include "command" in command names/IDs
-- Don't duplicate plugin ID in command IDs
-- Don't set default hotkeys
-- Don't create manual HTML headings (use `.setHeading()`)
-- Don't use "General", "settings", or plugin name in settings headings
-
-**Styling**:
-- Don't assign styles via JavaScript
-- Don't hardcode colors, sizes, or spacing (use CSS variables)
-- Don't use broad CSS selectors (scope to plugin)
-- Don't manually switch themes (CSS variables adapt automatically)
-- Don't create `<link>` or `<style>` elements (use `styles.css` file)
-
-**Security & Compatibility**:
-- Don't use `innerHTML`/`outerHTML` (XSS risk)
-- Don't use regex lookbehind (iOS < 16.4 incompatibility)
-
-**Accessibility**:
-- Don't create inaccessible interactive elements
-- Don't use icon buttons without ARIA labels
-- Don't remove focus indicators without alternatives
-- Don't make touch targets smaller than 44×44px
-
-**Code Quality**:
-- Don't use Promise chains (use async/await)
-- Don't use `document.createElement` (use Obsidian helpers)
-- Don't keep sample class names (MyPlugin, SampleModal, etc.)
-- Don't use console.log in onload/onunload (pollutes console in production)
-- Don't use `Object.assign(defaultsVar, other)` — mutates defaults; use `Object.assign({}, defaults, other)` instead
-- Don't leave "Dynalist Inc." as LICENSE copyright holder or an outdated copyright year
+If ESLint reports new errors after fixing, re-run from step 1.
 
 ---
 
@@ -349,21 +258,5 @@ button.addEventListener('keydown', (e) => {
 ```
 
 ---
-
-## Additional Resources
-
-- ESLint Plugin: `eslint-plugin-obsidianmd` (install for automatic checking)
-- Obsidian API Docs: https://docs.obsidian.md
-- Sample Plugin: https://github.com/obsidianmd/obsidian-sample-plugin
-- Community: Obsidian Discord, Forum
-
----
-
-## Important Notes
-
-- These guidelines are based on `eslint-plugin-obsidianmd` v0.1.9
-- Rules marked as auto-fixable can be automatically corrected with ESLint's `--fix` flag
-- **Accessibility is NOT optional** - all interactive elements must be keyboard accessible
-- Always test on mobile devices if your plugin is not desktop-only
 
 When helping with Obsidian plugin development, proactively apply these rules and suggest improvements based on these guidelines. Refer to the detailed reference files for comprehensive information on specific topics.
