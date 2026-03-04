@@ -73,7 +73,7 @@ The skill uses **progressive disclosure** for optimal performance:
 
 ```
 .claude/skills/obsidian/
-├── SKILL.md                          # Main overview (312 lines)
+├── SKILL.md                          # Main overview (263 lines)
 └── reference/                        # Detailed documentation
     ├── memory-management.md          # Lifecycle & cleanup patterns
     ├── type-safety.md                # Type narrowing & safety
@@ -507,7 +507,7 @@ This skill is based on:
 
 This skill follows **Anthropic's best practices for agent skills**:
 
-- **Progressive Disclosure**: Main SKILL.md (312 lines) provides overview; reference files contain details
+- **Progressive Disclosure**: Main SKILL.md (263 lines) provides overview; reference files contain details
 - **Context Window Efficiency**: "The context window is a public good" - optimized token usage
 - **One-Level-Deep References**: All reference files directly under `reference/` (no nesting)
 - **Topic-Based Organization**: Each reference file focuses on a specific domain
