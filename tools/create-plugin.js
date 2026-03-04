@@ -325,6 +325,9 @@ Thumbs.db
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Privacy
+data.json
 `;
 }
 
