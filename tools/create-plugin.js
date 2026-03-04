@@ -106,7 +106,7 @@ function generateManifest(id, name, version, description, author, authorUrl, min
 }
 
 // Generate settings.ts
-function generateSettings(pluginClassName, pluginName) {
+function generateSettings(pluginClassName) {
   return `import { App, PluginSettingTab, Setting } from 'obsidian';
 import type ${pluginClassName}Plugin from './main';
 
@@ -189,7 +189,7 @@ function generateTsConfig() {
 }
 
 // Generate package.json
-function generatePackageJson(id, name, version, description, author) {
+function generatePackageJson(id, version, description, author) {
   return JSON.stringify({
     "name": id,
     "version": version,
@@ -331,6 +331,32 @@ data.json
 `;
 }
 
+// Generate LICENSE
+function generateLicense(author) {
+  const year = new Date().getFullYear();
+  return `MIT License
+
+Copyright (c) ${year} ${author}
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`;
+}
+
 // Convert plugin name to class name (PascalCase)
 function toClassName(name) {
   return name
@@ -451,15 +477,16 @@ async function main() {
   let createdCount = 0;
 
   if (writeFileIfNotExists('src/main.ts', generateMainTs(className, name))) createdCount++;
-  if (writeFileIfNotExists('src/settings.ts', generateSettings(className, name))) createdCount++;
+  if (writeFileIfNotExists('src/settings.ts', generateSettings(className))) createdCount++;
   if (writeFileIfNotExists('manifest.json', generateManifest(id, name, version, description, author, authorUrl, minAppVersion))) createdCount++;
   if (writeFileIfNotExists('styles.css', generateStyles(id))) createdCount++;
   if (writeFileIfNotExists('tsconfig.json', generateTsConfig())) createdCount++;
-  if (writeFileIfNotExists('package.json', generatePackageJson(id, name, version, description, author))) createdCount++;
+  if (writeFileIfNotExists('package.json', generatePackageJson(id, version, description, author))) createdCount++;
   if (writeFileIfNotExists('esbuild.config.mjs', generateEsbuildConfig())) createdCount++;
   if (writeFileIfNotExists('version-bump.mjs', generateVersionBump())) createdCount++;
   if (writeFileIfNotExists('versions.json', generateVersionsJson(version, minAppVersion))) createdCount++;
   if (writeFileIfNotExists('.gitignore', generateGitignore())) createdCount++;
+  if (writeFileIfNotExists('LICENSE', generateLicense(author))) createdCount++;
 
   console.log(`\n✨ Done! Created ${createdCount} file(s).\n`);
 
