@@ -208,11 +208,12 @@ function generatePackageJson(id, version, description, author) {
     "license": "MIT",
     "devDependencies": {
       "@types/node": "^16.11.6",
+      "builtin-modules": "^5.0.0",
       "esbuild": "0.25.5",
       "eslint-plugin-obsidianmd": "0.1.9",
       "globals": "14.0.0",
       "tslib": "2.4.0",
-      "typescript": "5.9.3",
+      "typescript": "5.8.2",
       "typescript-eslint": "8.35.1",
       "@eslint/js": "9.30.1",
 		  "jiti": "2.6.1"
@@ -328,6 +329,7 @@ Thumbs.db
 
 # Privacy
 data.json
+.env
 `;
 }
 
