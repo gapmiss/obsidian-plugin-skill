@@ -7,8 +7,9 @@ node_modules/                                                                   
 dist/                                                                                                                                                                                 │ │
 *.log
 
-# CLAUDE settings
+# Agent settings (local)
 .claude/settings.local.json
+.agents/settings.local.json
 
 # macOS                                                                                                                                                                               │ │
 .DS_Store

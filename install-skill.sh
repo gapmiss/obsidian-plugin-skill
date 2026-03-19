@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Obsidian Plugin Development Skill Installer
-# Copies the skill to your project's .claude directory
+# Copies the skill to your project for Claude Code, Codex, and/or Windsurf
 
 set -e  # Exit on error
 
@@ -14,8 +14,8 @@ NC='\033[0m' # No Color
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_SOURCE="$SCRIPT_DIR/.claude/skills/obsidian"
-COMMAND_SOURCE="$SCRIPT_DIR/.claude/commands/obsidian.md"
+SKILL_SOURCE="$SCRIPT_DIR/.agents/skills/obsidian"
+COMMAND_SOURCE_DIR="$SCRIPT_DIR/.claude/commands"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║   Obsidian Plugin Development Skill Installer         ║${NC}"
@@ -28,87 +28,133 @@ if [ ! -d "$SKILL_SOURCE" ]; then
     exit 1
 fi
 
+# Function to copy skill files to a target path
+copy_skill() {
+    local dest="$1"
+    mkdir -p "$dest"
+    cp -r "$SKILL_SOURCE"/* "$dest/"
+    echo -e "${GREEN}✓ Skill files copied to $dest${NC}"
+}
+
+# Function to copy Claude Code commands
+copy_commands() {
+    local dest="$1/.claude/commands"
+    mkdir -p "$dest"
+    if [ -f "$COMMAND_SOURCE_DIR/obsidian.md" ]; then
+        cp "$COMMAND_SOURCE_DIR/obsidian.md" "$dest/obsidian.md"
+    fi
+    if [ -f "$COMMAND_SOURCE_DIR/create-plugin.md" ]; then
+        cp "$COMMAND_SOURCE_DIR/create-plugin.md" "$dest/create-plugin.md"
+    fi
+    echo -e "${GREEN}✓ Slash commands copied to $dest${NC}"
+}
+
 # Function to install skill
 install_skill() {
     local target_dir="$1"
+    local provider="$2"
 
-    # Validate target directory
+    # Create target directory if it doesn't exist
     if [ ! -d "$target_dir" ]; then
-        echo -e "${RED}Error: Directory '$target_dir' does not exist${NC}"
-        return 1
+        mkdir -p "$target_dir"
+        echo -e "${GREEN}✓ Created directory: $target_dir${NC}"
     fi
-
-    # Create .claude directories
-    local skill_target="$target_dir/.claude/skills/obsidian"
-    local command_target="$target_dir/.claude/commands"
 
     echo -e "${BLUE}Installing to: $target_dir${NC}"
     echo ""
 
-    # Create directories
-    mkdir -p "$skill_target"
-    mkdir -p "$command_target"
-
-    # Copy skill files
-    echo -e "${YELLOW}Copying skill files...${NC}"
-    cp -r "$SKILL_SOURCE"/* "$skill_target/"
-
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓ Skill files copied successfully${NC}"
-        echo -e "  Location: $skill_target"
-    else
-        echo -e "${RED}✗ Failed to copy skill files${NC}"
-        return 1
-    fi
-
-    # Copy slash command
-    if [ -f "$COMMAND_SOURCE" ]; then
-        echo -e "${YELLOW}Copying slash command...${NC}"
-        cp "$COMMAND_SOURCE" "$command_target/obsidian.md"
-
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}✓ Slash command copied successfully${NC}"
-            echo -e "  Location: $command_target/obsidian.md"
-        else
-            echo -e "${RED}✗ Failed to copy slash command${NC}"
-            return 1
-        fi
-    fi
+    case $provider in
+        all)
+            echo -e "${YELLOW}Installing for all providers...${NC}"
+            copy_skill "$target_dir/.agents/skills/obsidian"
+            copy_skill "$target_dir/.claude/skills/obsidian"
+            copy_commands "$target_dir"
+            ;;
+        claude)
+            echo -e "${YELLOW}Installing for Claude Code...${NC}"
+            copy_skill "$target_dir/.claude/skills/obsidian"
+            copy_commands "$target_dir"
+            ;;
+        codex)
+            echo -e "${YELLOW}Installing for Codex (OpenAI)...${NC}"
+            copy_skill "$target_dir/.agents/skills/obsidian"
+            ;;
+        windsurf)
+            echo -e "${YELLOW}Installing for Windsurf...${NC}"
+            copy_skill "$target_dir/.agents/skills/obsidian"
+            ;;
+    esac
 
     echo ""
     echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║              Installation Complete! ✓                  ║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${BLUE}The Obsidian plugin skill is now available in:${NC}"
-    echo -e "  $target_dir"
-    echo ""
-    echo -e "${BLUE}Skill structure:${NC}"
-    echo -e "  .claude/skills/obsidian/SKILL.md           (Main overview)"
-    echo -e "  .claude/skills/obsidian/reference/         (Detailed docs)"
-    echo -e "  .claude/commands/obsidian.md               (Slash command)"
-    echo ""
+
     echo -e "${YELLOW}Usage:${NC}"
-    echo -e "  - Just ask Claude to help with Obsidian plugin development"
-    echo -e "  - Or use: ${BLUE}/obsidian${NC} to explicitly load the skill"
+    case $provider in
+        all)
+            echo -e "  Claude Code:  ${BLUE}/obsidian${NC}  or  ${BLUE}/create-plugin${NC}"
+            echo -e "  Codex:        ${BLUE}\$obsidian${NC}"
+            echo -e "  Windsurf:     ${BLUE}@obsidian${NC}"
+            ;;
+        claude)
+            echo -e "  ${BLUE}/obsidian${NC}  or  ${BLUE}/create-plugin${NC}"
+            ;;
+        codex)
+            echo -e "  ${BLUE}\$obsidian${NC}"
+            ;;
+        windsurf)
+            echo -e "  ${BLUE}@obsidian${NC}"
+            ;;
+    esac
     echo ""
 
     return 0
 }
 
-# Main installation flow
-echo -e "${YELLOW}Choose installation option:${NC}"
+# Provider selection
+echo -e "${YELLOW}Which provider(s) are you using?${NC}"
+echo ""
+echo -e "  ${BLUE}1)${NC} All providers (recommended)"
+echo -e "  ${BLUE}2)${NC} Claude Code"
+echo -e "  ${BLUE}3)${NC} Codex (OpenAI)"
+echo -e "  ${BLUE}4)${NC} Windsurf"
+echo -e "  ${BLUE}5)${NC} Cancel"
+echo ""
+read -p "Enter choice [1-5]: " provider_choice
+
+case $provider_choice in
+    1) provider="all" ;;
+    2) provider="claude" ;;
+    3) provider="codex" ;;
+    4) provider="windsurf" ;;
+    5)
+        echo ""
+        echo -e "${YELLOW}Installation cancelled${NC}"
+        exit 0
+        ;;
+    *)
+        echo ""
+        echo -e "${RED}Invalid choice${NC}"
+        exit 1
+        ;;
+esac
+
+# Target directory selection
+echo ""
+echo -e "${YELLOW}Choose installation target:${NC}"
 echo ""
 echo -e "  ${BLUE}1)${NC} Install to current directory"
 echo -e "  ${BLUE}2)${NC} Install to specific directory"
 echo -e "  ${BLUE}3)${NC} Cancel"
 echo ""
-read -p "Enter choice [1-3]: " choice
+read -p "Enter choice [1-3]: " dir_choice
 
-case $choice in
+case $dir_choice in
     1)
         echo ""
-        install_skill "$(pwd)"
+        install_skill "$(pwd)" "$provider"
         ;;
     2)
         echo ""
@@ -123,7 +169,7 @@ case $choice in
         fi
 
         echo ""
-        install_skill "$target_path"
+        install_skill "$target_path" "$provider"
         ;;
     3)
         echo ""

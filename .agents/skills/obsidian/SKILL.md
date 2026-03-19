@@ -3,7 +3,7 @@ name: obsidian
 description: Comprehensive guidelines for Obsidian.md plugin development including all 27 ESLint rules from eslint-plugin-obsidianmd v0.1.9, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.3.0
+  version: 1.4.0
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -16,7 +16,7 @@ Follow these comprehensive guidelines derived from the official Obsidian ESLint 
 
 For new plugin projects, an interactive boilerplate generator is available:
 - **Script**: `tools/create-plugin.js` in the skill repository
-- **Slash command**: `/create-plugin` for guided setup
+- **Command**: Invoke `create-plugin` using your agent's method (`/create-plugin`, `$create-plugin`, or `@create-plugin`)
 - Generates minimal, best-practice boilerplate with no sample code
 - Detects existing projects and only adds missing files
 

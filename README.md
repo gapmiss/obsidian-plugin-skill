@@ -1,10 +1,10 @@
-# Obsidian Plugin Development - Claude Skill
+# Obsidian Plugin Development - Agent Skill
 
-A comprehensive Claude Code skill for developing high-quality Obsidian plugins that follow best practices, pass code review, and adhere to official submission guidelines.
+A comprehensive agent skill for developing high-quality Obsidian plugins that follow best practices, pass code review, and adhere to official submission guidelines.
 
 ## Overview
 
-This skill provides Claude with deep knowledge of Obsidian plugin development standards, including:
+This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
 - All 27 ESLint rules from `eslint-plugin-obsidianmd` v0.1.9
 - Official Plugin Guidelines from Obsidian documentation
@@ -14,18 +14,22 @@ This skill provides Claude with deep knowledge of Obsidian plugin development st
 - Platform compatibility (including iOS considerations)
 - Network request best practices (requestUrl vs fetch)
 
+## Prerequisites
+
+- A coding agent supporting the [Agent Skills standard](https://agentskills.io) (Claude Code, OpenAI Codex, or Windsurf)
+- An Obsidian plugin project (or starting a new one)
+
 ## Installation
 
-This skill is located in `.claude/skills/obsidian/` and works with Claude Code CLI.
+### Quick Install
 
-### Prerequisites
-
-- [Claude Code CLI](https://docs.claude.com/en/docs/claude-code) installed
-- An Obsidian plugin project (or starting a new one)
+```bash
+npx skills add https://github.com/gapmiss/obsidian-plugin-skill --skill obsidian
+```
 
 ### Setup
 
-#### Option 1: Quick Install (Recommended)
+#### Option 1: Installer Script (Recommended)
 
 1. Clone this repository:
    ```bash
@@ -38,41 +42,57 @@ This skill is located in `.claude/skills/obsidian/` and works with Claude Code C
    ./install-skill.sh
    ```
 
-3. Choose installation option:
-   - **Option 1**: Install to current directory
-   - **Option 2**: Specify a custom directory path
+3. Select your provider(s):
+   - **All providers** — installs to both `.agents/skills/` and `.claude/skills/`
+   - **Claude Code** — installs to `.claude/skills/` with slash commands
+   - **Codex (OpenAI)** — installs to `.agents/skills/`
+   - **Windsurf** — installs to `.agents/skills/`
 
-The installer will copy all skill files and the slash command to your project's `.claude` directory.
+4. Choose installation target (current directory or custom path)
 
 #### Option 2: Manual Install
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/gapmiss/obsidian-plugin-skill.git
-   cd obsidian-plugin-skill
-   ```
+<details>
+<summary>Claude Code</summary>
 
-2. Copy the skill to your project:
-   ```bash
-   # Copy to your project's .claude directory
-   mkdir -p your-project/.claude/skills/obsidian
-   cp -r .claude/skills/obsidian/* your-project/.claude/skills/obsidian/
+```bash
+git clone https://github.com/gapmiss/obsidian-plugin-skill.git
+cd obsidian-plugin-skill
 
-   # Also copy the slash command
-   mkdir -p your-project/.claude/commands
-   cp .claude/commands/obsidian.md your-project/.claude/commands/
-   ```
+# Copy skill
+mkdir -p your-project/.claude/skills/obsidian
+cp -r .agents/skills/obsidian/* your-project/.claude/skills/obsidian/
+
+# Copy slash commands
+mkdir -p your-project/.claude/commands
+cp .claude/commands/obsidian.md your-project/.claude/commands/
+cp .claude/commands/create-plugin.md your-project/.claude/commands/
+```
+</details>
+
+<details>
+<summary>Codex (OpenAI) / Windsurf</summary>
+
+```bash
+git clone https://github.com/gapmiss/obsidian-plugin-skill.git
+cd obsidian-plugin-skill
+
+# Copy skill
+mkdir -p your-project/.agents/skills/obsidian
+cp -r .agents/skills/obsidian/* your-project/.agents/skills/obsidian/
+```
+</details>
 
 #### Option 3: Use as Standalone
 
-Just open this directory with Claude Code - no installation needed!
+Just open this directory with your coding agent — no installation needed!
 
 ### Skill Structure
 
 The skill uses **progressive disclosure** for optimal performance:
 
 ```
-.claude/skills/obsidian/
+.agents/skills/obsidian/
 ├── SKILL.md                          # Main overview (263 lines)
 └── reference/                        # Detailed documentation
     ├── memory-management.md          # Lifecycle & cleanup patterns
@@ -98,11 +118,12 @@ node /path/to/obsidian-plugin-skill/tools/create-plugin.js
 ```
 
 **Features:**
-- ✅ Generates clean TypeScript boilerplate with **no sample code**
-- ✅ Creates `src/` directory structure with `main.ts` and `settings.ts`
-- ✅ **Validates plugin metadata in real-time** against Obsidian's submission bot rules
-- ✅ Detects existing projects and only adds missing files
-- ✅ All generated code follows the skill's best practices automatically
+- Generates clean TypeScript boilerplate with **no sample code**
+- Creates `src/` directory structure with `main.ts` and `settings.ts`
+- **Validates plugin metadata in real-time** against Obsidian's submission bot rules
+- Prompts for target directory to avoid overwriting existing files
+- Detects existing projects and only adds missing files
+- All generated code follows the skill's best practices automatically
 
 **What it creates:**
 ```
@@ -117,16 +138,18 @@ your-plugin/
 ├── esbuild.config.mjs   # Build configuration
 ├── version-bump.mjs     # Version management script
 ├── versions.json        # Version tracking
-└── .gitignore          # Git ignore rules
+├── .gitignore          # Git ignore rules
+└── LICENSE             # MIT license
 ```
 
 **Interactive prompts:**
-1. Plugin name (validates: no "Obsidian", can't end with "Plugin")
-2. Plugin ID (validates: no "obsidian", can't end with "plugin", lowercase only)
-3. Description (validates: no "Obsidian"/"This plugin", must end with punctuation)
-4. Author name
-5. GitHub username (optional, auto-generates authorUrl)
-6. Minimum Obsidian version
+1. Target directory (default: current directory)
+2. Plugin name (validates: no "Obsidian", can't end with "Plugin")
+3. Plugin ID (validates: no "obsidian", can't end with "plugin", lowercase only)
+4. Description (validates: no "Obsidian"/"This plugin", must end with punctuation)
+5. Author name
+6. GitHub username (optional, auto-generates authorUrl)
+7. Minimum Obsidian version
 
 **Real-time validation catches common mistakes:**
 ```
@@ -136,45 +159,27 @@ your-plugin/
    • Description must end with punctuation: . ? ! or )
 ```
 
-### Using the Slash Command
-
-For guided plugin creation with Claude's help:
-
-```
-/create-plugin
-```
-
-Claude will guide you through the setup process and help customize the generated code.
-
 ---
 
 ## Usage
 
-### How Skills Work
+### Invoking the Skill
 
-**Skills are automatically invoked by Claude** - you don't need to explicitly call them. When you work on Obsidian plugin development in a directory containing this skill, Claude will automatically load and apply these guidelines based on your requests.
+| Provider | Load skill | Create plugin |
+|----------|-----------|---------------|
+| Claude Code | `/obsidian` | `/create-plugin` |
+| Codex (OpenAI) | `$obsidian` | — |
+| Windsurf | `@obsidian` | — |
 
-Just ask Claude naturally:
+Skills are automatically discovered by your agent when present in the project directory. You can also invoke them explicitly using the commands above.
+
+Just ask your agent naturally:
 
 ```
 Help me implement a new command for my Obsidian plugin
 ```
 
-Claude will automatically use the Obsidian skill guidelines while helping you write code.
-
-### Optional: Manual Invocation
-
-If you want to explicitly load the skill, you can use the slash command:
-
-```
-/obsidian
-```
-
-Or reference the skill directly:
-
-```
-Following the Obsidian plugin guidelines, help me refactor this code...
-```
+Your agent will automatically use the Obsidian skill guidelines while helping you write code.
 
 ### What the Skill Helps With
 
@@ -271,36 +276,36 @@ The main SKILL.md file highlights the most important rules organized by category
 
 ### Detailed Coverage by Topic
 
-**[Memory Management & Lifecycle](/.claude/skills/obsidian/reference/memory-management.md)**
+**[Memory Management & Lifecycle](/.agents/skills/obsidian/reference/memory-management.md)**
 - Using `registerEvent()`, `addCommand()`, `registerDomEvent()`, `registerInterval()`
 - Avoiding view references in plugin
 - Not using plugin as component
 - Proper leaf cleanup
 
-**[Type Safety](/.claude/skills/obsidian/reference/type-safety.md)**
+**[Type Safety](/.agents/skills/obsidian/reference/type-safety.md)**
 - Using `instanceof` instead of type casting
 - Avoiding `any` type
 - Using `const` and `let` over `var`
 
-**[UI/UX Standards](/.claude/skills/obsidian/reference/ui-ux.md)**
+**[UI/UX Standards](/.agents/skills/obsidian/reference/ui-ux.md)**
 - Sentence case enforcement
 - Command naming conventions
 - Settings and configuration best practices
 
-**[File & Vault Operations](/.claude/skills/obsidian/reference/file-operations.md)**
+**[File & Vault Operations](/.agents/skills/obsidian/reference/file-operations.md)**
 - View access patterns
 - Editor vs Vault API
 - Atomic file operations (Vault.process, processFrontMatter)
 - File management and path handling
 
-**[CSS Styling Best Practices](/.claude/skills/obsidian/reference/css-styling.md)**
+**[CSS Styling Best Practices](/.agents/skills/obsidian/reference/css-styling.md)**
 - Avoiding inline styles
 - Using Obsidian CSS variables
 - Scoping plugin styles
 - Theme support (light/dark)
 - Spacing and layout (4px grid)
 
-**[Accessibility (A11y)](/.claude/skills/obsidian/reference/accessibility.md)** - MANDATORY
+**[Accessibility (A11y)](/.agents/skills/obsidian/reference/accessibility.md)** - MANDATORY
 - Keyboard navigation for all interactive elements
 - ARIA labels and roles
 - Tooltips with proper positioning
@@ -309,7 +314,7 @@ The main SKILL.md file highlights the most important rules organized by category
 - Screen reader support
 - Mobile and touch accessibility (44×44px minimum)
 
-**[Code Quality & Best Practices](/.claude/skills/obsidian/reference/code-quality.md)**
+**[Code Quality & Best Practices](/.agents/skills/obsidian/reference/code-quality.md)**
 - Removing sample code
 - Security best practices (XSS prevention)
 - Platform compatibility (iOS, mobile)
@@ -317,7 +322,7 @@ The main SKILL.md file highlights the most important rules organized by category
 - Async/await patterns
 - DOM helpers
 
-**[Plugin Submission Requirements](/.claude/skills/obsidian/reference/submission.md)**
+**[Plugin Submission Requirements](/.agents/skills/obsidian/reference/submission.md)**
 - **Naming and description validation rules** (enforced by Obsidian's release bot)
 - Plugin ID, name, and description requirements
 - Repository structure and manifest synchronization
@@ -469,6 +474,7 @@ npx eslint --fix .
 - Sample Plugin: https://github.com/obsidianmd/obsidian-sample-plugin
 - Plugin Guidelines: https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines
 - Submission Repo: https://github.com/obsidianmd/obsidian-releases
+- Agent Skills Standard: https://agentskills.io
 
 ## Contributing
 
@@ -476,8 +482,8 @@ Found a missing guideline or rule? Please contribute!
 
 1. Fork this repository
 2. Add the guideline to the appropriate file:
-   - Main overview: `.claude/skills/obsidian/SKILL.md`
-   - Detailed coverage: `.claude/skills/obsidian/reference/*.md`
+   - Main overview: `.agents/skills/obsidian/SKILL.md`
+   - Detailed coverage: `.agents/skills/obsidian/reference/*.md`
 3. Update this README if needed
 4. Submit a pull request
 
@@ -487,7 +493,20 @@ When adding new content:
 - Keep SKILL.md under 500 lines (progressive disclosure principle)
 - Add detailed content to appropriate reference files
 - Use consistent formatting and examples
-- Include both ❌ incorrect and ✅ correct examples
+- Include both incorrect and correct examples
+
+## Migration from `.claude/skills/`
+
+If you previously installed this skill to `.claude/skills/obsidian/`, you can migrate:
+
+```bash
+# Move skill files to the new location
+mv .claude/skills/obsidian .agents/skills/obsidian
+
+# Keep .claude/commands/ as-is (Claude Code only)
+```
+
+The `.claude/skills/` path still works for Claude Code, but `.agents/skills/` is the standard location recognized by all providers.
 
 ## License
 
@@ -499,13 +518,13 @@ This skill is based on:
 - The official Obsidian Plugin Guidelines
 - The `eslint-plugin-obsidianmd` package (not yet production-ready)
 - Community best practices from plugin developers
-- Anthropic's best practices for agent skills (progressive disclosure pattern)
+- Agent Skills standard best practices (progressive disclosure pattern)
 
 ---
 
 ## Design Philosophy
 
-This skill follows **Anthropic's best practices for agent skills**:
+This skill follows **Agent Skills standard best practices**:
 
 - **Progressive Disclosure**: Main SKILL.md (263 lines) provides overview; reference files contain details
 - **Context Window Efficiency**: "The context window is a public good" - optimized token usage
@@ -513,7 +532,7 @@ This skill follows **Anthropic's best practices for agent skills**:
 - **Topic-Based Organization**: Each reference file focuses on a specific domain
 - **Consistent Terminology**: Same terms used throughout for clarity
 
-This structure allows Claude to load the essential information quickly while having access to comprehensive details when needed.
+This structure allows your coding agent to load the essential information quickly while having access to comprehensive details when needed.
 
 ---
 

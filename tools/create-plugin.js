@@ -7,6 +7,7 @@
  * following the guidelines from the Obsidian Plugin Development Skill.
  *
  * Features:
+ * - Prompts for target directory before generating files
  * - Detects existing projects and only adds missing files
  * - Generates clean boilerplate with no sample code
  * - Follows all SKILL best practices automatically
@@ -330,6 +331,10 @@ Thumbs.db
 # Privacy
 data.json
 .env
+
+# Agent settings (local)
+.claude/settings.local.json
+.agents/settings.local.json
 `;
 }
 
@@ -425,6 +430,16 @@ async function main() {
   console.log('This tool creates a minimal, best-practice plugin structure.');
   console.log('Existing files will NOT be overwritten.\n');
 
+  // Ask for target directory
+  const targetDir = await prompt('Where should the plugin be created?\n  (leave blank for current directory)\n  Target directory', '');
+
+  if (targetDir) {
+    // Create target directory if it doesn't exist
+    fs.mkdirSync(targetDir, { recursive: true });
+    process.chdir(targetDir);
+    console.log(`\n📁 Working in: ${process.cwd()}\n`);
+  }
+
   // Detect if we're in an existing project
   const hasPackageJson = fileExists('package.json');
   const hasManifest = fileExists('manifest.json');
@@ -487,8 +502,12 @@ async function main() {
   if (writeFileIfNotExists('esbuild.config.mjs', generateEsbuildConfig())) createdCount++;
   if (writeFileIfNotExists('version-bump.mjs', generateVersionBump())) createdCount++;
   if (writeFileIfNotExists('versions.json', generateVersionsJson(version, minAppVersion))) createdCount++;
-  if (writeFileIfNotExists('.gitignore', generateGitignore())) createdCount++;
   if (writeFileIfNotExists('LICENSE', generateLicense(author))) createdCount++;
+
+  // Always write .gitignore (overwrite if exists to ensure plugin-specific rules)
+  fs.writeFileSync('.gitignore', generateGitignore(), 'utf8');
+  console.log('  ✅ Created .gitignore');
+  createdCount++;
 
   console.log(`\n✨ Done! Created ${createdCount} file(s).\n`);
 
