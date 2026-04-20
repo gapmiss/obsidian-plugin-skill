@@ -447,29 +447,39 @@ Use this checklist before submitting your plugin:
 
 ## ESLint Integration
 
-For automatic checking, install the official ESLint plugin:
+For automatic checking, install the official ESLint plugin **and** typescript-eslint:
 
 ```bash
-npm install --save-dev eslint eslint-plugin-obsidianmd
+npm install --save-dev eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
 ```
 
-Create `eslint.config.js`:
+**Important:** The community plugin scanner uses **both** `eslint-plugin-obsidianmd` AND `typescript-eslint` type-checked rules. Most submission failures come from missing the typescript-eslint setup.
+
+See the **[complete ESLint setup guide](/.agents/skills/obsidian/reference/eslint-setup.md)** for:
+- Full `eslint.config.mjs` that matches the community scanner
+- Why `recommendedTypeChecked` is required (not just `recommended`)
+- Common violations and how to fix them
+- Popout window compatibility rules (new in v0.2.3)
+
+Quick config example:
 
 ```javascript
+// eslint.config.mjs
+import tsParser from "@typescript-eslint/parser";
+import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default [
-  // Use recommended for TypeScript source files only.
-  // Use recommendedWithLocalesEn to also lint en*.json / en*.ts locale files.
+  { ignores: ["node_modules/**", "main.js"] },
+  // Type-checked rules — this is what most people miss
+  ...tseslint.configs.recommendedTypeChecked.map(c => ({ ...c, files: ["src/**/*.ts"] })),
+  // Obsidian-specific rules
   ...obsidianmd.configs.recommended,
   {
-    rules: {
-      // Customize rules as needed
-      "obsidianmd/ui/sentence-case": ["warn", {
-        brands: ["Obsidian", "GitHub"],
-        acronyms: ["API", "URL", "HTML"],
-        enforceCamelCaseLower: true,
-      }],
+    files: ["src/**/*.ts"],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: { project: "./tsconfig.json" },
     },
   },
 ];

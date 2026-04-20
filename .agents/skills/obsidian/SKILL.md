@@ -174,6 +174,12 @@ For comprehensive information on specific topics, see the reference files:
 - Testing checklist
 - Additional resources and important notes
 
+### [ESLint Setup Guide](reference/eslint-setup.md)
+- Complete ESLint config for community scanner compliance
+- Why `typescript-eslint` recommendedTypeChecked is required
+- Common violations and fixes (floating promises, require imports, etc.)
+- Popout window compatibility rules (new in v0.2.3)
+
 ---
 
 ## Plugin Submission Validation Workflow
