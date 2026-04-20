@@ -93,7 +93,7 @@ The skill uses **progressive disclosure** for optimal performance:
 
 ```
 .agents/skills/obsidian/
-├── SKILL.md                          # Main overview (263 lines)
+├── SKILL.md                          # Main overview (285 lines)
 └── reference/                        # Detailed documentation
     ├── memory-management.md          # Lifecycle & cleanup patterns
     ├── type-safety.md                # Type narrowing & safety
@@ -102,10 +102,11 @@ The skill uses **progressive disclosure** for optimal performance:
     ├── css-styling.md                # Theming & styling
     ├── accessibility.md              # A11y requirements (MANDATORY)
     ├── code-quality.md               # Best practices & security
-    └── submission.md                 # Publishing guidelines
+    ├── submission.md                 # Publishing guidelines
+    └── eslint-setup.md               # Complete ESLint config guide
 ```
 
-SKILL.md provides a concise overview with the top 20 critical rules, while reference files contain comprehensive details on specific topics.
+SKILL.md provides a concise overview with all 36 rules, while reference files contain comprehensive details on specific topics.
 
 ## Quick Start: Creating a New Plugin
 
