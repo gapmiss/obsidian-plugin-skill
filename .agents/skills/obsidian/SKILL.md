@@ -1,9 +1,9 @@
 ---
 name: obsidian
-description: Comprehensive guidelines for Obsidian.md plugin development including all 27 ESLint rules from eslint-plugin-obsidianmd v0.1.9, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including all 33 ESLint rules from eslint-plugin-obsidianmd v0.2.3, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, popout window compatibility, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.4.0
+  version: 1.5.0
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -24,7 +24,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 
 ---
 
-## Rules Reference (eslint-plugin-obsidianmd v0.1.9)
+## Rules Reference (eslint-plugin-obsidianmd v0.2.3)
 
 ### Submission & Naming
 | # | Rule | ✅ Do | ❌ Don't |
@@ -40,46 +40,63 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 |---|------|--------|----------|
 | 6 | Event cleanup | Use `registerEvent()` for automatic cleanup | Register events without cleanup |
 | 7 | View references | Return views/components directly | Store view references in plugin properties or pass plugin as component to `MarkdownRenderer` |
+| 8 | Leaf detachment | Let Obsidian handle leaf cleanup | Call `detachLeavesOfType()` in `onunload` |
 
 ### Type Safety
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 8 | TFile/TFolder | Use `instanceof` for type checking | Cast to TFile/TFolder; use `any`; use `var` |
+| 9 | TFile/TFolder | Use `instanceof` for type checking | Cast to TFile/TFolder; use `any`; use `var` |
+| 10 | DOM instanceof | Use `.instanceOf(T)` for DOM Nodes/UIEvents | Use `instanceof` for cross-window DOM checks |
 
 ### UI/UX
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 9 | UI text | Sentence case — "Advanced settings" | Title Case — "Advanced Settings" |
-| 10 | JSON locale | Sentence case in JSON locale files (`recommendedWithLocalesEn`) | Title case in locale JSON |
-| 11 | TS/JS locale | Sentence case in TS/JS locale modules | Title case in locale modules |
-| 12 | Command names | Omit "command" in command names/IDs | Include "command" in names/IDs |
-| 13 | Command IDs | Omit plugin ID/name from command IDs/names | Duplicate plugin ID in command IDs |
-| 14 | Hotkeys | No default hotkeys | Set default hotkeys |
-| 15 | Settings headings | Use `.setHeading()` | Create manual HTML headings; use "General", "settings", or plugin name in headings |
+| 11 | UI text | Sentence case — "Advanced settings" | Title Case — "Advanced Settings" |
+| 12 | JSON locale | Sentence case in JSON locale files (`recommendedWithLocalesEn`) | Title case in locale JSON |
+| 13 | TS/JS locale | Sentence case in TS/JS locale modules | Title case in locale modules |
+| 14 | Command names | Omit "command" in command names/IDs | Include "command" in names/IDs |
+| 15 | Command IDs | Omit plugin ID/name from command IDs/names | Duplicate plugin ID in command IDs |
+| 16 | Hotkeys | No default hotkeys | Set default hotkeys |
+| 17 | Settings headings | Use `.setHeading()` | Create manual HTML headings; use "General", "settings", or plugin name in headings |
 
 ### API Best Practices
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 16 | Active file edits | Use Editor API | Use `Vault.modify()` for active file edits |
-| 17 | Background file mods | Use `Vault.process()` | Use `Vault.modify()` for background modifications |
-| 18 | User paths | Use `normalizePath()` | Hardcode `.obsidian` path; use raw user paths |
-| 19 | OS detection | Use `Platform` API | Use `navigator.platform`/`userAgent` |
-| 20 | Network requests | Use `requestUrl()` | Use `fetch()` |
-| 21 | Logging | Minimize console logging; none in `onload`/`onunload` in production | Use `console.log` in `onload`/`onunload` |
+| 18 | Active file edits | Use Editor API | Use `Vault.modify()` for active file edits |
+| 19 | Background file mods | Use `Vault.process()` | Use `Vault.modify()` for background modifications |
+| 20 | File deletion | Use `FileManager.trashFile()` | Use `Vault.trash()` or `Vault.delete()` directly |
+| 21 | File lookup | Use `Vault.getAbstractFileByPath()` | Iterate all files with `Vault.getFiles().find()` |
+| 22 | User paths | Use `normalizePath()` | Hardcode `.obsidian` path; use raw user paths |
+| 23 | OS detection | Use `Platform` API | Use `navigator.platform`/`userAgent` |
+| 24 | Network requests | Use `requestUrl()` | Use `fetch()` |
+| 25 | Logging | Minimize console logging; none in `onload`/`onunload` in production | Use `console.log` in `onload`/`onunload` |
+| 26 | Input suggest | Use built-in `AbstractInputSuggest` | Copy Liam's `TextInputSuggest` implementation |
+| 27 | API compatibility | Check `minAppVersion` for API availability | Use APIs not available in declared minAppVersion |
+
+### Popout Window Compatibility
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 28 | Document/Window | Use `activeDocument` and `activeWindow` | Use global `document` and `window` |
+| 29 | Timers | Use `activeWindow.setTimeout()`, `setInterval()`, etc. | Use bare `setTimeout()`, `setInterval()` |
+
+### Event Handling
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 30 | Editor drop/paste | Check `evt.defaultPrevented` and call `evt.preventDefault()` | Handle editor-drop/paste without checking defaultPrevented |
 
 ### Styling
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 22 | CSS variables | Use Obsidian CSS variables for all styling | Hardcode colors, sizes, or spacing |
-| 23 | CSS scope | Scope CSS to plugin containers | Use broad CSS selectors |
-| 24 | Style elements | Use `styles.css` file (`no-forbidden-elements`) | Create `<link>` or `<style>` elements; assign styles via JavaScript |
+| 31 | CSS variables | Use Obsidian CSS variables for all styling | Hardcode colors, sizes, or spacing |
+| 32 | CSS scope | Scope CSS to plugin containers | Use broad CSS selectors |
+| 33 | Style elements | Use `styles.css` file (`no-forbidden-elements`) | Create `<link>` or `<style>` elements; assign styles via JavaScript |
 
 ### Accessibility (MANDATORY)
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 25 | Keyboard access | Make all interactive elements keyboard accessible; Tab through all elements | Create inaccessible interactive elements |
-| 26 | ARIA labels | Provide ARIA labels for icon buttons; use `data-tooltip-position` for tooltips | Use icon buttons without ARIA labels |
-| 27 | Focus indicators | Use `:focus-visible` with Obsidian CSS variables; touch targets ≥ 44×44px | Remove focus indicators; make touch targets < 44×44px |
+| 34 | Keyboard access | Make all interactive elements keyboard accessible; Tab through all elements | Create inaccessible interactive elements |
+| 35 | ARIA labels | Provide ARIA labels for icon buttons; use `data-tooltip-position` for tooltips | Use icon buttons without ARIA labels |
+| 36 | Focus indicators | Use `:focus-visible` with Obsidian CSS variables; touch targets ≥ 44×44px | Remove focus indicators; make touch targets < 44×44px |
 
 ### Security & Compatibility
 | Rule | ✅ Do | ❌ Don't |

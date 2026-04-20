@@ -6,7 +6,7 @@ A comprehensive agent skill for developing high-quality Obsidian plugins that fo
 
 This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
-- All 27 ESLint rules from `eslint-plugin-obsidianmd` v0.1.9
+- All 33 ESLint rules from `eslint-plugin-obsidianmd` v0.2.3
 - Official Plugin Guidelines from Obsidian documentation
 - Submission requirements for the community plugins directory
 - Memory management and lifecycle best practices
@@ -220,7 +220,7 @@ Your agent will automatically use the Obsidian skill guidelines while helping yo
 
 ## What's Covered
 
-### Most Critical Rules (eslint-plugin-obsidianmd v0.1.9)
+### Most Critical Rules (eslint-plugin-obsidianmd v0.2.3)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
@@ -234,45 +234,58 @@ The main SKILL.md file highlights the most important rules organized by category
 **Memory & Lifecycle:**
 6. Use `registerEvent()` for automatic cleanup
 7. Don't store view references in plugin
+8. Don't call `detachLeavesOfType()` in `onunload`
 
 **Type Safety:**
-8. Use `instanceof` instead of type casting
+9. Use `instanceof` instead of type casting for TFile/TFolder
+10. Use `.instanceOf(T)` for cross-window DOM checks
 
 **UI/UX:**
-9. Use sentence case for all UI text
-10. Sentence case in locale JSON files
-11. Sentence case in TS/JS locale modules
-12. No "command" in command names/IDs
-13. No plugin ID/name in command IDs/names
-14. No default hotkeys
-15. Use `.setHeading()` for settings headings
+11. Use sentence case for all UI text
+12. Sentence case in locale JSON files
+13. Sentence case in TS/JS locale modules
+14. No "command" in command names/IDs
+15. No plugin ID/name in command IDs/names
+16. No default hotkeys
+17. Use `.setHeading()` for settings headings
 
 **API Best Practices:**
-16. Use Editor API for active file edits
-17. Use `Vault.process()` for background file mods
-18. Use `normalizePath()` for user paths
-19. Use `Platform` API for OS detection
-20. Use `requestUrl()` instead of `fetch()`
-21. No console.log in onload/onunload in production
+18. Use Editor API for active file edits
+19. Use `Vault.process()` for background file mods
+20. Use `FileManager.trashFile()` for file deletion
+21. Use `Vault.getAbstractFileByPath()` instead of iterating files
+22. Use `normalizePath()` for user paths
+23. Use `Platform` API for OS detection
+24. Use `requestUrl()` instead of `fetch()`
+25. No console.log in onload/onunload in production
+26. Use built-in `AbstractInputSuggest`
+27. Check `minAppVersion` for API compatibility
+
+**Popout Window Compatibility:**
+28. Use `activeDocument`/`activeWindow` instead of globals
+29. Use `activeWindow.setTimeout()` for timers
+
+**Event Handling:**
+30. Check `evt.defaultPrevented` in editor-drop/paste handlers
 
 **Styling:**
-22. Use Obsidian CSS variables
-23. Scope CSS to plugin containers
-24. Don't create `<link>` or `<style>` elements
+31. Use Obsidian CSS variables
+32. Scope CSS to plugin containers
+33. Don't create `<link>` or `<style>` elements
 
 **Accessibility (MANDATORY):**
-25. Make all interactive elements keyboard accessible
-26. Provide ARIA labels for icon buttons
-27. Define clear focus indicators
+34. Make all interactive elements keyboard accessible
+35. Provide ARIA labels for icon buttons
+36. Define clear focus indicators
 
 **Security & Compatibility:**
-28. Don't use `innerHTML`/`outerHTML`
-29. Avoid regex lookbehind
+- Don't use `innerHTML`/`outerHTML`
+- Avoid regex lookbehind
 
 **Code Quality:**
-30. Remove all sample/template code
-31. Don't mutate defaults with `Object.assign`
-32. Validate LICENSE copyright holder and year
+- Remove all sample/template code
+- Don't mutate defaults with `Object.assign`
+- Validate LICENSE copyright holder and year
 
 ### Detailed Coverage by Topic
 
@@ -536,4 +549,4 @@ This structure allows your coding agent to load the essential information quickl
 
 ---
 
-Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.1.9. The plugin is under active development and rules may evolve.
+Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.2.3. The plugin is under active development and rules may evolve.
