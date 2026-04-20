@@ -52,15 +52,12 @@ function writeFileIfNotExists(filePath, content) {
 // Generate main.ts
 function generateMainTs(pluginClassName, pluginName) {
   return `import { Plugin } from 'obsidian';
-import { SettingsTab, DEFAULT_SETTINGS } from './settings';
+import { PluginSettings, SettingsTab, DEFAULT_SETTINGS } from './settings';
 
 export default class ${pluginClassName}Plugin extends Plugin {
-	settings: typeof DEFAULT_SETTINGS;
+	settings: PluginSettings;
 
-	async onload() {
-		// TODO: Remove console.log after testing
-		console.log('Loading ${pluginName}');
-
+	async onload(): Promise<void> {
 		await this.loadSettings();
 
 		// Add settings tab
@@ -68,24 +65,23 @@ export default class ${pluginClassName}Plugin extends Plugin {
 
 		// Register commands
 		this.addCommand({
-			id: 'example-command',
-			name: 'Example command',
+			id: 'run-example',
+			name: 'Run example',
 			callback: () => {
-				console.log('Example command executed');
+				// TODO: Implement your command
 			}
 		});
 	}
 
-	async onunload() {
-		// TODO: Remove console.log after testing
-		console.log('Unloading ${pluginName}');
+	onunload(): void {
+		// Cleanup handled automatically by Obsidian
 	}
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	async loadSettings(): Promise<void> {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<PluginSettings>);
 	}
 
-	async saveSettings() {
+	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 	}
 }
@@ -122,6 +118,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 export class SettingsTab extends PluginSettingTab {
 	plugin: ${pluginClassName}Plugin;
 
+	// eslint-disable-next-line obsidianmd/prefer-active-doc -- false positive: "constructor" contains "doc"
 	constructor(app: App, plugin: ${pluginClassName}Plugin) {
 		super(app, plugin);
 		this.plugin = plugin;
@@ -184,7 +181,7 @@ function generateTsConfig() {
       ]
     },
     "include": [
-      "**/*.ts"
+      "src/**/*.ts"
     ]
   }, null, 2) + '\n';
 }
@@ -199,6 +196,7 @@ function generatePackageJson(id, version, description, author) {
     "scripts": {
       "dev": "node esbuild.config.mjs",
       "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+      "lint": "eslint src/",
       "version": "node version-bump.mjs && git add manifest.json versions.json"
     },
     "keywords": [
@@ -208,16 +206,19 @@ function generatePackageJson(id, version, description, author) {
     "author": author,
     "license": "MIT",
     "devDependencies": {
+      "@eslint/js": "^9.30.1",
       "@types/node": "^16.11.6",
+      "@typescript-eslint/parser": "^8.35.1",
       "builtin-modules": "^5.0.0",
-      "esbuild": "0.25.5",
-      "eslint-plugin-obsidianmd": "0.1.9",
-      "globals": "14.0.0",
-      "tslib": "2.4.0",
-      "typescript": "5.8.2",
-      "typescript-eslint": "8.35.1",
-      "@eslint/js": "9.30.1",
-		  "jiti": "2.6.1"
+      "esbuild": "^0.25.5",
+      "eslint": "^9.30.1",
+      "eslint-plugin-no-unsanitized": "^4.1.2",
+      "eslint-plugin-obsidianmd": "^0.2.3",
+      "globals": "^14.0.0",
+      "jiti": "^2.6.1",
+      "tslib": "^2.4.0",
+      "typescript": "^5.8.2",
+      "typescript-eslint": "^8.35.1"
     },
     "dependencies": {
       "obsidian": "latest"
@@ -302,6 +303,49 @@ function generateVersionsJson(version, minAppVersion) {
   const versions = {};
   versions[version] = minAppVersion;
   return JSON.stringify(versions, null, '\t') + '\n';
+}
+
+// Generate eslint.config.mjs
+function generateEslintConfig() {
+  return `import tsParser from "@typescript-eslint/parser";
+import tseslint from "typescript-eslint";
+import obsidianmd from "eslint-plugin-obsidianmd";
+
+export default [
+    {
+        ignores: ["node_modules/**", "main.js"],
+    },
+    // TypeScript-ESLint recommended rules WITH type checking
+    // Required for community plugin scanner compliance
+    ...tseslint.configs.recommendedTypeChecked.map(config => ({
+        ...config,
+        files: ["src/**/*.ts"],
+    })),
+    // Obsidian-specific rules (all 33 rules from v0.2.3)
+    ...obsidianmd.configs.recommended,
+    // Project-specific configuration
+    {
+        files: ["src/**/*.ts"],
+        languageOptions: {
+            parser: tsParser,
+            parserOptions: {
+                project: "./tsconfig.json",
+                sourceType: "module",
+            },
+        },
+        rules: {
+            // Console: scanner allows warn, error, debug only
+            "no-console": ["error", { allow: ["warn", "error", "debug"] }],
+
+            // Allow underscore-prefixed unused params (interface compliance)
+            "@typescript-eslint/no-unused-vars": ["error", {
+                argsIgnorePattern: "^_",
+                varsIgnorePattern: "^_",
+            }],
+        },
+    },
+];
+`;
 }
 
 // Generate .gitignore
@@ -500,6 +544,7 @@ async function main() {
   if (writeFileIfNotExists('tsconfig.json', generateTsConfig())) createdCount++;
   if (writeFileIfNotExists('package.json', generatePackageJson(id, version, description, author))) createdCount++;
   if (writeFileIfNotExists('esbuild.config.mjs', generateEsbuildConfig())) createdCount++;
+  if (writeFileIfNotExists('eslint.config.mjs', generateEslintConfig())) createdCount++;
   if (writeFileIfNotExists('version-bump.mjs', generateVersionBump())) createdCount++;
   if (writeFileIfNotExists('versions.json', generateVersionsJson(version, minAppVersion))) createdCount++;
   if (writeFileIfNotExists('LICENSE', generateLicense(author))) createdCount++;
@@ -516,8 +561,9 @@ async function main() {
     console.log('  1. Run: npm install');
     console.log('  2. Run: npm run dev');
     console.log('  3. Enable the plugin in Obsidian settings');
-    console.log('\n💡 Tip: This boilerplate follows all Obsidian plugin best practices.');
-    console.log('   Review the code and customize it for your needs!\n');
+    console.log('  4. Before submitting: npm run lint');
+    console.log('\n💡 Tip: This boilerplate includes ESLint configured for community scanner compliance.');
+    console.log('   Run "npm run lint" to catch issues before submission!\n');
   } else {
     console.log('ℹ️  No new files were created (all files already exist).\n');
   }
