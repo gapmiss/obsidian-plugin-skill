@@ -8,10 +8,12 @@ This guide covers the complete setup so your local `npx eslint .` catches exactl
 
 The scanner uses **two rule sets together**:
 
-1. **`eslint-plugin-obsidianmd`** — 33 Obsidian-specific rules (DOM safety, command naming, platform APIs, popout window compatibility, etc.)
+1. **`eslint-plugin-obsidianmd`** — 34 Obsidian-specific rules (DOM safety, command naming, platform APIs, popout window compatibility, etc.)
 2. **`typescript-eslint` recommended type-checked** — Standard TypeScript rules (`no-floating-promises`, `no-require-imports`, `restrict-template-expressions`, `no-unnecessary-type-assertion`, etc.)
 
-The critical mistake is configuring only the obsidianmd plugin rules. The plugin's `configs.recommended` export contains only the obsidianmd rules. It does **not** include or extend the typescript-eslint rules. You must add both yourself.
+The critical mistake is configuring only the obsidianmd plugin rules without the typescript-eslint type-checked rules. You must add both.
+
+**Note:** As of v0.2.4, `obsidianmd.configs.recommended` has a bug that applies TypeScript-requiring rules globally, breaking on non-TS files like `package.json`. The config below registers rules manually as a workaround.
 
 ## Prerequisites
 
@@ -20,7 +22,7 @@ npm install -D eslint typescript-eslint @typescript-eslint/parser eslint-plugin-
 ```
 
 Versions at time of writing:
-- `eslint-plugin-obsidianmd` 0.2.3
+- `eslint-plugin-obsidianmd` 0.2.4
 - `typescript-eslint` 8.x
 - `eslint` 9.x (flat config)
 
@@ -36,29 +38,62 @@ export default [
     {
         ignores: ["node_modules/**", "main.js"],
     },
-    // TypeScript-ESLint recommended rules WITH type checking.
-    // This is what the community scanner uses and what most people miss.
+    // TypeScript-ESLint recommended rules WITH type checking
     ...tseslint.configs.recommendedTypeChecked.map(config => ({
         ...config,
         files: ["src/**/*.ts"],
     })),
-    // Obsidian-specific rules (all 33 rules from v0.2.3)
-    ...obsidianmd.configs.recommended,
-    // Project-specific overrides
+    // Obsidian plugin rules + project config
     {
         files: ["src/**/*.ts"],
+        plugins: {
+            obsidianmd,
+        },
         languageOptions: {
             parser: tsParser,
             parserOptions: {
                 project: "./tsconfig.json",
                 sourceType: "module",
             },
+            globals: {
+                activeDocument: "readonly",
+                activeWindow: "readonly",
+            },
         },
         rules: {
-            // Console: the scanner allows warn, error, debug — everything else is forbidden
+            // All obsidianmd rules (v0.2.4)
+            "obsidianmd/commands/no-command-in-command-id": "error",
+            "obsidianmd/commands/no-command-in-command-name": "error",
+            "obsidianmd/commands/no-default-hotkeys": "error",
+            "obsidianmd/commands/no-plugin-id-in-command-id": "error",
+            "obsidianmd/commands/no-plugin-name-in-command-name": "error",
+            "obsidianmd/settings-tab/no-manual-html-headings": "error",
+            "obsidianmd/settings-tab/no-problematic-settings-headings": "error",
+            "obsidianmd/vault/iterate": "error",
+            "obsidianmd/detach-leaves": "error",
+            "obsidianmd/editor-drop-paste": "error",
+            "obsidianmd/hardcoded-config-path": "error",
+            "obsidianmd/no-forbidden-elements": "error",
+            "obsidianmd/no-plugin-as-component": "error",
+            "obsidianmd/no-sample-code": "error",
+            "obsidianmd/no-tfile-tfolder-cast": "error",
+            "obsidianmd/no-view-references-in-plugin": "error",
+            "obsidianmd/no-static-styles-assignment": "error",
+            "obsidianmd/object-assign": "error",
+            "obsidianmd/platform": "error",
+            "obsidianmd/prefer-file-manager-trash-file": "warn",
+            "obsidianmd/prefer-instanceof": "error",
+            "obsidianmd/prefer-get-language": "error",
+            "obsidianmd/prefer-abstract-input-suggest": "error",
+            "obsidianmd/prefer-active-window-timers": "error",
+            "obsidianmd/prefer-active-doc": "error",
+            "obsidianmd/regex-lookbehind": "error",
+            "obsidianmd/sample-names": "error",
+            "obsidianmd/no-unsupported-api": "error",
+            "obsidianmd/ui/sentence-case": ["error", { enforceCamelCaseLower: true }],
+            // Console: scanner allows warn, error, debug only
             "no-console": ["error", { allow: ["warn", "error", "debug"] }],
-
-            // Allow underscore-prefixed unused params (common for interface compliance)
+            // Allow underscore-prefixed unused params
             "@typescript-eslint/no-unused-vars": ["error", {
                 argsIgnorePattern: "^_",
                 varsIgnorePattern: "^_",
@@ -313,6 +348,22 @@ activeWindow.setTimeout(() => {}, 100);
 activeWindow.setInterval(() => {}, 1000);
 ```
 
+### Detecting user language incorrectly
+
+**Rule:** `obsidianmd/prefer-get-language` (new in v0.2.4)
+
+Obsidian provides `getLanguage()` to detect the user's language setting. Don't use `localStorage` or third-party i18n detection libraries:
+
+```typescript
+// Bad
+const lang = localStorage.getItem('language');
+import LanguageDetector from 'i18next-browser-languagedetector';
+
+// Good
+import { getLanguage } from 'obsidian';
+const lang = getLanguage();
+```
+
 ## Running the Lint
 
 ```bash
@@ -331,3 +382,4 @@ Type-checked linting is slower than basic linting because it loads the TypeScrip
 6. No unhandled promises (search for `MarkdownRenderer.render`, `clipboard.writeText`, `workspace.revealLeaf` without `void`/`await`)
 7. No bare `document`/`window` usage (use `activeDocument`/`activeWindow`)
 8. No bare `setTimeout`/`setInterval` (use `activeWindow.setTimeout()` etc.)
+9. Use `getLanguage()` instead of `localStorage.getItem('language')` for i18n

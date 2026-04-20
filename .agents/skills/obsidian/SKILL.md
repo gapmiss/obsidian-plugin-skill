@@ -1,6 +1,6 @@
 ---
 name: obsidian
-description: Comprehensive guidelines for Obsidian.md plugin development including all 33 ESLint rules from eslint-plugin-obsidianmd v0.2.3, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, popout window compatibility, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including all 34 ESLint rules from eslint-plugin-obsidianmd v0.2.4, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, popout window compatibility, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
   version: 1.5.0
@@ -24,7 +24,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 
 ---
 
-## Rules Reference (eslint-plugin-obsidianmd v0.2.3)
+## Rules Reference (eslint-plugin-obsidianmd v0.2.4)
 
 ### Submission & Naming
 | # | Rule | ✅ Do | ❌ Don't |
@@ -72,31 +72,32 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 25 | Logging | Minimize console logging; none in `onload`/`onunload` in production | Use `console.log` in `onload`/`onunload` |
 | 26 | Input suggest | Use built-in `AbstractInputSuggest` | Copy Liam's `TextInputSuggest` implementation |
 | 27 | API compatibility | Check `minAppVersion` for API availability | Use APIs not available in declared minAppVersion |
+| 28 | Language detection | Use Obsidian's `getLanguage()` | Use `localStorage.getItem('language')` or `i18next-browser-languagedetector` |
 
 ### Popout Window Compatibility
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 28 | Document/Window | Use `activeDocument` and `activeWindow` | Use global `document` and `window` |
-| 29 | Timers | Use `activeWindow.setTimeout()`, `setInterval()`, etc. | Use bare `setTimeout()`, `setInterval()` |
+| 29 | Document/Window | Use `activeDocument` and `activeWindow` | Use global `document` and `window` |
+| 30 | Timers | Use `activeWindow.setTimeout()`, `setInterval()`, etc. | Use bare `setTimeout()`, `setInterval()` |
 
 ### Event Handling
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 30 | Editor drop/paste | Check `evt.defaultPrevented` and call `evt.preventDefault()` | Handle editor-drop/paste without checking defaultPrevented |
+| 31 | Editor drop/paste | Check `evt.defaultPrevented` and call `evt.preventDefault()` | Handle editor-drop/paste without checking defaultPrevented |
 
 ### Styling
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 31 | CSS variables | Use Obsidian CSS variables for all styling | Hardcode colors, sizes, or spacing |
-| 32 | CSS scope | Scope CSS to plugin containers | Use broad CSS selectors |
-| 33 | Style elements | Use `styles.css` file (`no-forbidden-elements`) | Create `<link>` or `<style>` elements; assign styles via JavaScript |
+| 32 | CSS variables | Use Obsidian CSS variables for all styling | Hardcode colors, sizes, or spacing |
+| 33 | CSS scope | Scope CSS to plugin containers | Use broad CSS selectors |
+| 34 | Style elements | Use `styles.css` file (`no-forbidden-elements`) | Create `<link>` or `<style>` elements; assign styles via JavaScript |
 
 ### Accessibility (MANDATORY)
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 34 | Keyboard access | Make all interactive elements keyboard accessible; Tab through all elements | Create inaccessible interactive elements |
-| 35 | ARIA labels | Provide ARIA labels for icon buttons; use `data-tooltip-position` for tooltips | Use icon buttons without ARIA labels |
-| 36 | Focus indicators | Use `:focus-visible` with Obsidian CSS variables; touch targets ≥ 44×44px | Remove focus indicators; make touch targets < 44×44px |
+| 35 | Keyboard access | Make all interactive elements keyboard accessible; Tab through all elements | Create inaccessible interactive elements |
+| 36 | ARIA labels | Provide ARIA labels for icon buttons; use `data-tooltip-position` for tooltips | Use icon buttons without ARIA labels |
+| 37 | Focus indicators | Use `:focus-visible` with Obsidian CSS variables; touch targets ≥ 44×44px | Remove focus indicators; make touch targets < 44×44px |
 
 ### Security & Compatibility
 | Rule | ✅ Do | ❌ Don't |
