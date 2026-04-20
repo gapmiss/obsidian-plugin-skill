@@ -137,6 +137,7 @@ your-plugin/
 ├── tsconfig.json        # TypeScript configuration
 ├── package.json         # Dependencies
 ├── esbuild.config.mjs   # Build configuration
+├── eslint.config.mjs    # ESLint configuration
 ├── version-bump.mjs     # Version management script
 ├── versions.json        # Version tracking
 ├── .gitignore          # Git ignore rules
