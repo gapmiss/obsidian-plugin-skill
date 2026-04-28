@@ -92,19 +92,19 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 33 | CSS scope | Scope CSS to plugin containers | Use broad CSS selectors |
 | 34 | Style elements | Use `styles.css` file (`no-forbidden-elements`) | Create `<link>` or `<style>` elements; assign styles via JavaScript |
 
-### Accessibility (MANDATORY)
-| # | Rule | ✅ Do | ❌ Don't |
-|---|------|--------|----------|
-| 38 | Keyboard access | Make all interactive elements keyboard accessible; Tab through all elements | Create inaccessible interactive elements |
-| 39 | ARIA labels | Provide ARIA labels for icon buttons; use `data-tooltip-position` for tooltips | Use icon buttons without ARIA labels |
-| 40 | Focus indicators | Use `:focus-visible` with Obsidian CSS variables; touch targets ≥ 44×44px | Remove focus indicators; make touch targets < 44×44px |
-
 ### Security & Compatibility
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
 | 35 | DOM creation | Use Obsidian DOM helpers (`createEl()`, `createDiv()`, `createSpan()`, `createSvg()`, `createFragment()`) via `prefer-create-el` | Use `document.createElement()`, `document.createDocumentFragment()`, etc. |
 | 36 | Node.js modules | Guard Node.js imports with `Platform.isDesktop` check (`no-nodejs-modules`) | Import Node.js modules without platform guard |
 | 37 | iOS compat | Avoid regex lookbehind (iOS < 16.4 incompatibility) | Use regex lookbehind |
+
+### Accessibility (MANDATORY)
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 38 | Keyboard access | Make all interactive elements keyboard accessible; Tab through all elements | Create inaccessible interactive elements |
+| 39 | ARIA labels | Provide ARIA labels for icon buttons; use `data-tooltip-position` for tooltips | Use icon buttons without ARIA labels |
+| 40 | Focus indicators | Use `:focus-visible` with Obsidian CSS variables; touch targets ≥ 44×44px | Remove focus indicators; make touch targets < 44×44px |
 
 ### Code Quality
 | Rule | ✅ Do | ❌ Don't |
