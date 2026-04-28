@@ -6,7 +6,7 @@ A comprehensive agent skill for developing high-quality Obsidian plugins that fo
 
 This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
-- All 33 ESLint rules from `eslint-plugin-obsidianmd` v0.2.3
+- All 36 ESLint rules from `eslint-plugin-obsidianmd` v0.2.8
 - Official Plugin Guidelines from Obsidian documentation
 - Submission requirements for the community plugins directory
 - Memory management and lifecycle best practices
@@ -222,7 +222,7 @@ Your agent will automatically use the Obsidian skill guidelines while helping yo
 
 ## What's Covered
 
-### Most Critical Rules (eslint-plugin-obsidianmd v0.2.3)
+### Most Critical Rules (eslint-plugin-obsidianmd v0.2.8)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
@@ -461,8 +461,6 @@ See the **[complete ESLint setup guide](/.agents/skills/obsidian/reference/eslin
 - Full `eslint.config.mjs` that matches the community scanner
 - Why `recommendedTypeChecked` is required (not just `recommended`)
 - Common violations and how to fix them
-- Popout window compatibility rules (new in v0.2.3)
-
 Quick config example:
 
 ```javascript
@@ -561,4 +559,4 @@ This structure allows your coding agent to load the essential information quickl
 
 ---
 
-Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.2.3. The plugin is under active development and rules may evolve.
+Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.2.8. The plugin is under active development and rules may evolve.

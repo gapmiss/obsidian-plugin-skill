@@ -8,12 +8,10 @@ This guide covers the complete setup so your local `npx eslint .` catches exactl
 
 The scanner uses **two rule sets together**:
 
-1. **`eslint-plugin-obsidianmd`** — 34 Obsidian-specific rules (DOM safety, command naming, platform APIs, popout window compatibility, etc.)
+1. **`eslint-plugin-obsidianmd`** — 36 Obsidian-specific rules (DOM safety, command naming, platform APIs, popout window compatibility, etc.)
 2. **`typescript-eslint` recommended type-checked** — Standard TypeScript rules (`no-floating-promises`, `no-require-imports`, `restrict-template-expressions`, `no-unnecessary-type-assertion`, etc.)
 
 The critical mistake is configuring only the obsidianmd plugin rules without the typescript-eslint type-checked rules. You must add both.
-
-**Note:** As of v0.2.4, `obsidianmd.configs.recommended` has a bug that applies TypeScript-requiring rules globally, breaking on non-TS files like `package.json`. The config below registers rules manually as a workaround.
 
 ## Prerequisites
 
@@ -22,11 +20,45 @@ npm install -D eslint typescript-eslint @typescript-eslint/parser eslint-plugin-
 ```
 
 Versions at time of writing:
-- `eslint-plugin-obsidianmd` 0.2.4
+- `eslint-plugin-obsidianmd` 0.2.8
 - `typescript-eslint` 8.x
-- `eslint` 9.x (flat config)
+- `eslint` 9.x or 10.x (flat config)
 
 ## The Complete ESLint Config
+
+### Simple Config (Recommended)
+
+As of v0.2.5, `configs.recommended` properly scopes TypeScript rules to `.ts` files:
+
+```js
+// eslint.config.mjs
+import tsParser from "@typescript-eslint/parser";
+import tseslint from "typescript-eslint";
+import obsidianmd from "eslint-plugin-obsidianmd";
+
+export default [
+    { ignores: ["node_modules/**", "main.js", "*.mjs", "package.json", "package-lock.json", "versions.json", "tsconfig.json"] },
+    ...tseslint.configs.recommendedTypeChecked.map(config => ({
+        ...config,
+        files: ["src/**/*.ts"],
+    })),
+    ...obsidianmd.configs.recommended,
+    {
+        files: ["src/**/*.ts"],
+        languageOptions: {
+            parser: tsParser,
+            parserOptions: {
+                project: "./tsconfig.json",
+                sourceType: "module",
+            },
+        },
+    },
+];
+```
+
+### Explicit Config (Full Control)
+
+If you need to customize rule severity or add overrides:
 
 ```js
 // eslint.config.mjs
@@ -36,7 +68,7 @@ import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default [
     {
-        ignores: ["node_modules/**", "main.js"],
+        ignores: ["node_modules/**", "main.js", "*.mjs", "package.json", "package-lock.json", "versions.json", "tsconfig.json"],
     },
     // TypeScript-ESLint recommended rules WITH type checking
     ...tseslint.configs.recommendedTypeChecked.map(config => ({
@@ -61,7 +93,7 @@ export default [
             },
         },
         rules: {
-            // All obsidianmd rules (v0.2.4)
+            // All obsidianmd rules (v0.2.8)
             "obsidianmd/commands/no-command-in-command-id": "error",
             "obsidianmd/commands/no-command-in-command-name": "error",
             "obsidianmd/commands/no-default-hotkeys": "error",
@@ -74,6 +106,7 @@ export default [
             "obsidianmd/editor-drop-paste": "error",
             "obsidianmd/hardcoded-config-path": "error",
             "obsidianmd/no-forbidden-elements": "error",
+            "obsidianmd/no-nodejs-modules": "error",
             "obsidianmd/no-plugin-as-component": "error",
             "obsidianmd/no-sample-code": "error",
             "obsidianmd/no-tfile-tfolder-cast": "error",
@@ -81,6 +114,7 @@ export default [
             "obsidianmd/no-static-styles-assignment": "error",
             "obsidianmd/object-assign": "error",
             "obsidianmd/platform": "error",
+            "obsidianmd/prefer-create-el": "error",
             "obsidianmd/prefer-file-manager-trash-file": "warn",
             "obsidianmd/prefer-instanceof": "error",
             "obsidianmd/prefer-get-language": "error",
@@ -320,7 +354,7 @@ Only `console.warn`, `console.error`, and `console.debug` are allowed. Use `cons
 
 ### Using `document` or `window` directly
 
-**Rule:** `obsidianmd/prefer-active-doc` (new in v0.2.3)
+**Rule:** `obsidianmd/prefer-active-doc`
 
 For popout window compatibility, use `activeDocument` and `activeWindow`:
 
@@ -336,7 +370,7 @@ activeWindow.setTimeout(() => {}, 100);
 
 ### Using bare `setTimeout`/`setInterval`
 
-**Rule:** `obsidianmd/prefer-active-window-timers` (new in v0.2.3)
+**Rule:** `obsidianmd/prefer-active-window-timers`
 
 ```typescript
 // Bad
@@ -350,7 +384,7 @@ activeWindow.setInterval(() => {}, 1000);
 
 ### Detecting user language incorrectly
 
-**Rule:** `obsidianmd/prefer-get-language` (new in v0.2.4)
+**Rule:** `obsidianmd/prefer-get-language`
 
 Obsidian provides `getLanguage()` to detect the user's language setting. Don't use `localStorage` or third-party i18n detection libraries:
 
@@ -362,6 +396,43 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // Good
 import { getLanguage } from 'obsidian';
 const lang = getLanguage();
+```
+
+### Using native DOM methods instead of Obsidian helpers
+
+**Rule:** `obsidianmd/prefer-create-el` (new in v0.2.5)
+
+Obsidian provides DOM helper methods that are cleaner and more consistent:
+
+```typescript
+// Bad
+const div = document.createElement('div');
+const frag = document.createDocumentFragment();
+
+// Good
+const div = createDiv();
+const div2 = containerEl.createDiv({ cls: 'my-class' });
+const frag = createFragment();
+```
+
+### Using Node.js modules without platform guard
+
+**Rule:** `obsidianmd/no-nodejs-modules` (updated in v0.2.6)
+
+Node.js built-in modules (`fs`, `path`, `os`, etc.) are only available on desktop. Guard imports with `Platform.isDesktop`:
+
+```typescript
+// Bad - breaks on mobile
+import * as fs from 'fs';
+fs.readFileSync(path);
+
+// Good - guarded for desktop only
+import { Platform } from 'obsidian';
+
+if (Platform.isDesktop) {
+    const fs = await import('fs');
+    fs.readFileSync(path);
+}
 ```
 
 ## Running the Lint

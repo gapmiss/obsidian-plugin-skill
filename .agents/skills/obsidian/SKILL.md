@@ -1,9 +1,9 @@
 ---
 name: obsidian
-description: Comprehensive guidelines for Obsidian.md plugin development including all 34 ESLint rules from eslint-plugin-obsidianmd v0.2.4, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, popout window compatibility, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including all 36 ESLint rules from eslint-plugin-obsidianmd v0.2.8, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, popout window compatibility, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.5.0
+  version: 1.6.0
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -24,7 +24,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 
 ---
 
-## Rules Reference (eslint-plugin-obsidianmd v0.2.4)
+## Rules Reference (eslint-plugin-obsidianmd v0.2.8)
 
 ### Submission & Naming
 | # | Rule | ✅ Do | ❌ Don't |
@@ -95,15 +95,16 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 ### Accessibility (MANDATORY)
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 35 | Keyboard access | Make all interactive elements keyboard accessible; Tab through all elements | Create inaccessible interactive elements |
-| 36 | ARIA labels | Provide ARIA labels for icon buttons; use `data-tooltip-position` for tooltips | Use icon buttons without ARIA labels |
-| 37 | Focus indicators | Use `:focus-visible` with Obsidian CSS variables; touch targets ≥ 44×44px | Remove focus indicators; make touch targets < 44×44px |
+| 38 | Keyboard access | Make all interactive elements keyboard accessible; Tab through all elements | Create inaccessible interactive elements |
+| 39 | ARIA labels | Provide ARIA labels for icon buttons; use `data-tooltip-position` for tooltips | Use icon buttons without ARIA labels |
+| 40 | Focus indicators | Use `:focus-visible` with Obsidian CSS variables; touch targets ≥ 44×44px | Remove focus indicators; make touch targets < 44×44px |
 
 ### Security & Compatibility
-| Rule | ✅ Do | ❌ Don't |
-|------|--------|----------|
-| DOM safety | Use Obsidian DOM helpers (`createDiv()`, `createSpan()`, `createEl()`) | Use `innerHTML`/`outerHTML` or `document.createElement` |
-| iOS compat | Avoid regex lookbehind (iOS < 16.4 incompatibility) | Use regex lookbehind |
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| 35 | DOM creation | Use Obsidian DOM helpers (`createEl()`, `createDiv()`, `createSpan()`, `createSvg()`, `createFragment()`) via `prefer-create-el` | Use `document.createElement()`, `document.createDocumentFragment()`, etc. |
+| 36 | Node.js modules | Guard Node.js imports with `Platform.isDesktop` check (`no-nodejs-modules`) | Import Node.js modules without platform guard |
+| 37 | iOS compat | Avoid regex lookbehind (iOS < 16.4 incompatibility) | Use regex lookbehind |
 
 ### Code Quality
 | Rule | ✅ Do | ❌ Don't |
@@ -179,7 +180,7 @@ For comprehensive information on specific topics, see the reference files:
 - Complete ESLint config for community scanner compliance
 - Why `typescript-eslint` recommendedTypeChecked is required
 - Common violations and fixes (floating promises, require imports, etc.)
-- Popout window compatibility rules (new in v0.2.3)
+- Popout window compatibility rules
 
 ---
 
