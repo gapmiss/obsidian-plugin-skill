@@ -541,7 +541,7 @@ MIT License - See LICENSE file for details
 
 This skill is based on:
 - The official Obsidian Plugin Guidelines
-- The `eslint-plugin-obsidianmd` package (not yet production-ready)
+- The `eslint-plugin-obsidianmd` package
 - Community best practices from plugin developers
 - Agent Skills standard best practices (progressive disclosure pattern)
 
