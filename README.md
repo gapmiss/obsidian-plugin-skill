@@ -6,9 +6,9 @@ A comprehensive agent skill for developing high-quality Obsidian plugins that fo
 
 This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
-- All 36 ESLint rules from `eslint-plugin-obsidianmd` v0.2.8
+- ESLint rules from `eslint-plugin-obsidianmd` v0.3.0
 - Official Plugin Guidelines from Obsidian documentation
-- Submission requirements for the community plugins directory
+- Submission via community.obsidian.md and Scorecard optimization
 - Memory management and lifecycle best practices
 - Security guidelines and XSS prevention
 - Platform compatibility (including iOS considerations)
@@ -106,7 +106,7 @@ The skill uses **progressive disclosure** for optimal performance:
     └── eslint-setup.md               # Complete ESLint config guide
 ```
 
-SKILL.md provides a concise overview with all 36 rules, while reference files contain comprehensive details on specific topics.
+SKILL.md provides a concise overview with ESLint rules and Scorecard guidance, while reference files contain comprehensive details on specific topics.
 
 ## Quick Start: Creating a New Plugin
 
@@ -222,7 +222,7 @@ Your agent will automatically use the Obsidian skill guidelines while helping yo
 
 ## What's Covered
 
-### Most Critical Rules (eslint-plugin-obsidianmd v0.2.8)
+### Most Critical Rules (eslint-plugin-obsidianmd v0.3.0)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
@@ -243,7 +243,7 @@ The main SKILL.md file highlights the most important rules organized by category
 10. Use `.instanceOf(T)` for cross-window DOM checks
 
 **UI/UX:**
-11. Use sentence case for all UI text
+11. Use sentence case for all UI text (rule disabled by default in v0.3.0)
 12. Sentence case in locale JSON files
 13. Sentence case in TS/JS locale modules
 14. No "command" in command names/IDs
@@ -264,7 +264,7 @@ The main SKILL.md file highlights the most important rules organized by category
 27. Check `minAppVersion` for API compatibility
 
 **Popout Window Compatibility:**
-28. Use `activeDocument`/`activeWindow` instead of globals
+28. Use `activeDocument`/`activeWindow` instead of globals (rule disabled by default in v0.3.0)
 29. Use `activeWindow.setTimeout()` for timers
 
 **Event Handling:**
@@ -338,10 +338,11 @@ The main SKILL.md file highlights the most important rules organized by category
 - DOM helpers
 
 **[Plugin Submission Requirements](/.agents/skills/obsidian/reference/submission.md)**
-- **Naming and description validation rules** (enforced by Obsidian's release bot)
+- **Naming and description validation rules** (enforced by automated review)
 - Plugin ID, name, and description requirements
 - Repository structure and manifest synchronization
-- Submission process to obsidianmd/obsidian-releases
+- Submission via **community.obsidian.md** portal
+- **Scorecard system** (Health, Review, Disclosures)
 - Semantic versioning
 - Testing checklist
 
@@ -493,10 +494,11 @@ npx eslint --fix .
 ## Resources
 
 - Obsidian API Docs: https://docs.obsidian.md
+- **Community Portal**: https://community.obsidian.md
 - ESLint Plugin: https://github.com/obsidianmd/eslint-plugin
 - Sample Plugin: https://github.com/obsidianmd/obsidian-sample-plugin
 - Plugin Guidelines: https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines
-- Submission Repo: https://github.com/obsidianmd/obsidian-releases
+- Submission Guide: https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin
 - Agent Skills Standard: https://agentskills.io
 
 ## Contributing
@@ -559,4 +561,4 @@ This structure allows your coding agent to load the essential information quickl
 
 ---
 
-Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.2.8. The plugin is under active development and rules may evolve.
+Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.3.0 and the community.obsidian.md Scorecard system. The plugin and portal are under active development and may evolve.

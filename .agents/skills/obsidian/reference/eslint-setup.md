@@ -20,9 +20,16 @@ npm install -D eslint typescript-eslint @typescript-eslint/parser eslint-plugin-
 ```
 
 Versions at time of writing:
-- `eslint-plugin-obsidianmd` 0.2.8
+- `eslint-plugin-obsidianmd` 0.3.0
 - `typescript-eslint` 8.x
 - `eslint` 9.x or 10.x (flat config)
+
+**v0.3.0 changes:**
+- `ui/sentence-case` rule disabled by default (not working as intended)
+- `prefer-active-doc` rule disabled by default
+- Cursor added as recognized brand
+- Fixed `.obsidian` in URLs detection
+- Fixed `createDocumentFragment` on `activeDocument` should use `activeWindow`
 
 ## The Complete ESLint Config
 
@@ -93,7 +100,7 @@ export default [
             },
         },
         rules: {
-            // All obsidianmd rules (v0.2.8)
+            // All obsidianmd rules (v0.3.0)
             "obsidianmd/commands/no-command-in-command-id": "error",
             "obsidianmd/commands/no-command-in-command-name": "error",
             "obsidianmd/commands/no-default-hotkeys": "error",
@@ -120,11 +127,13 @@ export default [
             "obsidianmd/prefer-get-language": "error",
             "obsidianmd/prefer-abstract-input-suggest": "error",
             "obsidianmd/prefer-active-window-timers": "error",
+            // prefer-active-doc is OFF by default in v0.3.0; enable for popout window support
             "obsidianmd/prefer-active-doc": "error",
             "obsidianmd/regex-lookbehind": "error",
             "obsidianmd/sample-names": "error",
             "obsidianmd/no-unsupported-api": "error",
-            "obsidianmd/ui/sentence-case": ["error", { enforceCamelCaseLower: true }],
+            // sentence-case is OFF by default in v0.3.0 (not working as intended)
+            // "obsidianmd/ui/sentence-case": ["error", { enforceCamelCaseLower: true }],
             // Console: scanner allows warn, error, debug only
             "no-console": ["error", { allow: ["warn", "error", "debug"] }],
             // Allow underscore-prefixed unused params

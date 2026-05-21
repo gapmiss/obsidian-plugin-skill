@@ -82,26 +82,26 @@ The Obsidian release validation bot (`validate-plugin-entry.yml`) enforces these
 
 ### 1. Create GitHub Release
 
-- Tag must match version in `manifest.json`
-- Include: `manifest.json`, `main.js`, `styles.css`
+- Tag must match version in `manifest.json` (e.g., `1.0.0`)
+- Attach binary assets: `main.js`, `manifest.json`, `styles.css` (optional)
+- Consider adding GitHub artifact attestation for better Scorecard
 
-### 2. Submit to community-plugins.json
+### 2. Submit via community.obsidian.md
 
-Fork `obsidianmd/obsidian-releases` and add entry:
+1. Sign in at **community.obsidian.md**
+2. Link your GitHub account to your Obsidian profile
+3. Navigate to **Plugins → New plugin**
+4. Enter your repository URL
+5. Review Developer policies and confirm support commitment
+6. Submit for review
 
-```json
-{
-  "id": "your-plugin-id",
-  "name": "Your Plugin Name",
-  "author": "Your Name",
-  "description": "Short description.",
-  "repo": "username/repo-name"
-}
-```
+### 3. Address Feedback
 
-Create pull request.
+- Automated review provides guidance on required corrections
+- Update your repository and publish a new release with incremented version
+- The directory processes `manifest.json` from your repository's default branch
 
-### 3. Follow Developer Policies
+### 4. Follow Developer Policies
 
 - Comply with Obsidian's terms of service
 - No malicious code
@@ -124,7 +124,80 @@ Follow semantic versioning:
 - Test on mobile (if not desktop-only)
 - Test with keyboard navigation
 - Test in both light and dark themes
-- Verify all ESLint rules pass
+- Verify all ESLint rules pass (errors AND warnings)
 - Remove all sample/template code
 - Ensure manifest.json is valid
 - Include LICENSE file
+
+---
+
+## Scorecard System
+
+Published plugins receive a **Scorecard** on community.obsidian.md that users see when browsing. A poor Scorecard can deter users from installing your plugin.
+
+### Overall Score (percentage)
+
+Composite of Health and Review metrics. Examples: 96% (excellent), 65% (needs work).
+
+### Health (Excellent / Good / Poor)
+
+| Metric | What it measures | Tips |
+|--------|------------------|------|
+| Hygiene | readme, license, description, contributing guide | Add CONTRIBUTING.md |
+| Maintenance | Commit frequency, release recency | Release regularly |
+| Responsiveness | Issue close rate | Triage issues promptly |
+| Adoption | Installations, stars | Promote your plugin |
+
+### Review (Satisfactory / Caution)
+
+Automated scans of your latest release. **ESLint violations become publicly visible here.**
+
+**Passed Checks:**
+- No known vulnerable dependencies
+- No network requests detected (or properly disclosed)
+- Build verified against source
+- `main.js` and `styles.css` have verified GitHub artifact attestation
+
+**Risks:**
+- Unsafe API calls (e.g., `range.createContextualFragment`)
+
+**Warnings (can be 100+):**
+- Unnecessary type assertions
+- Unexpected `any` types
+- Direct style manipulation via `setAttribute` or `element.style`
+- Missing `activeDocument`/`activeWindow` usage
+- Floating promises (must be awaited or voided)
+- Unused variables (prefix with `_` if intentional)
+- Deprecated packages (e.g., `builtin-modules`, `indent-str`)
+- `setInterval` combined with network calls (periodic data transmission concern)
+- Plugin description missing punctuation
+
+### Disclosures (informational, not penalized)
+
+These are shown to users but don't affect your score:
+
+| Disclosure | Trigger |
+|------------|---------|
+| Clipboard Access | `navigator.clipboard` usage |
+| base64 calls | `atob()` / `btoa()` usage |
+| Vault Read | `vault.read`, `vault.cachedRead` |
+| Vault Write | `vault.modify`, `vault.create` |
+| Vault Enumeration | `vault.getFiles()`, `getMarkdownFiles()` |
+| Network Requests | `fetch()`, `XMLHttpRequest` count |
+| Dynamic Code Execution | `eval()`, `new Function()` |
+| System Identity | hostname, user info, env vars |
+| ES5 Transpilation | `__esModule`, `__generator` helpers in bundle |
+
+### Other Flags
+
+- Missing GitHub artifact attestation on release assets
+- Build verification not available
+
+### Improving Your Scorecard
+
+1. **Fix ALL ESLint warnings**, not just errors — warnings are publicly visible
+2. **Use `typescript-eslint/recommendedTypeChecked`** for type-aware checks
+3. **Add GitHub artifact attestation** to your release workflow
+4. **Maintain regular commits and releases** for good Health metrics
+5. **Respond to issues promptly** to improve Responsiveness
+6. **Add a CONTRIBUTING.md** file for perfect Hygiene

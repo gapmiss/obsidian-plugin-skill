@@ -212,7 +212,7 @@ function generatePackageJson(id, version, description, author) {
       "esbuild": "^0.25.5",
       "eslint": "^9.30.1",
       "eslint-plugin-no-unsanitized": "^4.1.2",
-      "eslint-plugin-obsidianmd": "^0.2.8",
+      "eslint-plugin-obsidianmd": "^0.3.0",
       "globals": "^14.0.0",
       "jiti": "^2.6.1",
       "tslib": "^2.4.0",
@@ -317,7 +317,7 @@ export default [
         ...config,
         files: ["src/**/*.ts"],
     })),
-    // Obsidian plugin rules (v0.2.8+)
+    // Obsidian plugin rules (v0.3.0+)
     ...obsidianmd.configs.recommended,
     // Project-specific config
     {

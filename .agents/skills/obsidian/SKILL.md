@@ -1,9 +1,9 @@
 ---
 name: obsidian
-description: Comprehensive guidelines for Obsidian.md plugin development including all 36 ESLint rules from eslint-plugin-obsidianmd v0.2.8, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, locale file sentence-case enforcement, popout window compatibility, and submission requirements. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.3.0, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.6.0
+  version: 1.7.0
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -24,7 +24,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 
 ---
 
-## Rules Reference (eslint-plugin-obsidianmd v0.2.8)
+## Rules Reference (eslint-plugin-obsidianmd v0.3.0)
 
 ### Submission & Naming
 | # | Rule | ✅ Do | ❌ Don't |
@@ -54,6 +54,8 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 11 | UI text | Sentence case — "Advanced settings" | Title Case — "Advanced Settings" |
 | 12 | JSON locale | Sentence case in JSON locale files (`recommendedWithLocalesEn`) | Title case in locale JSON |
 | 13 | TS/JS locale | Sentence case in TS/JS locale modules | Title case in locale modules |
+
+> **Note (v0.3.0):** The `ui/sentence-case` rule is disabled by default (not working as intended). Consider enabling manually if needed.
 | 14 | Command names | Omit "command" in command names/IDs | Include "command" in names/IDs |
 | 15 | Command IDs | Omit plugin ID/name from command IDs/names | Duplicate plugin ID in command IDs |
 | 16 | Hotkeys | No default hotkeys | Set default hotkeys |
@@ -79,6 +81,8 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 |---|------|--------|----------|
 | 29 | Document/Window | Use `activeDocument` and `activeWindow` | Use global `document` and `window` |
 | 30 | Timers | Use `activeWindow.setTimeout()`, `setInterval()`, etc. | Use bare `setTimeout()`, `setInterval()` |
+
+> **Note (v0.3.0):** The `prefer-active-doc` rule is disabled by default. Enable manually for popout window support.
 
 ### Event Handling
 | # | Rule | ✅ Do | ❌ Don't |
@@ -188,14 +192,63 @@ For comprehensive information on specific topics, see the reference files:
 
 Before submitting a plugin, follow this sequence:
 
-1. **Run ESLint** — `npx eslint .` using `eslint-plugin-obsidianmd`; fix all errors (warnings are informational)
+1. **Run ESLint** — `npx eslint .` using `eslint-plugin-obsidianmd`; fix all errors AND warnings (warnings affect your Scorecard)
 2. **Validate manifest** — Confirm `id`, `name`, `description`, `version`, and `minAppVersion` meet naming and formatting rules (rules 1–5)
 3. **Check LICENSE** — Copyright holder must not be "Dynalist Inc." and the year must be current
 4. **Test on mobile** — Verify no regex lookbehind, no `fetch()`, and touch targets ≥ 44×44px (skip only if plugin is declared desktop-only)
 5. **Keyboard accessibility audit** — Tab through all interactive elements; confirm focus indicators and ARIA labels are present
-6. **Submit** — Open a PR to the community plugins repository with the updated `manifest.json` and `community-plugins.json` entry
+6. **Create GitHub Release** — Tag must match `manifest.json` version; attach `main.js`, `manifest.json`, and `styles.css` (optional)
+7. **Submit via community.obsidian.md** — Sign in, link GitHub account, navigate to Plugins → New plugin, enter repository URL, review Developer policies, and submit
 
 If ESLint reports new errors after fixing, re-run from step 1.
+
+---
+
+## Scorecard System
+
+Published plugins receive a **Scorecard** visible on community.obsidian.md. The Scorecard affects user trust and discoverability.
+
+### Overall Score (percentage)
+Composite of Health and Review metrics. Aim for 90%+.
+
+### Health (Excellent / Good / Poor)
+| Metric | What it measures |
+|--------|------------------|
+| Hygiene | readme, license, description, contributing guide |
+| Maintenance | Commit frequency, release recency |
+| Responsiveness | Issue close rate |
+| Adoption | Installations, stars |
+
+### Review (Satisfactory / Caution)
+Automated scans of your latest release. **This is where ESLint violations become public.**
+
+| Check | Impact |
+|-------|--------|
+| Passed | No vulnerable dependencies, build verified, GitHub artifact attestation |
+| Risks | Unsafe API calls (e.g., `createContextualFragment`) |
+| Warnings | ESLint-style issues — can be 100+ if not addressed |
+
+**Common warnings that tank your score:**
+- Unnecessary type assertions
+- Unexpected `any` types
+- Direct style manipulation (use CSS classes)
+- Missing `activeDocument`/`activeWindow`
+- Floating promises
+- Unused variables
+- Deprecated packages
+
+### Disclosures (informational, not penalized)
+- Clipboard access, Vault Read/Write, Vault Enumeration
+- Network requests (fetch, XMLHttpRequest count)
+- Dynamic Code Execution (eval, new Function)
+- System identity info access
+
+### Improving Your Score
+1. Fix ALL ESLint warnings, not just errors
+2. Use `typescript-eslint/recommendedTypeChecked` for type-aware checks
+3. Add GitHub artifact attestation to releases
+4. Maintain regular commits and releases
+5. Respond to issues promptly
 
 ---
 
