@@ -15,14 +15,84 @@ The critical mistake is configuring only the obsidianmd plugin rules without the
 
 ## Prerequisites
 
+### For New Projects
+
 ```bash
 npm install -D eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
 ```
+
+### Migrating Existing Projects (IMPORTANT)
+
+If your project has old ESLint packages (common in plugins created before 2024), you must clean up before installing.
+
+#### Quick Migration (One Command)
+
+If you have TypeScript 4.x, this single command upgrades everything at once:
+
+```bash
+npm uninstall @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint && \
+npm install -D typescript@latest eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
+```
+
+Then remove old config files:
+```bash
+rm -f .eslintrc .eslintrc.js .eslintrc.json .eslintrc.yml .eslintrc.yaml
+```
+
+#### Step-by-Step Migration
+
+If the quick command fails or you prefer more control:
+
+**1. Check your current setup:**
+```bash
+grep -E "@typescript-eslint|eslint|typescript" package.json
+```
+
+**2. Remove ALL old eslint packages first:**
+```bash
+npm uninstall @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint
+
+# Or with pnpm:
+pnpm remove @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint
+```
+
+**3. Install everything together (including TypeScript upgrade):**
+
+`typescript-eslint` v8.x requires **TypeScript >=4.8.4**. Include TypeScript in the install to avoid ERESOLVE errors:
+
+```bash
+npm install -D typescript@latest eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
+```
+
+> **Why include TypeScript?** If your project has TypeScript 4.7.x or older, npm will refuse to install `typescript-eslint` with `ERESOLVE unable to resolve dependency tree`. Installing TypeScript in the same command resolves this.
+
+**4. Remove old config files:**
+```bash
+rm -f .eslintrc .eslintrc.js .eslintrc.json .eslintrc.yml .eslintrc.yaml
+```
+
+**5. Verify old packages are gone:**
+```bash
+grep "@typescript-eslint/eslint-plugin" package.json
+# Should return nothing. If it still shows, run:
+npm uninstall @typescript-eslint/eslint-plugin
+```
+
+#### Why Migration Fails
+
+The old `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` (v5-7) conflict with the new unified `typescript-eslint` package (v8+). Common errors:
+- `ERESOLVE unable to resolve dependency tree` — TypeScript too old, or old packages still installed
+- `TypeError: scopeManager.addGlobals is not a function` — version conflict between old and new packages
+- `Parsing error: Unexpected character 'e' found` — parser not loading due to version mismatch
+- `peer eslint@"^6.0.0 || ^7.0.0 || ^8.0.0"` warnings — old @typescript-eslint packages don't support ESLint 9+
+
+### Version Requirements
 
 Versions at time of writing:
 - `eslint-plugin-obsidianmd` 0.3.0
 - `typescript-eslint` 8.x
 - `eslint` 9.x or 10.x (flat config)
+- `typescript` 5.x+ (required for typescript-eslint 8.x)
 
 **v0.3.0 changes:**
 - `ui/sentence-case` rule disabled by default (not working as intended)
@@ -463,3 +533,93 @@ Type-checked linting is slower than basic linting because it loads the TypeScrip
 7. No bare `document`/`window` usage (use `activeDocument`/`activeWindow`)
 8. No bare `setTimeout`/`setInterval` (use `activeWindow.setTimeout()` etc.)
 9. Use `getLanguage()` instead of `localStorage.getItem('language')` for i18n
+
+## Troubleshooting
+
+### `ERESOLVE unable to resolve dependency tree`
+
+**Cause:** npm refuses to install because of peer dependency conflicts. Usually means:
+1. TypeScript version is too old (need >=4.8.4 for typescript-eslint 8.x)
+2. Old @typescript-eslint packages are still in package.json
+
+**Fix:** Uninstall old packages and upgrade TypeScript in one command:
+```bash
+npm uninstall @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint && \
+npm install -D typescript@latest eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
+```
+
+### `TypeError: scopeManager.addGlobals is not a function`
+
+**Cause:** Version conflict between old `@typescript-eslint/*` packages (v5-7) and new `typescript-eslint` (v8+).
+
+**Fix:** Remove the old packages completely:
+```bash
+npm uninstall @typescript-eslint/eslint-plugin @typescript-eslint/parser
+npm install -D typescript-eslint @typescript-eslint/parser
+```
+
+### `Parsing error: Unexpected character 'e' found` (or similar)
+
+**Cause:** TypeScript files aren't being parsed as TypeScript. Usually means:
+1. TypeScript version is too old (need 5.x+ for typescript-eslint 8.x)
+2. Parser isn't configured correctly
+3. Version conflicts between packages
+
+**Fix:**
+```bash
+npm install -D typescript@latest
+# Then reinstall eslint packages
+npm uninstall eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
+npm install -D eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
+```
+
+### `Error while loading rule: You have used a rule which requires type information`
+
+**Cause:** The `parserOptions.project` isn't set, or `tsconfig.json` doesn't include the files being linted.
+
+**Fix:** Ensure your eslint.config.mjs has:
+```js
+parserOptions: {
+    project: "./tsconfig.json",
+    sourceType: "module",
+}
+```
+
+And your tsconfig.json includes your source files:
+```json
+{
+    "include": ["src/**/*.ts"]
+}
+```
+
+### `file not found in project` errors
+
+**Cause:** The file being linted isn't included in your tsconfig.json's `include` pattern.
+
+**Fix:** Update tsconfig.json to include all source files:
+```json
+{
+    "include": ["src/**/*.ts"]
+}
+```
+
+### Package manager conflicts (pnpm/npm/yarn mixing)
+
+**Cause:** Using pnpm on a project that was set up with npm (or vice versa) causes packages to be moved to `node_modules/.ignored`.
+
+**Fix:** Stick to one package manager. To switch cleanly:
+```bash
+rm -rf node_modules package-lock.json pnpm-lock.yaml yarn.lock
+# Then use your preferred package manager:
+npm install  # or pnpm install
+```
+
+### ESLint can't find the config file
+
+**Cause:** Using `.eslintrc.*` (old format) instead of `eslint.config.mjs` (flat config).
+
+**Fix:** ESLint 9+ uses flat config by default. Remove old config files and create `eslint.config.mjs`:
+```bash
+rm -f .eslintrc .eslintrc.js .eslintrc.json .eslintrc.yml
+# Then create eslint.config.mjs with the config from this guide
+```
