@@ -9,6 +9,7 @@ Code quality ensures maintainability, reliability, and better user experience.
 - [API Usage Best Practices](#api-usage-best-practices)
 - [Async/Await Patterns](#asyncawait-patterns)
 - [DOM Helpers](#dom-helpers)
+- [Deprecated & Replaceable Packages](#deprecated--replaceable-packages)
 - [Miscellaneous Rules](#miscellaneous-rules)
 
 ---
@@ -354,6 +355,41 @@ const fragment = createFragment();
 ```
 
 Rationale: Obsidian's helper functions (`createDiv()`, `createSpan()`, `createEl()`, `createFragment()`) are more concise and integrate better with the API.
+
+---
+
+## Deprecated & Replaceable Packages
+
+The Obsidian community plugin scanner checks for npm packages that have been superseded by Node.js built-ins. Using flagged packages produces warnings that lower your Scorecard score.
+
+### Replace `builtin-modules` with `node:module`
+Rule: Scanner warning — deprecated package
+
+The `builtin-modules` package provides a list of Node.js built-in module names. Node.js has shipped this natively as `module.builtinModules` since v9.3.0.
+
+❌ **INCORRECT** (`esbuild.config.mjs`):
+```javascript
+import builtins from "builtin-modules";
+// ...
+external: [...builtins],
+```
+
+✅ **CORRECT** (`esbuild.config.mjs`):
+```javascript
+import { builtinModules } from "node:module";
+// ...
+external: [...builtinModules],
+```
+
+Then remove `builtin-modules` from `package.json` devDependencies.
+
+### General Guidance
+
+When the scanner flags a package with a "should be replaced with an alternative" warning:
+1. Check [es-tooling/module-replacements](https://github.com/es-tooling/module-replacements) for the recommended replacement
+2. Replace the import with the Node.js built-in or recommended alternative
+3. Remove the flagged package from `package.json`
+4. Verify the build still passes
 
 ---
 

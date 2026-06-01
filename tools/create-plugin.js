@@ -208,7 +208,6 @@ function generatePackageJson(id, version, description, author) {
       "@eslint/js": "^9.30.1",
       "@types/node": "^16.11.6",
       "@typescript-eslint/parser": "^8.35.1",
-      "builtin-modules": "^5.0.0",
       "esbuild": "^0.25.5",
       "eslint": "^9.30.1",
       "eslint-plugin-no-unsanitized": "^4.1.2",
@@ -229,7 +228,7 @@ function generatePackageJson(id, version, description, author) {
 function generateEsbuildConfig() {
   return `import esbuild from "esbuild";
 import process from "process";
-import builtins from "builtin-modules";
+import { builtinModules } from "node:module";
 
 const banner =
 \`/*
@@ -260,7 +259,7 @@ const context = await esbuild.context({
 		"@lezer/common",
 		"@lezer/highlight",
 		"@lezer/lr",
-		...builtins],
+		...builtinModules],
 	format: "cjs",
 	target: "es2018",
 	logLevel: "info",

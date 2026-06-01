@@ -117,6 +117,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | Object.assign | `Object.assign({}, defaults, overrides)` (`object-assign`) | `Object.assign(defaultsVar, other)` — mutates defaults |
 | LICENSE | Copyright holder must not be "Dynalist Inc."; year must be current (`validate-license`) | Leave "Dynalist Inc." as holder or use an outdated year |
 | Async | Use async/await | Use Promise chains |
+| Deprecated packages | Replace flagged npm packages with Node.js built-ins (e.g., `builtin-modules` → `import { builtinModules } from "node:module"`) | Use packages the scanner flags as replaceable |
 
 ---
 
@@ -172,6 +173,7 @@ For comprehensive information on specific topics, see the reference files:
 - API usage best practices
 - Async/await patterns
 - DOM helpers
+- Deprecated/replaceable packages (e.g., `builtin-modules` → `node:module`)
 
 ### [Plugin Submission Requirements](reference/submission.md)
 - Repository structure
@@ -235,7 +237,7 @@ Automated scans of your latest release. **This is where ESLint violations become
 - Missing `activeDocument`/`activeWindow`
 - Floating promises
 - Unused variables
-- Deprecated packages
+- Deprecated/replaceable packages (e.g., `builtin-modules` — replace with `import { builtinModules } from "node:module"` and remove from devDependencies)
 
 ### Disclosures (informational, not penalized)
 - Clipboard access, Vault Read/Write, Vault Enumeration
