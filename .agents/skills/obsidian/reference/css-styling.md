@@ -5,6 +5,8 @@ Proper CSS styling ensures your plugin respects user themes and provides a nativ
 ## Table of Contents
 - [Avoid Inline Styles](#avoid-inline-styles)
 - [Use Obsidian CSS Variables](#use-obsidian-css-variables)
+- [Avoid `!important`](#avoid-important)
+- [Avoid `:has` Selector](#avoid-has-selector)
 - [Scope Plugin Styles](#scope-plugin-styles)
 - [Theme Support](#theme-support)
 - [Spacing and Layout](#spacing-and-layout)
@@ -134,6 +136,71 @@ Always use Obsidian's CSS variables instead of hardcoded values to ensure your p
 **Modal/Dialog**:
 - `--modal-background`, `--modal-border-color`
 - `--modal-max-width`, `--modal-max-height`
+
+---
+
+## Avoid `!important`
+
+### Avoid `!important`
+Rule: Scanner warning — style override
+
+❌ **INCORRECT**:
+```css
+.my-plugin-button {
+  color: red !important;
+  background: blue !important;
+}
+```
+
+✅ **CORRECT**:
+```css
+/* Increase specificity instead */
+.my-plugin-container .my-plugin-button {
+  color: var(--text-error);
+  background: var(--interactive-accent);
+}
+
+/* Or use CSS variables for overridable values */
+.my-plugin-button {
+  color: var(--my-plugin-button-color, var(--text-normal));
+}
+```
+
+Rationale: `!important` overrides user themes and CSS snippets. Increase selector specificity or use CSS variables instead. The community scanner flags every use of `!important`.
+
+---
+
+## Avoid `:has` Selector
+
+### Avoid `:has` Selector
+Rule: Scanner warning — performance
+
+❌ **INCORRECT**:
+```css
+.my-plugin-container:has(.active-item) {
+  border: 1px solid var(--interactive-accent);
+}
+
+div:has(> .my-plugin-icon) {
+  padding: var(--size-4-2);
+}
+```
+
+✅ **CORRECT**:
+```typescript
+// Add a class from TypeScript when the condition is met
+if (container.querySelector('.active-item')) {
+  container.addClass('my-plugin-has-active');
+}
+```
+
+```css
+.my-plugin-has-active {
+  border: 1px solid var(--interactive-accent);
+}
+```
+
+Rationale: `:has` causes broad selector invalidation and significant performance issues. The community scanner flags all uses. Instead, toggle classes from TypeScript when the condition changes.
 
 ---
 

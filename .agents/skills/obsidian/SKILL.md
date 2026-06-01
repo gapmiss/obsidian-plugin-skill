@@ -95,6 +95,8 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 32 | CSS variables | Use Obsidian CSS variables for all styling | Hardcode colors, sizes, or spacing |
 | 33 | CSS scope | Scope CSS to plugin containers | Use broad CSS selectors |
 | 34 | Style elements | Use `styles.css` file (`no-forbidden-elements`) | Create `<link>` or `<style>` elements; assign styles via JavaScript |
+| 34a | `!important` | Increase selector specificity or use CSS variables | Use `!important` — overrides user themes/snippets |
+| 34b | `:has` selector | Toggle classes from TypeScript when conditions change | Use `:has` — causes broad selector invalidation and performance issues |
 
 ### Security & Compatibility
 | # | Rule | ✅ Do | ❌ Don't |
@@ -152,6 +154,8 @@ For comprehensive information on specific topics, see the reference files:
 ### [CSS Styling Best Practices](reference/css-styling.md)
 - Avoiding inline styles
 - Using Obsidian CSS variables
+- Avoiding `!important` (use specificity or CSS variables)
+- Avoiding `:has` selector (toggle classes from TypeScript instead)
 - Scoping plugin styles
 - Theme support
 - Spacing and layout
@@ -238,6 +242,8 @@ Automated scans of your latest release. **This is where ESLint violations become
 - Floating promises
 - Unused variables
 - Deprecated/replaceable packages (e.g., `builtin-modules` — replace with `import { builtinModules } from "node:module"` and remove from devDependencies)
+- `!important` in CSS (increase selector specificity or use CSS variables)
+- `:has` selector in CSS (causes broad selector invalidation — toggle classes from TypeScript instead)
 
 ### Disclosures (informational, not penalized)
 - Clipboard access, Vault Read/Write, Vault Enumeration
