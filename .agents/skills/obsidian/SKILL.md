@@ -212,51 +212,15 @@ If ESLint reports new errors after fixing, re-run from step 1.
 
 ## Scorecard System
 
-Published plugins receive a **Scorecard** visible on community.obsidian.md. The Scorecard affects user trust and discoverability.
+Published plugins receive a **Scorecard** visible on community.obsidian.md. The Scorecard affects user trust and discoverability — a poor score deters users from installing.
 
-### Overall Score (percentage)
-Composite of Health and Review metrics. Aim for 90%+.
+**Key points:**
+- Aim for 90%+ overall score
+- Fix ALL ESLint warnings, not just errors — warnings are publicly visible
+- Use `typescript-eslint/recommendedTypeChecked` for type-aware checks
+- Add GitHub artifact attestation to releases
 
-### Health (Excellent / Good / Poor)
-| Metric | What it measures |
-|--------|------------------|
-| Hygiene | readme, license, description, contributing guide |
-| Maintenance | Commit frequency, release recency |
-| Responsiveness | Issue close rate |
-| Adoption | Installations, stars |
-
-### Review (Satisfactory / Caution)
-Automated scans of your latest release. **This is where ESLint violations become public.**
-
-| Check | Impact |
-|-------|--------|
-| Passed | No vulnerable dependencies, build verified, GitHub artifact attestation |
-| Risks | Unsafe API calls (e.g., `createContextualFragment`) |
-| Warnings | ESLint-style issues — can be 100+ if not addressed |
-
-**Common warnings that tank your score:**
-- Unnecessary type assertions
-- Unexpected `any` types
-- Direct style manipulation (use CSS classes)
-- Missing `activeDocument`/`activeWindow`
-- Floating promises
-- Unused variables
-- Deprecated/replaceable packages (e.g., `builtin-modules` — replace with `import { builtinModules } from "node:module"` and remove from devDependencies)
-- `!important` in CSS (increase selector specificity or use CSS variables)
-- `:has` selector in CSS (causes broad selector invalidation — toggle classes from TypeScript instead)
-
-### Disclosures (informational, not penalized)
-- Clipboard access, Vault Read/Write, Vault Enumeration
-- Network requests (fetch, XMLHttpRequest count)
-- Dynamic Code Execution (eval, new Function)
-- System identity info access
-
-### Improving Your Score
-1. Fix ALL ESLint warnings, not just errors
-2. Use `typescript-eslint/recommendedTypeChecked` for type-aware checks
-3. Add GitHub artifact attestation to releases
-4. Maintain regular commits and releases
-5. Respond to issues promptly
+See [Plugin Submission Requirements](reference/submission.md#scorecard-system) for full details on Health metrics, Review checks, common warnings, and improvement tips.
 
 ---
 

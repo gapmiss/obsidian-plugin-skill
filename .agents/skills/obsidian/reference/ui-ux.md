@@ -15,6 +15,8 @@ Consistent UI/UX is essential for a native-feeling Obsidian plugin experience.
 ### Enforce Sentence Case for UI Text
 Rule: `obsidianmd/ui/sentence-case` (auto-fixable)
 
+> **Note (v0.3.0):** This rule is disabled by default (not working as intended). Enable manually if needed.
+
 Use sentence case (first word capitalized, rest lowercase except proper nouns) for all UI text.
 
 ❌ **INCORRECT**:

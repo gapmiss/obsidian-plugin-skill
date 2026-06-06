@@ -124,8 +124,8 @@ Rationale: Avoid using the `navigator` API to detect the operating system. Use O
 
 ---
 
-### Use window.setTimeout and window.setInterval
-Rule: Platform compatibility
+### Use activeWindow.setTimeout and activeWindow.setInterval
+Rule: `obsidianmd/prefer-active-window-timers`
 
 ❌ **INCORRECT**:
 ```typescript
@@ -140,20 +140,20 @@ const interval = setInterval(() => {
 
 ✅ **CORRECT**:
 ```typescript
-const timer: number = window.setTimeout(() => {
+const timer: number = activeWindow.setTimeout(() => {
   // do something
 }, 1000);
 
-const interval: number = window.setInterval(() => {
+const interval: number = activeWindow.setInterval(() => {
   // do something
 }, 1000);
 
 // Clear them with:
-window.clearTimeout(timer);
-window.clearInterval(interval);
+activeWindow.clearTimeout(timer);
+activeWindow.clearInterval(interval);
 ```
 
-Rationale: Use `window.setTimeout/setInterval` with `number` type instead of `NodeJS.Timeout` for browser compatibility.
+Rationale: Use `activeWindow.setTimeout/setInterval` for popout window compatibility. Also use `number` type instead of `NodeJS.Timeout` for browser compatibility.
 
 ---
 
