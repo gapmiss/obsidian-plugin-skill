@@ -95,7 +95,7 @@ Versions at time of writing:
 - `typescript` 5.x+ (required for typescript-eslint 8.x)
 
 **TypeScript 5.9+ notes:**
-- `moduleResolution: "node"` shows deprecation warning → use `"node10"` (functionally identical)
+- `moduleResolution: "node"` shows deprecation warning → use `"bundler"` for esbuild/bundler projects, or `"node10"` for tsc-only builds
 - `baseUrl` is deprecated (removed in TS 7.0) → remove if not using path aliases
 
 **v0.3.0 changes:**
@@ -241,7 +241,7 @@ The type-checked rules need `project` in parser options, which means your `tscon
     "compilerOptions": {
         "module": "ESNext",
         "target": "ES6",
-        "moduleResolution": "node10",
+        "moduleResolution": "bundler",
         "strictNullChecks": true,
         "lib": ["DOM", "ES5", "ES6", "ES7"]
     },
@@ -249,9 +249,26 @@ The type-checked rules need `project` in parser options, which means your `tscon
 }
 ```
 
-> **TypeScript 5.9+ users:** Use `"node10"` instead of `"node"` to avoid deprecation warnings. They are functionally identical. Also remove `"baseUrl"` if you're not using path aliases — it's deprecated and will be removed in TS 7.0.
+> **TypeScript 5.9+ users:** Use `"bundler"` for projects using esbuild/bundlers. The `"node10"` option is deprecated and will be removed in TS 7.0. Also remove `"baseUrl"` if you're not using path aliases — it's deprecated.
+
+> **Note:** For bundler projects (esbuild), omit `outDir` entirely — the bundler handles output. Setting `outDir: "./"` causes TypeScript to auto-exclude the project root, breaking type checking.
 
 If you get "file not found in project" errors from ESLint, your `include` pattern doesn't match your source files.
+
+### Strict mode recommendation
+
+For new projects, enable full strict mode to catch more issues at compile time:
+```json
+{
+    "compilerOptions": {
+        "strict": true
+    }
+}
+```
+
+If migrating an existing project, be aware that your IDE may use stricter settings than your tsconfig. Running `tsc --noEmit --strict` locally catches what the IDE sees.
+
+The patterns in this guide (Events callbacks, Setting callbacks) work correctly with strict mode enabled.
 
 ## Common Violations and How to Fix Them
 
@@ -467,6 +484,60 @@ activeWindow.setTimeout(() => {}, 100);
 activeWindow.setInterval(() => {}, 1000);
 ```
 
+### Obsidian Events callback typing
+
+**Rule:** Strict mode incompatibility with `Events.on()` callbacks
+
+The Obsidian `Events` class (used by `Plugin`, `Component`, custom event emitters) has this signature:
+```typescript
+on(name: string, callback: (...data: unknown[]) => unknown, ctx?: unknown): EventRef
+```
+
+Inline typed parameters fail with strict mode:
+```typescript
+// Bad — strict mode error
+this.peerManager.on('transfer-request', (data: { files: File[] }) => {
+    // TS2345: Type '(data: { files: File[] }) => void' is not assignable...
+});
+
+// Good — cast inside the callback
+this.peerManager.on('transfer-request', (rawData) => {
+    const data = rawData as { files: File[] };
+    // use data.files
+});
+```
+
+For simple pass-through (just re-emitting), no cast needed:
+```typescript
+// Good — trigger accepts unknown
+peer.on('file-received', (data) => {
+    this.trigger('file-received', data);
+});
+```
+
+### Setting component callback typing
+
+Obsidian's `Setting` component callbacks (`Dropdown.onChange`, `Toggle.onChange`, etc.) expect generic signatures:
+
+```typescript
+// Dropdown.onChange expects (value: string) => any
+// Toggle.onChange expects (value: boolean) => any
+```
+
+Using narrower types inline fails:
+```typescript
+// Bad — strict mode error
+.onChange(async (value: 'auto' | 'manual') => {
+    this.settings.mode = value;
+});
+
+// Good — cast inside
+.onChange(async (value) => {
+    const mode = value as 'auto' | 'manual';
+    this.settings.mode = mode;
+});
+```
+
 ### Detecting user language incorrectly
 
 **Rule:** `obsidianmd/prefer-get-language`
@@ -649,14 +720,14 @@ rm -f .eslintrc .eslintrc.js .eslintrc.json .eslintrc.yml
 ### tsconfig.json shows errors in VSCode/VSCodium (TypeScript 5.9+)
 
 **Cause:** TypeScript 5.9+ deprecated several tsconfig options:
-- `moduleResolution: "node"` — deprecated, use `"node10"` instead
+- `moduleResolution: "node"` — deprecated, use `"bundler"` for esbuild projects or `"node10"` for tsc-only
 - `baseUrl` — deprecated (removed in TS 7.0), remove if not using path aliases
 
 **Fix:** Update tsconfig.json:
 ```json
 {
     "compilerOptions": {
-        "moduleResolution": "node10",
+        "moduleResolution": "bundler"
         // Remove "baseUrl" if you're not using path aliases
     }
 }

@@ -3,7 +3,7 @@ name: obsidian
 description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.3.0, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.7.0
+  version: 1.8.0
 ---
 
 # Obsidian Plugin Development Guidelines

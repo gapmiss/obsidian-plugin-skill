@@ -167,7 +167,7 @@ function generateTsConfig() {
       "target": "ES6",
       "allowJs": true,
       "noImplicitAny": true,
-      "moduleResolution": "node10",
+      "moduleResolution": "bundler",
       "importHelpers": true,
       "isolatedModules": true,
       "strictNullChecks": true,
