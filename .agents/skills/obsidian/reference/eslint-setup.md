@@ -270,6 +270,51 @@ If migrating an existing project, be aware that your IDE may use stricter settin
 
 The patterns in this guide (Events callbacks, Setting callbacks) work correctly with strict mode enabled.
 
+### TS2564: Property has no initializer
+
+**Error:** `Property 'foo' has no initializer and is not definitely assigned in the constructor.`
+
+This occurs when `strictPropertyInitialization` is enabled (part of `strict` mode). Common scenario: your tsconfig only has `strictNullChecks: true`, but your IDE applies full strict mode.
+
+**Fix patterns:**
+
+```typescript
+// Pattern A: Definite assignment assertion (when assigned in onload/lifecycle)
+export class MyPlugin extends Plugin {
+    settings!: MySettings;  // ! tells TS "I'll assign this before use"
+    
+    async onload() {
+        this.settings = await this.loadData();
+    }
+}
+
+// Pattern B: Initialize with undefined-compatible type
+export class MyModal extends Modal {
+    result: string | undefined;  // Explicitly allow undefined
+}
+
+// Pattern C: Initialize with default value
+export class MyView extends ItemView {
+    containerEl: HTMLElement = document.createElement('div');
+}
+```
+
+**When to use each:**
+- **Pattern A (`!`)**: Property assigned in `onload()`, `onOpen()`, or similar lifecycle method. Most common for plugin settings.
+- **Pattern B (`| undefined`)**: Property may legitimately be unset. Requires null checks when accessing.
+- **Pattern C (default value)**: Property has a sensible default. Use when the default is cheap to create.
+
+**Debugging IDE vs build mismatch:**
+```bash
+# See what strict mode catches (matches most IDEs)
+tsc --noEmit --strict
+
+# Compare against your actual tsconfig
+tsc --noEmit
+```
+
+If errors appear in IDE but build succeeds, either enable `strict: true` in tsconfig or apply the fix patterns above.
+
 ## Common Violations and How to Fix Them
 
 ### `require()` style import is forbidden
