@@ -94,6 +94,10 @@ Versions at time of writing:
 - `eslint` 9.x or 10.x (flat config)
 - `typescript` 5.x+ (required for typescript-eslint 8.x)
 
+**TypeScript 5.9+ notes:**
+- `moduleResolution: "node"` shows deprecation warning → use `"node10"` (functionally identical)
+- `baseUrl` is deprecated (removed in TS 7.0) → remove if not using path aliases
+
 **v0.3.0 changes:**
 - `ui/sentence-case` rule disabled by default (not working as intended)
 - `prefer-active-doc` rule disabled by default
@@ -237,13 +241,15 @@ The type-checked rules need `project` in parser options, which means your `tscon
     "compilerOptions": {
         "module": "ESNext",
         "target": "ES6",
-        "moduleResolution": "node",
+        "moduleResolution": "node10",
         "strictNullChecks": true,
         "lib": ["DOM", "ES5", "ES6", "ES7"]
     },
     "include": ["src/**/*.ts"]
 }
 ```
+
+> **TypeScript 5.9+ users:** Use `"node10"` instead of `"node"` to avoid deprecation warnings. They are functionally identical. Also remove `"baseUrl"` if you're not using path aliases — it's deprecated and will be removed in TS 7.0.
 
 If you get "file not found in project" errors from ESLint, your `include` pattern doesn't match your source files.
 
@@ -536,6 +542,22 @@ Type-checked linting is slower than basic linting because it loads the TypeScrip
 
 ## Troubleshooting
 
+### `WARNING: You are currently running a version of TypeScript which is not officially supported`
+
+**Cause:** You have old `@typescript-eslint/parser` v7.x installed, which only supports TypeScript <5.6.0. TypeScript 5.9+ triggers this warning.
+
+**Fix:** Migrate to the unified `typescript-eslint` v8.x package:
+```bash
+npm uninstall @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint && \
+npm install -D typescript@latest eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
+```
+
+Then update your `eslint.config.mjs` to import the parser from `typescript-eslint`:
+```js
+import tseslint from "typescript-eslint";
+// Use tseslint.parser or import @typescript-eslint/parser separately
+```
+
 ### `ERESOLVE unable to resolve dependency tree`
 
 **Cause:** npm refuses to install because of peer dependency conflicts. Usually means:
@@ -622,4 +644,20 @@ npm install  # or pnpm install
 ```bash
 rm -f .eslintrc .eslintrc.js .eslintrc.json .eslintrc.yml
 # Then create eslint.config.mjs with the config from this guide
+```
+
+### tsconfig.json shows errors in VSCode/VSCodium (TypeScript 5.9+)
+
+**Cause:** TypeScript 5.9+ deprecated several tsconfig options:
+- `moduleResolution: "node"` — deprecated, use `"node10"` instead
+- `baseUrl` — deprecated (removed in TS 7.0), remove if not using path aliases
+
+**Fix:** Update tsconfig.json:
+```json
+{
+    "compilerOptions": {
+        "moduleResolution": "node10",
+        // Remove "baseUrl" if you're not using path aliases
+    }
+}
 ```

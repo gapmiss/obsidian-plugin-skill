@@ -161,14 +161,13 @@ function generateStyles(pluginId) {
 function generateTsConfig() {
   return JSON.stringify({
     "compilerOptions": {
-      "baseUrl": ".",
       "inlineSourceMap": true,
       "inlineSources": true,
       "module": "ESNext",
       "target": "ES6",
       "allowJs": true,
       "noImplicitAny": true,
-      "moduleResolution": "node",
+      "moduleResolution": "node10",
       "importHelpers": true,
       "isolatedModules": true,
       "strictNullChecks": true,
