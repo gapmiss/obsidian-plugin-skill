@@ -81,8 +81,11 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 |---|------|--------|----------|
 | 29 | Document/Window | Use `activeDocument` and `activeWindow` | Use global `document` and `window` |
 | 30 | Timers | Use `activeWindow.setTimeout()`, `setInterval()`, etc. | Use bare `setTimeout()`, `setInterval()` |
+| 31 | Main workspace UI | Use `this.app.workspace.containerEl.ownerDocument` from settings | Use `activeDocument` to update main workspace from settings window |
 
 > **Note (v0.3.0):** The `prefer-active-doc` rule is disabled by default. Enable manually for popout window support.
+
+> **Note (v1.13.0):** Settings now open in a new window. `activeDocument` from settings callbacks points to the settings window, not the main vault. Use `this.app.workspace.containerEl.ownerDocument` to target main workspace UI.
 
 ### Event Handling
 | # | Rule | ✅ Do | ❌ Don't |

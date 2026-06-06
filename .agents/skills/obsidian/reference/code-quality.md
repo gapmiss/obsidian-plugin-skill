@@ -287,6 +287,40 @@ Rationale: When reconfiguring editor extensions, use `updateOptions()` to flush 
 
 ---
 
+### Target Main Workspace from Settings (v1.13.0+)
+Rule: Multi-window compatibility
+
+As of Obsidian 1.13.0, settings open in a **new window** instead of a modal. Code using `activeDocument` from settings callbacks will get the settings window's document, not the main vault window.
+
+❌ **INCORRECT** (breaks in 1.13.0+):
+```typescript
+// In settings tab or settings callback
+updateMainUI() {
+  // activeDocument points to settings window, not main vault!
+  const container = activeDocument.querySelector('.nav-files-container');
+  container?.addClass('my-plugin-active');
+}
+```
+
+✅ **CORRECT** (works in all versions):
+```typescript
+// In settings tab or settings callback
+updateMainUI() {
+  // Always targets the main workspace window
+  const doc = this.app.workspace.containerEl.ownerDocument;
+  const container = doc.querySelector('.nav-files-container');
+  container?.addClass('my-plugin-active');
+}
+```
+
+**When to use which:**
+- **Main workspace UI** (nav, sidebar, workspace elements): Use `this.app.workspace.containerEl.ownerDocument`
+- **Same-window UI** (modal contents, settings elements): `activeDocument` or `this.containerEl.ownerDocument` both work
+
+Rationale: `workspace.containerEl.ownerDocument` always points to the main vault window regardless of which window triggered the call. This is backwards compatible with older Obsidian versions.
+
+---
+
 ## Async/Await Patterns
 
 ### Prefer async/await over Promise chains
