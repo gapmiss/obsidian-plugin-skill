@@ -6,12 +6,9 @@ This guide covers the complete setup so your local `npx eslint .` catches exactl
 
 ## What the Community Scanner Actually Checks
 
-The scanner uses **two rule sets together**:
+The scanner runs **two rule sets together**: `eslint-plugin-obsidianmd` AND `typescript-eslint` recommended type-checked. The critical mistake is configuring only the obsidianmd plugin rules without the typescript-eslint type-checked rules — you must add both.
 
-1. **`eslint-plugin-obsidianmd`** — 36 Obsidian-specific rules (DOM safety, command naming, platform APIs, popout window compatibility, etc.)
-2. **`typescript-eslint` recommended type-checked** — Standard TypeScript rules (`no-floating-promises`, `no-require-imports`, `restrict-template-expressions`, `no-unnecessary-type-assertion`, etc.)
-
-The critical mistake is configuring only the obsidianmd plugin rules without the typescript-eslint type-checked rules. You must add both.
+Full scanner behavior (rule sets, checks beyond ESLint, Scorecard mechanics) is documented in [community-scanner.md](community-scanner.md).
 
 ## Prerequisites
 
@@ -515,6 +512,8 @@ activeDocument.createElement('div');
 activeWindow.setTimeout(() => {}, 100);
 ```
 
+**Caution:** `activeDocument`/`activeWindow` are dynamic getters that follow window focus — two calls may return different objects. Capture the value in a variable when the same document is needed later (e.g., listener cleanup), or use `registerDomEvent()`, which captures the target at registration. The linter does not catch this; see [memory-management.md](memory-management.md) for the full pattern.
+
 ### Using bare `setTimeout`/`setInterval`
 
 **Rule:** `obsidianmd/prefer-active-window-timers`
@@ -655,6 +654,7 @@ Type-checked linting is slower than basic linting because it loads the TypeScrip
 7. No bare `document`/`window` usage (use `activeDocument`/`activeWindow`)
 8. No bare `setTimeout`/`setInterval` (use `activeWindow.setTimeout()` etc.)
 9. Use `getLanguage()` instead of `localStorage.getItem('language')` for i18n
+10. DOM listeners on `document`/`window`/long-lived elements use `registerDomEvent()` — the linter does not flag manual `addEventListener` (check with `grep -rn "addEventListener" src/`)
 
 ## Troubleshooting
 

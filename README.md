@@ -93,7 +93,7 @@ The skill uses **progressive disclosure** for optimal performance:
 
 ```
 .agents/skills/obsidian/
-├── SKILL.md                          # Main overview (~315 lines)
+├── SKILL.md                          # Main overview (~325 lines)
 └── reference/                        # Detailed documentation
     ├── memory-management.md          # Lifecycle & cleanup patterns
     ├── type-safety.md                # Type narrowing & safety
@@ -103,6 +103,7 @@ The skill uses **progressive disclosure** for optimal performance:
     ├── accessibility.md              # A11y requirements (MANDATORY)
     ├── code-quality.md               # Best practices & security
     ├── submission.md                 # Publishing guidelines
+    ├── community-scanner.md          # Scanner behavior & Scorecard (version-stamped)
     └── eslint-setup.md               # Complete ESLint config guide
 ```
 
@@ -342,9 +343,13 @@ The main SKILL.md file highlights the most important rules organized by category
 - Plugin ID, name, and description requirements
 - Repository structure and manifest synchronization
 - Submission via **community.obsidian.md** portal
-- **Scorecard system** (Health, Review, Disclosures)
 - Semantic versioning
 - Testing checklist
+
+**[Community Plugin Scanner](/.agents/skills/obsidian/reference/community-scanner.md)**
+- What the scanner runs (ESLint rule sets + checks beyond ESLint)
+- **Scorecard system** (Health, Review, Disclosures)
+- Version-stamped — single place to update as the scanner evolves
 
 ## Examples
 
@@ -551,7 +556,7 @@ This skill is based on:
 
 This skill follows **Agent Skills standard best practices**:
 
-- **Progressive Disclosure**: Main SKILL.md (~315 lines) provides overview; reference files contain details
+- **Progressive Disclosure**: Main SKILL.md (~325 lines) provides overview; reference files contain details
 - **Context Window Efficiency**: "The context window is a public good" - optimized token usage
 - **One-Level-Deep References**: All reference files directly under `reference/` (no nesting)
 - **Topic-Based Organization**: Each reference file focuses on a specific domain

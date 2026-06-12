@@ -3,7 +3,7 @@ name: obsidian
 description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.3.0, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.8.0
+  version: 1.9.0
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -39,6 +39,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
 | 6 | Event cleanup | Use `registerEvent()` for automatic cleanup | Register events without cleanup |
+| 6a | DOM events | Use `registerDomEvent()` on the plugin or owning component | Pair `addEventListener` with manual `removeEventListener` cleanup |
 | 7 | View references | Return views/components directly | Store view references in plugin properties or pass plugin as component to `MarkdownRenderer` |
 | 8 | Leaf detachment | Let Obsidian handle leaf cleanup | Call `detachLeavesOfType()` in `onunload` |
 
@@ -80,12 +81,15 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
 | 29 | Document/Window | Use `activeDocument` and `activeWindow` | Use global `document` and `window` |
+| 29a | Getter capture | Capture `activeDocument` in a variable when the same document is needed later | Call `activeDocument` at setup and again at cleanup — it follows focus and may return different documents |
 | 30 | Timers | Use `activeWindow.setTimeout()`, `setInterval()`, etc. | Use bare `setTimeout()`, `setInterval()` |
 | 31 | Main workspace UI | Use `this.app.workspace.containerEl.ownerDocument` from settings | Use `activeDocument` to update main workspace from settings window |
 
 > **Note (v0.3.0):** The `prefer-active-doc` rule is disabled by default. Enable manually for popout window support.
 
 > **Note (v1.13.0):** Settings now open in a new window. `activeDocument` from settings callbacks points to the settings window, not the main vault. Use `this.app.workspace.containerEl.ownerDocument` to target main workspace UI.
+
+> **Note:** `activeDocument`/`activeWindow` are dynamic getters that track the focused window. A listener added via `activeDocument.addEventListener()` at setup cannot reliably be removed via `activeDocument.removeEventListener()` at cleanup. Prefer `registerDomEvent()` (rule 6a), which captures the target at registration.
 
 ### Event Handling
 | # | Rule | ✅ Do | ❌ Don't |
@@ -132,6 +136,7 @@ For comprehensive information on specific topics, see the reference files:
 
 ### [Memory Management & Lifecycle](reference/memory-management.md)
 - Using `registerEvent()`, `addCommand()`, `registerDomEvent()`, `registerInterval()`
+- `registerDomEvent()` vs manual `addEventListener` (and the `activeDocument` drift bug)
 - Avoiding view references in plugin
 - Not using plugin as component
 - Proper leaf cleanup
@@ -189,6 +194,11 @@ For comprehensive information on specific topics, see the reference files:
 - Testing checklist
 - Additional resources and important notes
 
+### [Community Plugin Scanner](reference/community-scanner.md)
+- What the scanner runs (ESLint rule sets + checks beyond ESLint)
+- Scorecard system (Health, Review, Disclosures, improvement tips)
+- Version-stamped — the single file to update as the scanner evolves
+
 ### [ESLint Setup Guide](reference/eslint-setup.md)
 - Complete ESLint config for community scanner compliance
 - Why `typescript-eslint` recommendedTypeChecked is required
@@ -223,7 +233,7 @@ Published plugins receive a **Scorecard** visible on community.obsidian.md. The 
 - Use `typescript-eslint/recommendedTypeChecked` for type-aware checks
 - Add GitHub artifact attestation to releases
 
-See [Plugin Submission Requirements](reference/submission.md#scorecard-system) for full details on Health metrics, Review checks, common warnings, and improvement tips.
+See [Community Plugin Scanner](reference/community-scanner.md) for full details on scanner checks, Health metrics, Review checks, common warnings, and improvement tips.
 
 ---
 
