@@ -475,6 +475,22 @@ const els = el.querySelectorAll<HTMLElement>('.my-class');
 
 The community scanner forbids `eslint-disable` comments for certain obsidianmd rules. Fix the underlying issue instead of suppressing it.
 
+### ESLint directive comments require descriptions
+
+All `eslint-disable` comments must include a `-- description` explaining why the suppression is necessary. Directives without descriptions produce warnings.
+
+```typescript
+// Bad — triggers "Unexpected undescribed directive comment"
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const value = obj.field!;
+
+// Good
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Guaranteed by earlier null check in parseConfig
+const value = obj.field!;
+```
+
+This applies to all directive forms: `eslint-disable`, `eslint-disable-next-line`, and `eslint-disable-line`.
+
 ### Unsafe assignment of `any` value
 
 **Rule:** `@typescript-eslint/no-unsafe-assignment`
