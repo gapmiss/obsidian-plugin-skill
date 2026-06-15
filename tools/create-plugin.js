@@ -207,7 +207,7 @@ function generatePackageJson(id, version, description, author) {
       "@eslint/js": "^9.30.1",
       "@types/node": "^16.11.6",
       "@typescript-eslint/parser": "^8.35.1",
-      "esbuild": "^0.25.5",
+      "esbuild": "^0.28.1",
       "eslint": "^9.30.1",
       "eslint-plugin-no-unsanitized": "^4.1.2",
       "eslint-plugin-obsidianmd": "^0.3.0",
@@ -219,6 +219,9 @@ function generatePackageJson(id, version, description, author) {
     },
     "dependencies": {
       "obsidian": "latest"
+    },
+    "allowScripts": {
+      "esbuild": true
     }
   }, null, 2) + '\n';
 }
