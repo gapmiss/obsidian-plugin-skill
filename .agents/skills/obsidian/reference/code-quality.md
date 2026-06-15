@@ -10,6 +10,7 @@ Code quality ensures maintainability, reliability, and better user experience.
 - [Async/Await Patterns](#asyncawait-patterns)
 - [DOM Helpers](#dom-helpers)
 - [Deprecated & Replaceable Packages](#deprecated--replaceable-packages)
+- [Obsidian API Deprecations](#obsidian-api-deprecations)
 - [Miscellaneous Rules](#miscellaneous-rules)
 
 ---
@@ -424,6 +425,28 @@ When the scanner flags a package with a "should be replaced with an alternative"
 2. Replace the import with the Node.js built-in or recommended alternative
 3. Remove the flagged package from `package.json`
 4. Verify the build still passes
+
+---
+
+## Obsidian API Deprecations
+
+### `ButtonComponent.setWarning()` → `setDestructive()`
+
+As of Obsidian 1.13+, `ButtonComponent.setWarning()` is deprecated. Use `setDestructive()` instead. For destructive primary actions, chain `.setDestructive().setCta()`.
+
+❌ **INCORRECT**:
+```typescript
+new Setting(containerEl)
+  .addButton(btn => btn.setWarning().setButtonText('Delete'));
+```
+
+✅ **CORRECT**:
+```typescript
+new Setting(containerEl)
+  .addButton(btn => btn.setDestructive().setButtonText('Delete'));
+```
+
+> **Note:** These deprecations surface via `@typescript-eslint/no-deprecated` only when the `obsidian` devDependency typings are current. Keep `"obsidian": "latest"` in `dependencies` to catch them.
 
 ---
 

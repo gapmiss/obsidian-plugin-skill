@@ -229,6 +229,8 @@ The `typescript-eslint` package exports several config levels:
 
 The community scanner uses rules from the **`recommendedTypeChecked`** level. If you only use `recommended` (non-type-checked), you'll miss the most common violations.
 
+> **Tip:** `recommendedTypeChecked` includes `@typescript-eslint/no-deprecated`, which catches deprecated Obsidian APIs (e.g., `setWarning()` → `setDestructive()` in 1.13+). This only works when the `obsidian` devDependency typings are current — stale typings silently hide deprecations. Keep `"obsidian": "latest"` in your `package.json`.
+
 ## tsconfig.json Requirements
 
 The type-checked rules need `project` in parser options, which means your `tsconfig.json` must cover all linted files:
