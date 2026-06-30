@@ -6,7 +6,7 @@ A comprehensive agent skill for developing high-quality Obsidian plugins that fo
 
 This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
-- ESLint rules from `eslint-plugin-obsidianmd` v0.3.0
+- ESLint rules from `eslint-plugin-obsidianmd` v0.4.0
 - Official Plugin Guidelines from Obsidian documentation
 - Submission via community.obsidian.md and Scorecard optimization
 - Memory management and lifecycle best practices
@@ -223,7 +223,7 @@ Your agent will automatically use the Obsidian skill guidelines while helping yo
 
 ## What's Covered
 
-### Most Critical Rules (eslint-plugin-obsidianmd v0.3.0)
+### Most Critical Rules (eslint-plugin-obsidianmd v0.4.0)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
@@ -244,7 +244,7 @@ The main SKILL.md file highlights the most important rules organized by category
 10. Use `.instanceOf(T)` for cross-window DOM checks
 
 **UI/UX:**
-11. Use sentence case for all UI text (rule disabled by default in v0.3.0)
+11. Use sentence case for all UI text (`ui/sentence-case`, enabled as `warn` in v0.4.0)
 12. Sentence case in locale JSON files
 13. Sentence case in TS/JS locale modules
 14. No "command" in command names/IDs
@@ -265,7 +265,7 @@ The main SKILL.md file highlights the most important rules organized by category
 27. Check `minAppVersion` for API compatibility
 
 **Popout Window Compatibility:**
-28. Use `activeDocument`/`activeWindow` instead of globals (rule disabled by default in v0.3.0)
+28. Use `activeDocument`/`activeWindow` instead of globals (`prefer-active-doc`, still off by default — enable manually)
 29. Use `activeWindow.setTimeout()` for timers
 
 **Event Handling:**
@@ -465,30 +465,29 @@ npm install --save-dev eslint typescript-eslint @typescript-eslint/parser eslint
 
 See the **[complete ESLint setup guide](/.agents/skills/obsidian/reference/eslint-setup.md)** for:
 - Full `eslint.config.mjs` that matches the community scanner
-- Why `recommendedTypeChecked` is required (not just `recommended`)
+- How `recommended` bundles the type-checked rules (v0.4.0)
 - Common violations and how to fix them
-Quick config example:
+
+Quick config example (v0.4.0 — `recommended` bundles `typescript-eslint` recommendedTypeChecked plus the security and import rules):
 
 ```javascript
 // eslint.config.mjs
-import tsParser from "@typescript-eslint/parser";
+import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
-export default [
-  { ignores: ["node_modules/**", "main.js"] },
-  // Type-checked rules — this is what most people miss
-  ...tseslint.configs.recommendedTypeChecked.map(c => ({ ...c, files: ["src/**/*.ts"] })),
-  // Obsidian-specific rules
+export default defineConfig([
+  { ignores: ["node_modules/**", "main.js", "*.mjs"] },
   ...obsidianmd.configs.recommended,
+  // Point the bundled type-checked rules at your tsconfig
   {
-    files: ["src/**/*.ts"],
+    files: ["**/*.ts"],
     languageOptions: {
-      parser: tsParser,
+      parser: tseslint.parser,
       parserOptions: { project: "./tsconfig.json" },
     },
   },
-];
+]);
 ```
 
 Many rules are auto-fixable with:
@@ -566,4 +565,4 @@ This structure allows your coding agent to load the essential information quickl
 
 ---
 
-Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.3.0 and the community.obsidian.md Scorecard system. The plugin and portal are under active development and may evolve.
+Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.4.0 and the community.obsidian.md Scorecard system. The plugin and portal are under active development and may evolve.

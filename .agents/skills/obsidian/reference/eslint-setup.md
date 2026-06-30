@@ -6,7 +6,7 @@ This guide covers the complete setup so your local `npx eslint .` catches exactl
 
 ## What the Community Scanner Actually Checks
 
-The scanner runs **two rule sets together**: `eslint-plugin-obsidianmd` AND `typescript-eslint` recommended type-checked. The critical mistake is configuring only the obsidianmd plugin rules without the typescript-eslint type-checked rules — you must add both.
+The scanner runs `eslint-plugin-obsidianmd`'s recommended config, which **as of v0.4.0 bundles the `typescript-eslint` recommended type-checked rules itself** (plus `import`, `@microsoft/sdl`, `depend`, and `no-unsanitized`). In older versions you had to add the typescript-eslint type-checked rules separately; now `...obsidianmd.configs.recommended` alone gives you the same ruleset the scanner uses.
 
 Full scanner behavior (rule sets, checks beyond ESLint, Scorecard mechanics) is documented in [community-scanner.md](community-scanner.md).
 
@@ -15,8 +15,10 @@ Full scanner behavior (rule sets, checks beyond ESLint, Scorecard mechanics) is 
 ### For New Projects
 
 ```bash
-npm install -D eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
+npm install -D eslint @eslint/js @eslint/json typescript-eslint eslint-plugin-obsidianmd
 ```
+
+`@eslint/js`, `@eslint/json`, `eslint`, and `typescript-eslint` are peer dependencies of v0.4.0 (npm 7+ auto-installs them). You don't need `@typescript-eslint/parser` separately — `typescript-eslint` provides the parser as `tseslint.parser`.
 
 ### Migrating Existing Projects (IMPORTANT)
 
@@ -86,140 +88,102 @@ The old `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` (v5-7
 ### Version Requirements
 
 Versions at time of writing:
-- `eslint-plugin-obsidianmd` 0.3.0
+- `eslint-plugin-obsidianmd` 0.4.0
 - `typescript-eslint` 8.x
-- `eslint` 9.x or 10.x (flat config)
+- `eslint` 9.19+ (flat config)
 - `typescript` 5.x+ (required for typescript-eslint 8.x)
+
+v0.4.0 declares `@eslint/js`, `@eslint/json`, `eslint`, and `typescript-eslint` as **peer dependencies** (npm 7+ auto-installs them). Everything else the config needs — `eslint-plugin-import`, `@microsoft/eslint-plugin-sdl`, `eslint-plugin-depend`, `eslint-plugin-no-unsanitized`, `eslint-comments` — ships bundled inside the plugin, so you don't install those yourself.
 
 **TypeScript 5.9+ notes:**
 - `moduleResolution: "node"` shows deprecation warning → use `"bundler"` for esbuild/bundler projects, or `"node10"` for tsc-only builds
 - `baseUrl` is deprecated (removed in TS 7.0) → remove if not using path aliases
 
-**v0.3.0 changes:**
-- `ui/sentence-case` rule disabled by default (not working as intended)
-- `prefer-active-doc` rule disabled by default
-- Cursor added as recognized brand
-- Fixed `.obsidian` in URLs detection
-- Fixed `createDocumentFragment` on `activeDocument` should use `activeWindow`
+**v0.4.0 changes:**
+- `configs.recommended` is now self-contained: it bundles `typescript-eslint` recommendedTypeChecked, `import`, `@microsoft/sdl`, `depend`, `no-unsanitized`, and `eslint-comments`, and injects the Obsidian globals. You no longer add the typescript-eslint type-checked config yourself.
+- New `recommendedWithLocalesEn` config adds sentence-case checks for English locale files.
+- Most Obsidian rules are now `warn` (were `error` in v0.3.0); see the severity table below.
+- `ui/sentence-case` is re-enabled (`warn`); `prefer-active-doc` remains `off`.
+- Four new `settings-tab` declarative-settings rules (Obsidian 1.13+): `require-display`, `prefer-setting-definitions`, `prefer-update-over-display`, `no-deprecated-display` — all gated on your manifest's `minAppVersion`.
+- `no-global-this` and `@typescript-eslint/no-deprecated` added (both `warn`).
+- `no-nodejs-modules` now reads `manifest.json` (`off` when `isDesktopOnly`).
+- `moment`, `axios`, `got`, `ky`, `node-fetch`, etc. are restricted imports (use Obsidian's `moment` / `requestUrl`); type-only `moment` imports are allowed.
+- `eslint-comments` rules enforced: disable directives need descriptions, and `obsidianmd/*` (plus `no-console`, etc.) can't be disabled inline.
 
 ## The Complete ESLint Config
 
-### Simple Config (Recommended)
+### Recommended Config (start here)
 
-As of v0.2.5, `configs.recommended` properly scopes TypeScript rules to `.ts` files:
+As of **v0.4.0**, `obsidianmd.configs.recommended` is self-contained — it bundles ESLint's `js.recommended`, `typescript-eslint` (recommendedTypeChecked for `.ts`), all Obsidian rules, plus `import`, `@microsoft/sdl`, `depend`, `no-unsanitized`, and `eslint-comments`, and it injects the Obsidian globals (`activeDocument`, `createDiv`, `sleep`, …). You no longer compose `tseslint.configs.recommendedTypeChecked` yourself. This is the same ruleset the community scanner runs.
+
+You only add one thing: a TypeScript block that points the type-checked rules at your `tsconfig.json`.
 
 ```js
 // eslint.config.mjs
-import tsParser from "@typescript-eslint/parser";
+import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
-export default [
-    { ignores: ["node_modules/**", "main.js", "*.mjs", "package.json", "package-lock.json", "versions.json", "tsconfig.json"] },
-    ...tseslint.configs.recommendedTypeChecked.map(config => ({
-        ...config,
-        files: ["src/**/*.ts"],
-    })),
+export default defineConfig([
+    { ignores: ["node_modules/**", "main.js", "*.mjs"] },
     ...obsidianmd.configs.recommended,
     {
-        files: ["src/**/*.ts"],
+        files: ["**/*.ts"],
         languageOptions: {
-            parser: tsParser,
+            parser: tseslint.parser,
             parserOptions: {
                 project: "./tsconfig.json",
                 sourceType: "module",
             },
         },
     },
-];
+]);
 ```
 
-### Explicit Config (Full Control)
+> **Don't ignore `package.json`.** The recommended config lints it (via `@eslint/json` + `depend/ban-dependencies`) to catch dependencies replaceable by built-ins. The older config ignored it — drop `package.json`, `tsconfig.json`, and `versions.json` from `ignores`.
 
-If you need to customize rule severity or add overrides:
+> **Match the bundle's glob.** The recommended config applies type-checked rules to every `**/*.ts` file, so scope your `parserOptions.project` block to `**/*.ts` (not `src/**/*.ts`), or you'll get "you have used a rule which requires type information" on any `.ts` outside `src/`. Alternatively set `parserOptions.projectService: true` to auto-discover the tsconfig per file.
+
+### Locale checks: `recommendedWithLocalesEn`
+
+For sentence-case enforcement on English locale files, swap `recommended` for `recommendedWithLocalesEn` — it adds `ui/sentence-case-json` (matches `en*.json`) and `ui/sentence-case-locale-module` (matches `en*.ts` / `en*.js`) on top of everything in `recommended`.
+
+### Customizing rules
+
+The recommended set is opinionated, and the scanner forbids disabling certain rules inline (see "Disabling rule `X` is not allowed" below), so prefer config-level overrides over `eslint-disable` comments:
 
 ```js
-// eslint.config.mjs
-import tsParser from "@typescript-eslint/parser";
-import tseslint from "typescript-eslint";
-import obsidianmd from "eslint-plugin-obsidianmd";
-
-export default [
+export default defineConfig([
+    ...obsidianmd.configs.recommended,
     {
-        ignores: ["node_modules/**", "main.js", "*.mjs", "package.json", "package-lock.json", "versions.json", "tsconfig.json"],
-    },
-    // TypeScript-ESLint recommended rules WITH type checking
-    ...tseslint.configs.recommendedTypeChecked.map(config => ({
-        ...config,
-        files: ["src/**/*.ts"],
-    })),
-    // Obsidian plugin rules + project config
-    {
-        files: ["src/**/*.ts"],
-        plugins: {
-            obsidianmd,
-        },
+        files: ["**/*.ts"],
         languageOptions: {
-            parser: tsParser,
-            parserOptions: {
-                project: "./tsconfig.json",
-                sourceType: "module",
-            },
-            globals: {
-                activeDocument: "readonly",
-                activeWindow: "readonly",
-            },
+            parser: tseslint.parser,
+            parserOptions: { project: "./tsconfig.json", sourceType: "module" },
         },
         rules: {
-            // All obsidianmd rules (v0.3.0)
-            "obsidianmd/commands/no-command-in-command-id": "error",
-            "obsidianmd/commands/no-command-in-command-name": "error",
-            "obsidianmd/commands/no-default-hotkeys": "error",
-            "obsidianmd/commands/no-plugin-id-in-command-id": "error",
-            "obsidianmd/commands/no-plugin-name-in-command-name": "error",
-            "obsidianmd/settings-tab/no-manual-html-headings": "error",
-            "obsidianmd/settings-tab/no-problematic-settings-headings": "error",
-            "obsidianmd/vault/iterate": "error",
-            "obsidianmd/detach-leaves": "error",
-            "obsidianmd/editor-drop-paste": "error",
-            "obsidianmd/hardcoded-config-path": "error",
-            "obsidianmd/no-forbidden-elements": "error",
-            "obsidianmd/no-nodejs-modules": "error",
-            "obsidianmd/no-plugin-as-component": "error",
-            "obsidianmd/no-sample-code": "error",
-            "obsidianmd/no-tfile-tfolder-cast": "error",
-            "obsidianmd/no-view-references-in-plugin": "error",
-            "obsidianmd/no-static-styles-assignment": "error",
-            "obsidianmd/object-assign": "error",
-            "obsidianmd/platform": "error",
-            "obsidianmd/prefer-create-el": "error",
-            "obsidianmd/prefer-file-manager-trash-file": "warn",
-            "obsidianmd/prefer-instanceof": "error",
-            "obsidianmd/prefer-get-language": "error",
-            "obsidianmd/prefer-abstract-input-suggest": "error",
-            "obsidianmd/prefer-active-window-timers": "error",
-            // prefer-active-doc is OFF by default in v0.3.0; enable for popout window support
-            "obsidianmd/prefer-active-doc": "error",
-            "obsidianmd/regex-lookbehind": "error",
-            "obsidianmd/sample-names": "error",
-            "obsidianmd/no-unsupported-api": "error",
-            // sentence-case is OFF by default in v0.3.0 (not working as intended)
-            // "obsidianmd/ui/sentence-case": ["error", { enforceCamelCaseLower: true }],
-            // Console: scanner allows warn, error, debug only
-            "no-console": ["error", { allow: ["warn", "error", "debug"] }],
-            // Allow underscore-prefixed unused params
-            "@typescript-eslint/no-unused-vars": ["error", {
-                argsIgnorePattern: "^_",
-                varsIgnorePattern: "^_",
-            }],
+            "obsidianmd/sample-names": "off",        // turn a rule off
+            "obsidianmd/prefer-active-doc": "warn",  // opt into a rule that's off by default
         },
     },
-];
+]);
 ```
 
-### Why `recommendedTypeChecked` Specifically
+### Default severities (v0.4.0)
 
-The `typescript-eslint` package exports several config levels:
+Most Obsidian rules are **`warn`** in v0.4.0 (warnings are publicly visible on your Scorecard, so fix them too). These are the exceptions:
+
+| Severity | Rules |
+|----------|-------|
+| **`error`** | `detach-leaves`, `no-forbidden-elements`, `no-sample-code`, `no-static-styles-assignment`, `platform`, `regex-lookbehind`, `sample-names`, `no-plugin-as-component`, `no-view-references-in-plugin`, `no-unsupported-api`, `rule-custom-message`, `settings-tab/no-manual-html-headings`, `settings-tab/no-problematic-settings-headings` |
+| **`off`** | `prefer-active-doc` (enable manually for popout support) |
+| **`warn`** | everything else — `commands/*`, `no-global-this`, `no-nodejs-modules`†, `object-assign`, `prefer-create-el`, `prefer-instanceof`, `prefer-window-timers`, `prefer-get-language`, `ui/sentence-case`, `vault/iterate`, and all four `settings-tab/*` declarative rules |
+
+† `no-nodejs-modules` reads your `manifest.json`: **`off`** when `isDesktopOnly: true`, otherwise `warn`.
+
+### Why type-aware linting matters (now bundled)
+
+The recommended config already extends `typescript-eslint`'s **`recommendedTypeChecked`** for `.ts` files, so you get the type-aware rules automatically:
 
 | Config | Type-aware | What it catches |
 |--------|-----------|-----------------|
@@ -227,7 +191,7 @@ The `typescript-eslint` package exports several config levels:
 | `recommendedTypeChecked` | Yes | + no-floating-promises, no-require-imports, restrict-template-expressions, no-unnecessary-type-assertion, require-await, no-misused-promises, await-thenable, no-base-to-string |
 | `strictTypeChecked` | Yes | + no-unsafe-assignment, no-unsafe-member-access, no-unsafe-return, no-unsafe-call |
 
-The community scanner uses rules from the **`recommendedTypeChecked`** level. If you only use `recommended` (non-type-checked), you'll miss the most common violations.
+The only thing you must supply is `parserOptions.project` (or `projectService`) so these rules can load type information — without it ESLint throws "you have used a rule which requires type information".
 
 ## tsconfig.json Requirements
 
@@ -473,7 +437,7 @@ const els = el.querySelectorAll<HTMLElement>('.my-class');
 
 ### Disabling rule `X` is not allowed
 
-The community scanner forbids `eslint-disable` comments for certain obsidianmd rules. Fix the underlying issue instead of suppressing it.
+The community scanner forbids `eslint-disable` comments for certain rules. In v0.4.0 this is enforced by the bundled `eslint-comments/no-restricted-disable` rule, which covers `obsidianmd/*`, `no-console`, `no-restricted-globals`, `@typescript-eslint/no-restricted-imports`, `no-alert`, `@typescript-eslint/no-deprecated`, `@typescript-eslint/no-explicit-any`, `no-eval`, the `@microsoft/sdl` rules, and `no-nodejs-modules`. Fix the underlying issue instead of suppressing it. Unused disable directives are also reported as errors (`reportUnusedDisableDirectives`).
 
 ### ESLint directive comments require descriptions
 
@@ -532,7 +496,7 @@ activeWindow.setTimeout(() => {}, 100);
 
 ### Using bare `setTimeout`/`setInterval`
 
-**Rule:** `obsidianmd/prefer-active-window-timers`
+**Rule:** `obsidianmd/prefer-window-timers` (named `prefer-active-window-timers` before v0.4.0)
 
 ```typescript
 // Bad
@@ -633,9 +597,11 @@ const frag = createFragment();
 
 ### Using Node.js modules without platform guard
 
-**Rule:** `obsidianmd/no-nodejs-modules` (updated in v0.2.6)
+**Rule:** `obsidianmd/no-nodejs-modules`
 
 Node.js built-in modules (`fs`, `path`, `os`, etc.) are only available on desktop. Guard imports with `Platform.isDesktop`:
+
+> **v0.4.0:** this rule reads your `manifest.json` — it's automatically **off** when `isDesktopOnly: true`, and `warn` otherwise. You don't need to disable it manually in desktop-only plugins.
 
 ```typescript
 // Bad - breaks on mobile
@@ -650,6 +616,32 @@ if (Platform.isDesktop) {
     fs.readFileSync(path);
 }
 ```
+
+### Restricted HTTP/util imports (use Obsidian built-ins)
+
+**Rule:** `@typescript-eslint/no-restricted-imports` (configured by `recommended`)
+
+v0.4.0 flags HTTP clients and `moment`, because Obsidian bundles equivalents:
+
+```typescript
+// Bad — use requestUrl() instead (axios, got, ky, node-fetch, ofetch, superagent)
+import axios from 'axios';
+
+// Good
+import { requestUrl } from 'obsidian';
+
+// moment is bundled with Obsidian — don't add it as a dependency
+// Bad
+import moment from 'moment';
+
+// Good — the value comes from 'obsidian'
+import { moment } from 'obsidian';
+
+// Type-only imports from 'moment' ARE allowed (allowTypeImports):
+import type { Moment } from 'moment';
+```
+
+The same rule warns on restricted globals: `app` (use your plugin's reference), `fetch` (use `requestUrl`), and `localStorage` (use `App#saveLocalStorage`/`loadLocalStorage`).
 
 ## Running the Lint
 

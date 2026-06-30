@@ -205,13 +205,11 @@ function generatePackageJson(id, version, description, author) {
     "license": "MIT",
     "devDependencies": {
       "@eslint/js": "^9.30.1",
+      "@eslint/json": "^0.14.0",
       "@types/node": "^16.11.6",
-      "@typescript-eslint/parser": "^8.35.1",
       "esbuild": "^0.28.1",
       "eslint": "^9.30.1",
-      "eslint-plugin-no-unsanitized": "^4.1.2",
-      "eslint-plugin-obsidianmd": "^0.3.0",
-      "globals": "^14.0.0",
+      "eslint-plugin-obsidianmd": "^0.4.0",
       "jiti": "^2.6.1",
       "tslib": "^2.4.0",
       "typescript": "^5.8.2",
@@ -307,40 +305,28 @@ function generateVersionsJson(version, minAppVersion) {
 
 // Generate eslint.config.mjs
 function generateEslintConfig() {
-  return `import tsParser from "@typescript-eslint/parser";
+  return `import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
-export default [
-    { ignores: ["node_modules/**", "main.js", "*.mjs", "package.json", "package-lock.json", "versions.json", "tsconfig.json"] },
-    // TypeScript-ESLint recommended rules WITH type checking
-    ...tseslint.configs.recommendedTypeChecked.map(config => ({
-        ...config,
-        files: ["src/**/*.ts"],
-    })),
-    // Obsidian plugin rules (v0.3.0+)
+export default defineConfig([
+    { ignores: ["node_modules/**", "main.js", "*.mjs"] },
+    // Obsidian + TypeScript + security rules, bundled (mirrors the community scanner).
+    // Includes typescript-eslint recommendedTypeChecked, import, sdl, depend,
+    // no-unsanitized, and eslint-comments — no need to add them separately.
     ...obsidianmd.configs.recommended,
-    // Project-specific config
+    // Point the type-checked rules at your tsconfig.
     {
-        files: ["src/**/*.ts"],
+        files: ["**/*.ts"],
         languageOptions: {
-            parser: tsParser,
+            parser: tseslint.parser,
             parserOptions: {
                 project: "./tsconfig.json",
                 sourceType: "module",
             },
         },
-        rules: {
-            // Console: scanner allows warn, error, debug only
-            "no-console": ["error", { allow: ["warn", "error", "debug"] }],
-            // Allow underscore-prefixed unused params
-            "@typescript-eslint/no-unused-vars": ["error", {
-                argsIgnorePattern: "^_",
-                varsIgnorePattern: "^_",
-            }],
-        },
     },
-];
+]);
 `;
 }
 

@@ -125,7 +125,7 @@ Rationale: Avoid using the `navigator` API to detect the operating system. Use O
 ---
 
 ### Use activeWindow.setTimeout and activeWindow.setInterval
-Rule: `obsidianmd/prefer-active-window-timers`
+Rule: `obsidianmd/prefer-window-timers` (named `prefer-active-window-timers` before v0.4.0)
 
 ❌ **INCORRECT**:
 ```typescript

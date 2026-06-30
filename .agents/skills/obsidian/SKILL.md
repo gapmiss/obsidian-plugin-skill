@@ -1,9 +1,9 @@
 ---
 name: obsidian
-description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.3.0, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.4.0, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.9.0
+  version: 1.10.0
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -24,7 +24,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 
 ---
 
-## Rules Reference (eslint-plugin-obsidianmd v0.3.0)
+## Rules Reference (eslint-plugin-obsidianmd v0.4.0)
 
 ### Submission & Naming
 | # | Rule | ✅ Do | ❌ Don't |
@@ -56,7 +56,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 12 | JSON locale | Sentence case in JSON locale files (`recommendedWithLocalesEn`) | Title case in locale JSON |
 | 13 | TS/JS locale | Sentence case in TS/JS locale modules | Title case in locale modules |
 
-> **Note (v0.3.0):** The `ui/sentence-case` rule is disabled by default (not working as intended). Consider enabling manually if needed.
+> **Note (v0.4.0):** `ui/sentence-case` is now enabled (`warn`) and enforced on inline UI strings — it was disabled in v0.3.0. Use the `recommendedWithLocalesEn` config to also check English locale files (rules 12–13).
 | 14 | Command names | Omit "command" in command names/IDs | Include "command" in names/IDs |
 | 15 | Command IDs | Omit plugin ID/name from command IDs/names | Duplicate plugin ID in command IDs |
 | 16 | Hotkeys | No default hotkeys | Set default hotkeys |
@@ -85,7 +85,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 30 | Timers | Use `activeWindow.setTimeout()`, `setInterval()`, etc. | Use bare `setTimeout()`, `setInterval()` |
 | 31 | Main workspace UI | Use `this.app.workspace.containerEl.ownerDocument` from settings | Use `activeDocument` to update main workspace from settings window |
 
-> **Note (v0.3.0):** The `prefer-active-doc` rule is disabled by default. Enable manually for popout window support.
+> **Note (v0.4.0):** `prefer-active-doc` remains disabled by default — the only Obsidian rule shipped as `off`. Enable it manually for popout window support.
 
 > **Note (v1.13.0):** Settings now open in a new window. `activeDocument` from settings callbacks points to the settings window, not the main vault. Use `this.app.workspace.containerEl.ownerDocument` to target main workspace UI.
 
