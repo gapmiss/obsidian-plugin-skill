@@ -386,9 +386,18 @@ const el = containerEl.createEl('section');
 const div = createDiv();
 const span = createSpan();
 const fragment = createFragment();
+
+// activeDocument → activeWindow (v0.4.1 autofix):
+activeWindow.createEl('p');        // not activeDocument.createEl('p')
+activeWindow.createDiv();
+activeWindow.createFragment();
+
+// Document-typed variables use .win:
+const doc = this.app.workspace.containerEl.ownerDocument;
+doc.win.createEl('p');             // not doc.createEl('p')
 ```
 
-Rationale: Obsidian's helper functions (`createDiv()`, `createSpan()`, `createEl()`, `createFragment()`) are more concise and integrate better with the API.
+Rationale: Obsidian's helper functions (`createDiv()`, `createSpan()`, `createEl()`, `createFragment()`) are more concise and integrate better with the API. `activeDocument` is a `Document` and doesn't have these helpers — they live on `Window`/`activeWindow`. For `Document`-typed variables, access helpers via the `.win` property.
 
 ---
 

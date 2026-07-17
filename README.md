@@ -6,7 +6,7 @@ A comprehensive agent skill for developing high-quality Obsidian plugins that fo
 
 This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
-- ESLint rules from `eslint-plugin-obsidianmd` v0.4.0
+- ESLint rules from `eslint-plugin-obsidianmd` v0.4.1
 - Official Plugin Guidelines from Obsidian documentation
 - Submission via community.obsidian.md and Scorecard optimization
 - Memory management and lifecycle best practices
@@ -223,7 +223,7 @@ Your agent will automatically use the Obsidian skill guidelines while helping yo
 
 ## What's Covered
 
-### Most Critical Rules (eslint-plugin-obsidianmd v0.4.0)
+### Most Critical Rules (eslint-plugin-obsidianmd v0.4.1)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
@@ -565,4 +565,4 @@ This structure allows your coding agent to load the essential information quickl
 
 ---
 
-Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.4.0 and the community.obsidian.md Scorecard system. The plugin and portal are under active development and may evolve.
+Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.4.1 and the community.obsidian.md Scorecard system. The plugin and portal are under active development and may evolve.

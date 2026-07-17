@@ -1,9 +1,9 @@
 ---
 name: obsidian
-description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.4.0, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.4.1, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.10.0
+  version: 1.10.1
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -24,7 +24,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 
 ---
 
-## Rules Reference (eslint-plugin-obsidianmd v0.4.0)
+## Rules Reference (eslint-plugin-obsidianmd v0.4.1)
 
 ### Submission & Naming
 | # | Rule | ✅ Do | ❌ Don't |
@@ -108,7 +108,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 ### Security & Compatibility
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 35 | DOM creation | Use Obsidian DOM helpers (`createEl()`, `createDiv()`, `createSpan()`, `createSvg()`, `createFragment()`) via `prefer-create-el` | Use `document.createElement()`, `document.createDocumentFragment()`, etc. |
+| 35 | DOM creation | Use Obsidian DOM helpers (`createEl()`, `createDiv()`, `createSpan()`, `createSvg()`, `createFragment()`) via `prefer-create-el`; linter autofixes `activeDocument.createElement()` → `activeWindow.createEl()` (v0.4.1) | Use `document.createElement()`, `document.createDocumentFragment()`, etc. |
 | 36 | Node.js modules | Guard Node.js imports with `Platform.isDesktop` check (`no-nodejs-modules`) | Import Node.js modules without platform guard |
 | 37 | iOS compat | Avoid regex lookbehind (iOS < 16.4 incompatibility) | Use regex lookbehind |
 

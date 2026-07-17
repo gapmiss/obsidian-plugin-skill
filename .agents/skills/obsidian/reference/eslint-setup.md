@@ -88,7 +88,7 @@ The old `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` (v5-7
 ### Version Requirements
 
 Versions at time of writing:
-- `eslint-plugin-obsidianmd` 0.4.0
+- `eslint-plugin-obsidianmd` 0.4.1
 - `typescript-eslint` 8.x
 - `eslint` 9.19+ (flat config)
 - `typescript` 5.x+ (required for typescript-eslint 8.x)
@@ -488,9 +488,11 @@ document.createElement('div');
 window.setTimeout(() => {}, 100);
 
 // Good
-activeDocument.createElement('div');
+activeWindow.createEl('div');
 activeWindow.setTimeout(() => {}, 100);
 ```
+
+> **v0.4.1 fix:** The `prefer-create-el` autofix now correctly rewrites `activeDocument.createElement()` → `activeWindow.createEl()` (not `activeDocument.createEl()`). `activeDocument` is a `Document` and doesn't have Obsidian's DOM helpers — those live on `Window`. The rule also handles arbitrary `Document`-typed variables via their `.win` property (e.g. `doc.createElement('p')` → `doc.win.createEl('p')`).
 
 **Caution:** `activeDocument`/`activeWindow` are dynamic getters that follow window focus — two calls may return different objects. Capture the value in a variable when the same document is needed later (e.g., listener cleanup), or use `registerDomEvent()`, which captures the target at registration. The linter does not catch this; see [memory-management.md](memory-management.md) for the full pattern.
 
@@ -580,7 +582,7 @@ const lang = getLanguage();
 
 ### Using native DOM methods instead of Obsidian helpers
 
-**Rule:** `obsidianmd/prefer-create-el` (new in v0.2.5)
+**Rule:** `obsidianmd/prefer-create-el` (new in v0.2.5, autofix corrected in v0.4.1)
 
 Obsidian provides DOM helper methods that are cleaner and more consistent:
 
@@ -588,12 +590,16 @@ Obsidian provides DOM helper methods that are cleaner and more consistent:
 // Bad
 const div = document.createElement('div');
 const frag = document.createDocumentFragment();
+activeDocument.createElement('p');
 
 // Good
 const div = createDiv();
 const div2 = containerEl.createDiv({ cls: 'my-class' });
 const frag = createFragment();
+activeWindow.createEl('p');
 ```
+
+As of v0.4.1, the autofix correctly targets `activeWindow` (not `activeDocument`) for DOM helper rewrites, and supports `Document`-typed variables via `.win` (e.g. `doc.createElement('p')` → `doc.win.createEl('p')`).
 
 ### Using Node.js modules without platform guard
 

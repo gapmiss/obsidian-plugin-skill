@@ -1,13 +1,13 @@
 # Community Plugin Scanner
 
-> **Last verified:** 2026-06-30, against `eslint-plugin-obsidianmd` v0.4.0.
+> **Last verified:** 2026-07-17, against `eslint-plugin-obsidianmd` v0.4.1.
 > The scanner is new and under active development. This file is the single source of truth for scanner behavior — when the scanner changes, update this file. Other docs link here rather than duplicating.
 
 The community.obsidian.md scanner analyzes every plugin release and publishes the results as a [Scorecard](#scorecard-system). For the ESLint configuration that satisfies it, see [eslint-setup.md](eslint-setup.md). For the submission process itself, see [submission.md](submission.md).
 
 ## What the Scanner Runs
 
-As of `eslint-plugin-obsidianmd` **v0.4.0**, the scanner ruleset is published *as* the plugin's `recommended` config (the "Community scanners ruleset"). A single `...obsidianmd.configs.recommended` reproduces what the scanner runs locally — it bundles:
+As of `eslint-plugin-obsidianmd` **v0.4.1**, the scanner ruleset is published *as* the plugin's `recommended` config (the "Community scanners ruleset"). A single `...obsidianmd.configs.recommended` reproduces what the scanner runs locally — it bundles:
 
 1. **`eslint-plugin-obsidianmd`** — 41 Obsidian-specific rules (DOM safety, command naming, platform APIs, popout window compatibility, declarative settings, etc.)
 2. **`typescript-eslint` recommended type-checked** — Standard type-aware TypeScript rules (`no-floating-promises`, `no-require-imports`, `restrict-template-expressions`, `no-unnecessary-type-assertion`, etc.)
