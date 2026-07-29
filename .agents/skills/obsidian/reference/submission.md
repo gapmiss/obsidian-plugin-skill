@@ -6,9 +6,9 @@ Guidelines for publishing your plugin to the Obsidian community plugin directory
 
 ```
 your-plugin/
-├── manifest.json       # Required: Plugin metadata
-├── main.js            # Required: Compiled plugin code
-├── styles.css         # Optional: Plugin styles
+├── manifest.json      # Required: Plugin metadata
+├── main.js            # Optional: Compiled at every build
+├── styles.css         # Optional: Compiled at every build
 ├── LICENSE            # Required: License file
 └── README.md          # Recommended: Usage documentation
 ```
