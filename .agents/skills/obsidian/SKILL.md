@@ -63,11 +63,18 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 17 | Settings headings | Use `.setHeading()` | Create manual HTML headings; use "General", "settings", or plugin name in headings |
 
 ### Declarative Settings (1.13.0+)
+
+All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d read `minAppVersion` from `manifest.json`; 17b is **not** version-gated.
+
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| — | Settings tab | Implement `getSettingDefinitions()` when `minAppVersion >= 1.13.0` | Keep imperative `display()` only on 1.13+ projects |
+| 17a | `settings-tab/require-display` | Keep `display()` when `minAppVersion < 1.13.0` | Ship declarative-only settings that render nothing on older Obsidian |
+| 17b | `settings-tab/prefer-setting-definitions` | Implement `getSettingDefinitions()` on every `PluginSettingTab` | Rely on `display()` alone — settings won't appear in 1.13+ global search |
+| 17c | `settings-tab/prefer-update-over-display` | Call `this.update()` to re-render declarative settings | Call `this.display()` — it's bypassed when definitions are non-empty |
+| 17d | `settings-tab/no-deprecated-display` | Delete `display()` once `minAppVersion >= 1.13.0` and definitions exist | Leave a dead `display()` behind (auto-fixable) |
 | — | Settings data | Keep all persisted data inside `plugin.settings` | Store sibling keys via `saveData()` — auto-persist clobbers them |
-| — | Tab refresh | Call `this.update()` to re-render declarative settings | Call `this.display()` — it's bypassed when definitions are non-empty |
+
+> **Detection caveat:** these rules match a bare `extends PluginSettingTab` only. `extends obsidian.PluginSettingTab` is out of scope and won't be flagged — but the underlying guidance still applies.
 
 ### API Best Practices
 | # | Rule | ✅ Do | ❌ Don't |

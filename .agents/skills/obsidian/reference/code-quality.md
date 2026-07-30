@@ -455,7 +455,27 @@ new Setting(containerEl)
   .addButton(btn => btn.setDestructive().setButtonText('Delete'));
 ```
 
-> **Note:** These deprecations surface via `@typescript-eslint/no-deprecated` only when the `obsidian` devDependency typings are current. Keep `"obsidian": "latest"` in `dependencies` to catch them.
+> **Scope:** only `ButtonComponent.setWarning()` is deprecated. `MenuItem.setWarning(isWarning: boolean)` is a different, non-deprecated method that takes an argument — don't "fix" it to `setDestructive()`.
+
+### `PluginSettingTab.display()` → `getSettingDefinitions()`
+
+`display()` carries `@deprecated Since 1.13.0` in the 1.13 typings, so `@typescript-eslint/no-deprecated` flags every implementation of it — including plugins that legitimately still need it to support Obsidian below 1.13.0 (see [Path B](ui-ux.md#path-b-dual-support)).
+
+**You cannot silence this inline.** `@typescript-eslint/no-deprecated` is on the bundled `eslint-comments/no-restricted-disable` list, so an `eslint-disable-next-line` for it is itself an error — see [Disabling rule `X` is not allowed](eslint-setup.md#disabling-rule-x-is-not-allowed). Use a file-scoped override in `eslint.config.mjs` instead:
+
+```javascript
+{
+  // Path B: minAppVersion is below 1.13.0, so display() is still the render path.
+  files: ["src/settings-tab.ts"],
+  rules: { "@typescript-eslint/no-deprecated": "off" },
+}
+```
+
+Scope it to the one file, and delete the override the moment you bump `minAppVersion` to 1.13.0 — otherwise it hides every *other* deprecation in that file. On Path A the warning is correct and the fix is to delete `display()`.
+
+> **Note:** These deprecations only surface when the `obsidian` typings are current — stale typings silently hide them. Keep `"obsidian": "latest"` in **`devDependencies`** (it's a compile-time-only dependency; the runtime API is provided by the app).
+
+> **Typings lag the app:** the `obsidian` npm package tracks the API surface, not the release train — it can sit a patch or two behind the public desktop build. A `1.13.x` app version doesn't guarantee a matching npm version exists.
 
 ---
 

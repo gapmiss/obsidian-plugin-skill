@@ -400,6 +400,30 @@ Use a `render` callback when `control` + `validate` isn't enough:
 
 For conditional visibility, use the `visible` predicate instead of `render`.
 
+### Shared Definition Fields
+
+Every definition (`control`, `render`, `action`, or empty) accepts these alongside `name`:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `desc` | `string \| DocumentFragment` | Description. A fragment's `textContent` is what search indexes. |
+| `aliases` | `string[]` | Extra search terms — synonyms users might type instead of `name`. |
+| `visible` | `boolean \| (() => boolean)` | Hides the item and excludes it from search for that render cycle. |
+| `searchable` | `boolean \| (() => boolean)` | Keeps the item rendered but out of global search. |
+
+Controls additionally accept `disabled: boolean | (() => boolean)`, which greys out the control while leaving it visible — the right choice for "unavailable because X", where hiding the setting would just be confusing.
+
+`visible` and `disabled` are re-evaluated on every render, so the function forms can reflect runtime state.
+
+### Refreshing: `update()` vs `refreshDomState()`
+
+Two different costs — pick by what changed:
+
+- **`refreshDomState()`** — re-evaluates every `visible` and `disabled` predicate and applies the result to the existing DOM. No re-render. Use this from a `render` callback's `onChange` after mutating state that *other* settings' predicates read.
+- **`update()`** — re-runs `getSettingDefinitions()` and re-renders. Use when the *structure* changed: items added or removed, list rows reordered.
+
+Reach for `refreshDomState()` first; a full `update()` to toggle one control's enabled state is wasted work and drops focus.
+
 ### Data-Shape Gotcha
 
 Auto-persist calls `saveData(plugin.settings)`, so **all persisted plugin data must live inside the `settings` object**. Sibling keys stored via `saveData()` outside `settings` will be clobbered.
@@ -419,6 +443,28 @@ interface MySettings {
 }
 ```
 
+**Escape hatch:** if you genuinely can't co-locate the data — settings split across multiple files, or a key that must live outside `settings` for backward compatibility — override `getControlValue(key)` and `setControlValue(key, value)` on your tab. `PluginSettingTab` implements them against `plugin.settings`; override both together and each control's `key` routes through your storage instead.
+
+```typescript
+class MySettingTab extends PluginSettingTab {
+  getControlValue(key: string): unknown {
+    if (key === 'apiToken') return this.plugin.secrets.apiToken;
+    return super.getControlValue(key);
+  }
+
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    if (key === 'apiToken') {
+      this.plugin.secrets.apiToken = value as string;
+      await this.plugin.saveSecrets();
+      return;
+    }
+    await super.setControlValue(key, value);
+  }
+}
+```
+
+Prefer reshaping your data over this. An override is a second persistence path to keep correct.
+
 ### Pitfalls
 
 - `getSettingDefinitions()` runs on every `update()` AND once at registration for search indexing. Keep it cheap — no I/O, no network calls.
@@ -426,7 +472,8 @@ interface MySettings {
 - `validate` is a UI gate — it shows inline errors but doesn't modify stored values. Re-validate stored data in `loadSettings()` for data saved by older plugin versions.
 - Page names must be unique among siblings at the same depth.
 - When an `action` callback depends on row position, use the `index` argument — don't capture index from an outer `map` (it goes stale after reorder/delete).
-- To refresh the tab after data changes, call `this.update()`. On 1.13.0+, `display()` is bypassed when `getSettingDefinitions()` returns a non-empty array.
+- To refresh the tab after data changes, call `this.update()` — or `this.refreshDomState()` when only `visible`/`disabled` predicates changed. On 1.13.0+, `display()` is bypassed when `getSettingDefinitions()` returns a non-empty array.
+- `validate` also runs once on mount, so a stored value that's already invalid surfaces its error immediately — but the bad value stays in `plugin.settings` until the user fixes it.
 - `desc` accepts `string` or `DocumentFragment`. For rich descriptions with formatting or links, pass a `DocumentFragment` built with `createFragment(...)`.
 
 ### Relationship to Existing Rules

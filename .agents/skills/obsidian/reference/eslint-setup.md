@@ -104,7 +104,8 @@ v0.4.0 declares `@eslint/js`, `@eslint/json`, `eslint`, and `typescript-eslint` 
 - New `recommendedWithLocalesEn` config adds sentence-case checks for English locale files.
 - Most Obsidian rules are now `warn` (were `error` in v0.3.0); see the severity table below.
 - `ui/sentence-case` is re-enabled (`warn`); `prefer-active-doc` remains `off`.
-- Four new `settings-tab` declarative-settings rules (Obsidian 1.13+): `require-display`, `prefer-setting-definitions`, `prefer-update-over-display`, `no-deprecated-display` — all gated on your manifest's `minAppVersion`.
+- Four new `settings-tab` declarative-settings rules (Obsidian 1.13+), all `warn`: `require-display`, `prefer-setting-definitions`, `prefer-update-over-display`, `no-deprecated-display`. Three of them read your manifest's `minAppVersion` (overridable via a `minAppVersion` rule option) and no-op when it doesn't apply. **`prefer-setting-definitions` is the exception — it takes no options and is not version-gated**, so it warns on every `PluginSettingTab` subclass lacking `getSettingDefinitions()` even when `minAppVersion` is below 1.13.0. The rationale is that 1.13+ *users* can't find your settings in global search regardless of what you declare.
+- All four detect the setting tab by a bare `extends PluginSettingTab` identifier. A class written as `extends obsidian.PluginSettingTab` is intentionally out of scope and will not be flagged.
 - `no-global-this` and `@typescript-eslint/no-deprecated` added (both `warn`).
 - `no-nodejs-modules` now reads `manifest.json` (`off` when `isDesktopOnly`).
 - `moment`, `axios`, `got`, `ky`, `node-fetch`, etc. are restricted imports (use Obsidian's `moment` / `requestUrl`); type-only `moment` imports are allowed.

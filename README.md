@@ -7,6 +7,7 @@ A comprehensive agent skill for developing high-quality Obsidian plugins that fo
 This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
 - ESLint rules from `eslint-plugin-obsidianmd` v0.4.1
+- Declarative settings (`getSettingDefinitions()`), the Obsidian 1.13 settings API
 - Official Plugin Guidelines from Obsidian documentation
 - Submission via community.obsidian.md and Scorecard optimization
 - Memory management and lifecycle best practices
@@ -122,6 +123,7 @@ node /path/to/obsidian-plugin-skill/tools/create-plugin.js
 **Features:**
 - Generates clean TypeScript boilerplate with **no sample code**
 - Creates `src/` directory structure with `main.ts` and `settings.ts`
+- Settings tab uses the **declarative API** (`getSettingDefinitions()`), so it's lint-clean and searchable on Obsidian 1.13+. To target older Obsidian, lower `minAppVersion` and add a `display()` fallback — see [Path B](.agents/skills/obsidian/reference/ui-ux.md#path-b-dual-support)
 - **Validates plugin metadata in real-time** against Obsidian's submission bot rules
 - Prompts for target directory to avoid overwriting existing files
 - Detects existing projects and only adds missing files
@@ -132,7 +134,7 @@ node /path/to/obsidian-plugin-skill/tools/create-plugin.js
 your-plugin/
 ├── src/
 │   ├── main.ts           # Plugin class with settings integration
-│   └── settings.ts       # Settings interface, defaults, and tab
+│   └── settings.ts       # Settings interface, defaults, and declarative tab
 ├── manifest.json         # Validated plugin metadata
 ├── styles.css           # CSS with Obsidian variables
 ├── tsconfig.json        # TypeScript configuration
@@ -152,7 +154,7 @@ your-plugin/
 4. Description (validates: no "Obsidian"/"This plugin", must end with punctuation)
 5. Author name
 6. GitHub username (optional, auto-generates authorUrl)
-7. Minimum Obsidian version
+7. Minimum Obsidian version (default `1.13.0`)
 
 **Real-time validation catches common mistakes:**
 ```
@@ -252,6 +254,13 @@ The main SKILL.md file highlights the most important rules organized by category
 16. No default hotkeys
 17. Use `.setHeading()` for settings headings
 
+**Declarative Settings (Obsidian 1.13+):**
+
+- Keep `display()` while `minAppVersion < 1.13.0` (`settings-tab/require-display`)
+- Implement `getSettingDefinitions()` so settings appear in global search (`settings-tab/prefer-setting-definitions`)
+- Refresh with `this.update()`, not `this.display()` (`settings-tab/prefer-update-over-display`)
+- Drop `display()` once `minAppVersion >= 1.13.0` and definitions exist (`settings-tab/no-deprecated-display`)
+
 **API Best Practices:**
 18. Use Editor API for active file edits
 19. Use `Vault.process()` for background file mods
@@ -292,36 +301,36 @@ The main SKILL.md file highlights the most important rules organized by category
 
 ### Detailed Coverage by Topic
 
-**[Memory Management & Lifecycle](/.agents/skills/obsidian/reference/memory-management.md)**
+**[Memory Management & Lifecycle](.agents/skills/obsidian/reference/memory-management.md)**
 - Using `registerEvent()`, `addCommand()`, `registerDomEvent()`, `registerInterval()`
 - Avoiding view references in plugin
 - Not using plugin as component
 - Proper leaf cleanup
 
-**[Type Safety](/.agents/skills/obsidian/reference/type-safety.md)**
+**[Type Safety](.agents/skills/obsidian/reference/type-safety.md)**
 - Using `instanceof` instead of type casting
 - Avoiding `any` type
 - Using `const` and `let` over `var`
 
-**[UI/UX Standards](/.agents/skills/obsidian/reference/ui-ux.md)**
+**[UI/UX Standards](.agents/skills/obsidian/reference/ui-ux.md)**
 - Sentence case enforcement
 - Command naming conventions
 - Settings and configuration best practices
 
-**[File & Vault Operations](/.agents/skills/obsidian/reference/file-operations.md)**
+**[File & Vault Operations](.agents/skills/obsidian/reference/file-operations.md)**
 - View access patterns
 - Editor vs Vault API
 - Atomic file operations (Vault.process, processFrontMatter)
 - File management and path handling
 
-**[CSS Styling Best Practices](/.agents/skills/obsidian/reference/css-styling.md)**
+**[CSS Styling Best Practices](.agents/skills/obsidian/reference/css-styling.md)**
 - Avoiding inline styles
 - Using Obsidian CSS variables
 - Scoping plugin styles
 - Theme support (light/dark)
 - Spacing and layout (4px grid)
 
-**[Accessibility (A11y)](/.agents/skills/obsidian/reference/accessibility.md)** - MANDATORY
+**[Accessibility (A11y)](.agents/skills/obsidian/reference/accessibility.md)** - MANDATORY
 - Keyboard navigation for all interactive elements
 - ARIA labels and roles
 - Tooltips with proper positioning
@@ -330,7 +339,7 @@ The main SKILL.md file highlights the most important rules organized by category
 - Screen reader support
 - Mobile and touch accessibility (44×44px minimum)
 
-**[Code Quality & Best Practices](/.agents/skills/obsidian/reference/code-quality.md)**
+**[Code Quality & Best Practices](.agents/skills/obsidian/reference/code-quality.md)**
 - Removing sample code
 - Security best practices (XSS prevention)
 - Platform compatibility (iOS, mobile)
@@ -338,7 +347,7 @@ The main SKILL.md file highlights the most important rules organized by category
 - Async/await patterns
 - DOM helpers
 
-**[Plugin Submission Requirements](/.agents/skills/obsidian/reference/submission.md)**
+**[Plugin Submission Requirements](.agents/skills/obsidian/reference/submission.md)**
 - **Naming and description validation rules** (enforced by automated review)
 - Plugin ID, name, and description requirements
 - Repository structure and manifest synchronization
@@ -346,7 +355,7 @@ The main SKILL.md file highlights the most important rules organized by category
 - Semantic versioning
 - Testing checklist
 
-**[Community Plugin Scanner](/.agents/skills/obsidian/reference/community-scanner.md)**
+**[Community Plugin Scanner](.agents/skills/obsidian/reference/community-scanner.md)**
 - What the scanner runs (ESLint rule sets + checks beyond ESLint)
 - **Scorecard system** (Health, Review, Disclosures)
 - Version-stamped — single place to update as the scanner evolves
@@ -463,7 +472,7 @@ npm install --save-dev eslint typescript-eslint @typescript-eslint/parser eslint
 
 **Important:** The community plugin scanner uses **both** `eslint-plugin-obsidianmd` AND `typescript-eslint` type-checked rules. Most submission failures come from missing the typescript-eslint setup.
 
-See the **[complete ESLint setup guide](/.agents/skills/obsidian/reference/eslint-setup.md)** for:
+See the **[complete ESLint setup guide](.agents/skills/obsidian/reference/eslint-setup.md)** for:
 - Full `eslint.config.mjs` that matches the community scanner
 - How `recommended` bundles the type-checked rules (v0.4.0)
 - Common violations and how to fix them

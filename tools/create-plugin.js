@@ -104,7 +104,8 @@ function generateManifest(id, name, version, description, author, authorUrl, min
 
 // Generate settings.ts
 function generateSettings(pluginClassName) {
-  return `import { App, PluginSettingTab, Setting } from 'obsidian';
+  return `import { App, PluginSettingTab } from 'obsidian';
+import type { SettingDefinitionItem } from 'obsidian';
 import type ${pluginClassName}Plugin from './main';
 
 export interface PluginSettings {
@@ -123,21 +124,22 @@ export class SettingsTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	display(): void {
-		const { containerEl } = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Example setting')
-			.setDesc('This is an example setting')
-			.addText(text => text
-				.setPlaceholder('Enter value')
-				.setValue(this.plugin.settings.exampleSetting)
-				.onChange(async (value) => {
-					this.plugin.settings.exampleSetting = value;
-					await this.plugin.saveSettings();
-				}));
+	// Declarative settings (Obsidian 1.13+): describe the settings and let
+	// Obsidian render, persist, and index them for the settings search box.
+	// Each \`key\` maps to a property on plugin.settings and is saved for you —
+	// so keep all persisted data inside that object.
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		return [
+			{
+				name: 'Example setting',
+				desc: 'This is an example setting',
+				control: {
+					type: 'text',
+					key: 'exampleSetting',
+					placeholder: 'Enter value'
+				}
+			}
+		];
 	}
 }
 `;
@@ -206,17 +208,16 @@ function generatePackageJson(id, version, description, author) {
     "devDependencies": {
       "@eslint/js": "^9.30.1",
       "@eslint/json": "^0.14.0",
-      "@types/node": "^16.11.6",
+      "@types/node": "^22.15.17",
       "esbuild": "^0.28.1",
       "eslint": "^9.30.1",
-      "eslint-plugin-obsidianmd": "^0.4.0",
+      "eslint-plugin-obsidianmd": "^0.4.1",
       "jiti": "^2.6.1",
+      // obsidian is compile-time only — the app provides the runtime API.
+      "obsidian": "latest",
       "tslib": "^2.4.0",
-      "typescript": "^5.8.2",
+      "typescript": "^5.9.2",
       "typescript-eslint": "^8.35.1"
-    },
-    "dependencies": {
-      "obsidian": "latest"
     },
     "allowScripts": {
       "esbuild": true
@@ -483,7 +484,10 @@ async function main() {
   const author = await prompt('Author name', '');
   const githubUsername = await prompt('GitHub username (optional)', '');
   const authorUrl = githubUsername ? `https://github.com/${githubUsername}` : '';
-  const minAppVersion = await prompt('Minimum Obsidian version', '0.15.0');
+  // 1.13.0 is the floor for declarative settings, which the generated
+  // settings tab uses. Lowering this means rewriting settings.ts to add a
+  // display() fallback — see reference/ui-ux.md "Path B: Dual Support".
+  const minAppVersion = await prompt('Minimum Obsidian version', '1.13.0');
 
   const className = toClassName(name);
 
