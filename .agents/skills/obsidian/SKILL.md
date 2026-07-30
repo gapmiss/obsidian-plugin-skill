@@ -62,6 +62,13 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 16 | Hotkeys | No default hotkeys | Set default hotkeys |
 | 17 | Settings headings | Use `.setHeading()` | Create manual HTML headings; use "General", "settings", or plugin name in headings |
 
+### Declarative Settings (1.13.0+)
+| # | Rule | ✅ Do | ❌ Don't |
+|---|------|--------|----------|
+| — | Settings tab | Implement `getSettingDefinitions()` when `minAppVersion >= 1.13.0` | Keep imperative `display()` only on 1.13+ projects |
+| — | Settings data | Keep all persisted data inside `plugin.settings` | Store sibling keys via `saveData()` — auto-persist clobbers them |
+| — | Tab refresh | Call `this.update()` to re-render declarative settings | Call `this.display()` — it's bypassed when definitions are non-empty |
+
 ### API Best Practices
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
@@ -74,7 +81,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 24 | Network requests | Use `requestUrl()` | Use `fetch()` |
 | 25 | Logging | Minimize console logging; none in `onload`/`onunload` in production | Use `console.log` in `onload`/`onunload` |
 | 26 | Input suggest | Use built-in `AbstractInputSuggest` | Copy Liam's `TextInputSuggest` implementation |
-| 27 | API compatibility | Check `minAppVersion` for API availability | Use APIs not available in declared minAppVersion |
+| 27 | API compatibility | Check `minAppVersion` for API availability (e.g., `getSettingDefinitions()` requires 1.13.0) | Use APIs not available in declared minAppVersion |
 | 28 | Language detection | Use Obsidian's `getLanguage()` | Use `localStorage.getItem('language')` or `i18next-browser-languagedetector` |
 
 ### Popout Window Compatibility
@@ -151,6 +158,7 @@ For comprehensive information on specific topics, see the reference files:
 - `recommendedWithLocalesEn` config for locale file checks
 - Command naming conventions (no "command", no plugin name, no plugin ID)
 - Settings and configuration best practices
+- Declarative settings API (1.13+): migration paths, control types, pitfalls
 
 ### [File & Vault Operations](reference/file-operations.md)
 - View access patterns
@@ -253,6 +261,7 @@ Use this checklist for code review and implementation:
 10. **Testing**: Can you use the plugin without a mouse?
 11. **Touch targets**: Are all interactive elements at least 44×44px?
 12. **Focus styles**: Using `:focus-visible` and proper CSS variables?
+13. **Settings**: Using declarative `getSettingDefinitions()` on 1.13+? All saved data co-located in `plugin.settings`?
 
 ---
 
@@ -300,6 +309,25 @@ button.addEventListener('keydown', (e) => {
     performAction();
   }
 });
+```
+
+### Declarative Settings (1.13+)
+
+```typescript
+// ✅ CORRECT — getSettingDefinitions() replaces display() on 1.13+
+getSettingDefinitions() {
+  return [
+    {
+      name: 'Mode',
+      control: {
+        type: 'dropdown',
+        key: 'mode',
+        defaultValue: 'fast',
+        options: { fast: 'Fast', thorough: 'Thorough' },
+      },
+    },
+  ];
+}
 ```
 
 ### Themed CSS

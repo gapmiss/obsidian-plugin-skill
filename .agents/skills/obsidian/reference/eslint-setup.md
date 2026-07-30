@@ -193,6 +193,8 @@ The recommended config already extends `typescript-eslint`'s **`recommendedTypeC
 
 The only thing you must supply is `parserOptions.project` (or `projectService`) so these rules can load type information — without it ESLint throws "you have used a rule which requires type information".
 
+> **Tip:** `recommendedTypeChecked` includes `@typescript-eslint/no-deprecated`, which catches deprecated Obsidian APIs (e.g., `setWarning()` → `setDestructive()` in 1.13+). This only works when the `obsidian` devDependency typings are current — stale typings silently hide deprecations. Keep `"obsidian": "latest"` in your `package.json`.
+
 ## tsconfig.json Requirements
 
 The type-checked rules need `project` in parser options, which means your `tsconfig.json` must cover all linted files:

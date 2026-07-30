@@ -129,6 +129,17 @@ Follow semantic versioning:
 - Ensure manifest.json is valid
 - Include LICENSE file
 
+### Declarative Settings Verification (1.13+)
+
+If your plugin uses `getSettingDefinitions()`:
+- Walk the settings tab top to bottom — every setting renders and reflects the current value
+- Changes persist across a reload
+- Global settings search finds each setting by name (and `aliases`, if set)
+- For each `validate` callback, enter invalid input — inline error appears, value is not saved
+- For any `type: 'list'` groups, add/delete/reorder rows — `plugin.settings` updates correctly
+- For any sub-pages, navigate in and back
+- If using Path B (dual support), test on an Obsidian version below 1.13.0 to verify `display()` still works
+
 ---
 
 ## Scorecard System
