@@ -1,19 +1,42 @@
 # Community Plugin Scanner
 
-> **Last verified:** 2026-07-17, against `eslint-plugin-obsidianmd` v0.4.1.
+> **Last verified:** 2026-09-13, against `eslint-plugin-obsidianmd` v0.4.2.
 > The scanner is new and under active development. This file is the single source of truth for scanner behavior — when the scanner changes, update this file. Other docs link here rather than duplicating.
 
 The community.obsidian.md scanner analyzes every plugin release and publishes the results as a [Scorecard](#scorecard-system). For the ESLint configuration that satisfies it, see [eslint-setup.md](eslint-setup.md). For the submission process itself, see [submission.md](submission.md).
 
 ## What the Scanner Runs
 
-As of `eslint-plugin-obsidianmd` **v0.4.1**, the scanner ruleset is published *as* the plugin's `recommended` config (the "Community scanners ruleset"). A single `...obsidianmd.configs.recommended` reproduces what the scanner runs locally — it bundles:
+As of `eslint-plugin-obsidianmd` **v0.4.2**, the scanner ruleset is published *as* the plugin's `recommended` config (the "Community scanners ruleset"). A single `...obsidianmd.configs.recommended` reproduces what the scanner runs locally — it bundles:
 
 1. **`eslint-plugin-obsidianmd`** — 41 Obsidian-specific rules (DOM safety, command naming, platform APIs, popout window compatibility, declarative settings, etc.)
 2. **`typescript-eslint` recommended type-checked** — Standard type-aware TypeScript rules (`no-floating-promises`, `no-require-imports`, `restrict-template-expressions`, `no-unnecessary-type-assertion`, etc.)
 3. **Security & hygiene plugins** — `@microsoft/eslint-plugin-sdl` and `no-unsanitized` (DOM injection), `eslint-plugin-depend` (replaceable dependencies, checked against `package.json`), `eslint-plugin-import`, and `eslint-comments` (disable-directive discipline).
 
-In older versions you had to compose the obsidianmd rules and the typescript-eslint type-checked rules yourself; that mistake is now moot. The only thing you supply is `parserOptions.project` so the type-aware rules can load type information — see [eslint-setup.md](eslint-setup.md) for the complete config.
+In older versions you had to compose the obsidianmd rules and the typescript-eslint type-checked rules yourself; that mistake is now moot. The only thing you supply is `parserOptions` with `projectService` so the type-aware rules can load type information — see [eslint-setup.md](eslint-setup.md) for the complete config.
+
+### Scanner Ignored Patterns
+
+The scanner only lints plugin source code. These patterns are excluded:
+
+- `node_modules`, `dist`, `build`, `pkg` — dependencies and build output
+- `.obsidian`, `**/.obsidian/**` — vault config directories
+- `test-vault` — test vault directories
+- `esbuild.config.mjs`, `version-bump.mjs` — common build scripts
+- `**/*.test.*`, `**/*.spec.*`, `**/test/**`, `**/tests/**`, `**/__tests__/**` — test files/directories
+- `**/mocks/**`, `**/__mocks__/**`, `**/testUtils**` — test utilities
+- `**/*.cjs`, `**/*.mjs`, `**/*.cts`, `**/*.mts` — non-`.ts`/`.js` extensions (typically config files)
+- `**/vite*`, `**/scripts/**`, `**/docs/**` — config, build, and documentation
+- `**/i18n/**`, `**/locale/**`, `**/locales/**`, `**/translations/**`, `**/l10n/**` — localization files
+- `.pnpm-store`, `automation/**`, `e2e-tests/**` — cache, CI, and end-to-end tests
+
+### Scanner Rule Adjustments
+
+The scanner adjusts severities compared to the `recommended` config:
+
+- **Security rules kept as `error`:** `no-eval`, `no-implied-eval`, `no-unsanitized/method`, `no-unsanitized/property`, `obsidianmd/regex-lookbehind`, `obsidianmd/no-forbidden-elements`
+- **Rules disabled by scanner:** `no-undef`, `@typescript-eslint/no-unsafe-*`, `restrict-template-expressions`, `no-base-to-string`, `import/no-unresolved`, `validate-manifest`, `validate-license`, `commands/no-command-in-command-id`, `commands/no-plugin-id-in-command-id`
+- Most other rules are downgraded to `warn`
 
 ## Checks Beyond ESLint
 
@@ -93,7 +116,7 @@ These are shown to users but don't affect your score:
 ### Improving Your Scorecard
 
 1. **Fix ALL ESLint warnings**, not just errors — warnings are publicly visible
-2. **Use the bundled `recommended` config** — it already includes `typescript-eslint/recommendedTypeChecked` for type-aware checks (just add `parserOptions.project`)
+2. **Use the bundled `recommended` config** — it already includes `typescript-eslint/recommendedTypeChecked` for type-aware checks (just add `parserOptions.projectService`)
 3. **Add GitHub artifact attestation** to your release workflow
 4. **Maintain regular commits and releases** for good Health metrics
 5. **Respond to issues promptly** to improve Responsiveness

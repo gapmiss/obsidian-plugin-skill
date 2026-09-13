@@ -88,7 +88,7 @@ The old `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` (v5-7
 ### Version Requirements
 
 Versions at time of writing:
-- `eslint-plugin-obsidianmd` 0.4.1
+- `eslint-plugin-obsidianmd` 0.4.2
 - `typescript-eslint` 8.x
 - `eslint` 9.19+ (flat config)
 - `typescript` 5.x+ (required for typescript-eslint 8.x)
@@ -115,35 +115,35 @@ v0.4.0 declares `@eslint/js`, `@eslint/json`, `eslint`, and `typescript-eslint` 
 
 ### Recommended Config (start here)
 
-As of **v0.4.0**, `obsidianmd.configs.recommended` is self-contained — it bundles ESLint's `js.recommended`, `typescript-eslint` (recommendedTypeChecked for `.ts`), all Obsidian rules, plus `import`, `@microsoft/sdl`, `depend`, `no-unsanitized`, and `eslint-comments`, and it injects the Obsidian globals (`activeDocument`, `createDiv`, `sleep`, …). You no longer compose `tseslint.configs.recommendedTypeChecked` yourself. This is the same ruleset the community scanner runs.
+`obsidianmd.configs.recommended` is self-contained — it bundles ESLint's `js.recommended`, `typescript-eslint` (recommendedTypeChecked for `.ts`), all Obsidian rules, plus `import`, `@microsoft/sdl`, `depend`, `no-unsanitized`, and `eslint-comments`, and it injects the Obsidian globals (`activeDocument`, `createDiv`, `sleep`, …). You no longer compose `tseslint.configs.recommendedTypeChecked` yourself. This is the same ruleset the community scanner runs.
 
-You only add one thing: a TypeScript block that points the type-checked rules at your `tsconfig.json`.
+You add two things: an `ignores` entry for build output, and a `parserOptions` block so the type-checked rules can access your TypeScript project. Use `projectService: true` — it auto-discovers the nearest `tsconfig.json` per file.
 
 ```js
 // eslint.config.mjs
 import { defineConfig } from "eslint/config";
-import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default defineConfig([
-    { ignores: ["node_modules/**", "main.js", "*.mjs"] },
+    { ignores: ["main.js", "*.mjs"] },
     ...obsidianmd.configs.recommended,
     {
-        files: ["**/*.ts"],
         languageOptions: {
-            parser: tseslint.parser,
             parserOptions: {
-                project: "./tsconfig.json",
-                sourceType: "module",
+                projectService: true,
             },
         },
     },
 ]);
 ```
 
-> **Don't ignore `package.json`.** The recommended config lints it (via `@eslint/json` + `depend/ban-dependencies`) to catch dependencies replaceable by built-ins. The older config ignored it — drop `package.json`, `tsconfig.json`, and `versions.json` from `ignores`.
+> **Ignore build output.** `main.js` is esbuild output. `*.mjs` covers `esbuild.config.mjs` and `version-bump.mjs` — build scripts that aren't plugin code and aren't in your tsconfig.
 
-> **Match the bundle's glob.** The recommended config applies type-checked rules to every `**/*.ts` file, so scope your `parserOptions.project` block to `**/*.ts` (not `src/**/*.ts`), or you'll get "you have used a rule which requires type information" on any `.ts` outside `src/`. Alternatively set `parserOptions.projectService: true` to auto-discover the tsconfig per file.
+> **Don't ignore `package.json`.** The recommended config lints it (via `@eslint/json` + `depend/ban-dependencies`) to catch dependencies replaceable by built-ins.
+
+> **No separate parser import needed.** The recommended config bundles the typescript-eslint parser. You don't need to import `tseslint` or set `parser` yourself — just provide `parserOptions`.
+
+> **`allowDefaultProject`:** If you have non-TS files that need linting but aren't in any `tsconfig.json` (e.g., an `eslint.config.mts`), use `projectService: { allowDefaultProject: ["eslint.config.*"] }` instead of `projectService: true`. For typical Obsidian plugins with an `eslint.config.mjs` (ignored by the glob above), `projectService: true` is sufficient.
 
 ### Locale checks: `recommendedWithLocalesEn`
 
@@ -155,12 +155,13 @@ The recommended set is opinionated, and the scanner forbids disabling certain ru
 
 ```js
 export default defineConfig([
+    { ignores: ["main.js", "*.mjs"] },
     ...obsidianmd.configs.recommended,
     {
-        files: ["**/*.ts"],
         languageOptions: {
-            parser: tseslint.parser,
-            parserOptions: { project: "./tsconfig.json", sourceType: "module" },
+            parserOptions: {
+                projectService: true,
+            },
         },
         rules: {
             "obsidianmd/sample-names": "off",        // turn a rule off
@@ -169,6 +170,39 @@ export default defineConfig([
     },
 ]);
 ```
+
+### Using only obsidianmd rules (without the full config)
+
+As of v0.4.2, the plugin exports `ruleConfigs` with two presets you can spread into a `rules` block — useful when you manage your own ESLint stack and want to add obsidianmd rules à la carte:
+
+- `obsidianmd.ruleConfigs.recommended` — base rules that do not require type information
+- `obsidianmd.ruleConfigs.recommendedTypeChecked` — rules that require typescript-eslint type-aware linting
+
+```js
+import obsidianmd from "eslint-plugin-obsidianmd";
+
+{
+    plugins: { obsidianmd },
+    rules: {
+        ...obsidianmd.ruleConfigs.recommended,
+        ...obsidianmd.ruleConfigs.recommendedTypeChecked,
+    },
+}
+```
+
+You can also use `ruleConfigs` to programmatically disable all obsidianmd rules for non-plugin files (e.g., build scripts):
+
+```js
+{
+    files: ["scripts/**"],
+    rules: Object.fromEntries([
+        ...Object.keys(obsidianmd.ruleConfigs.recommended),
+        ...Object.keys(obsidianmd.ruleConfigs.recommendedTypeChecked),
+    ].map(rule => [rule, "off"])),
+}
+```
+
+When using `ruleConfigs` instead of `configs.recommended`, you must declare Obsidian globals (`activeDocument`, `activeWindow`, `createEl`, `sleep`, etc.) yourself, and third-party plugins (`@microsoft/sdl`, `import`, `no-unsanitized`, `depend`, `eslint-comments`) are not included. Most users should stick with `configs.recommended`.
 
 ### Default severities (v0.4.0)
 
@@ -730,17 +764,20 @@ npm install -D eslint typescript-eslint @typescript-eslint/parser eslint-plugin-
 
 ### `Error while loading rule: You have used a rule which requires type information`
 
-**Cause:** The `parserOptions.project` isn't set, or `tsconfig.json` doesn't include the files being linted.
+**Cause:** `parserOptions` isn't set, or the file being linted isn't included in any `tsconfig.json`.
 
-**Fix:** Ensure your eslint.config.mjs has:
+**Fix:** Use `projectService` with `allowDefaultProject` for files outside your tsconfig:
 ```js
-parserOptions: {
-    project: "./tsconfig.json",
-    sourceType: "module",
+languageOptions: {
+    parserOptions: {
+        projectService: {
+            allowDefaultProject: ["eslint.config.*"],
+        },
+    },
 }
 ```
 
-And your tsconfig.json includes your source files:
+If using the older `project` approach instead, ensure your tsconfig.json includes your source files:
 ```json
 {
     "include": ["src/**/*.ts"]

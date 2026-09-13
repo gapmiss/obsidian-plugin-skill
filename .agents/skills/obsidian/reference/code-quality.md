@@ -388,7 +388,7 @@ const div = createDiv();
 const span = createSpan();
 const fragment = createFragment();
 
-// activeDocument → activeWindow (v0.4.1 autofix):
+// activeDocument → activeWindow (v0.4.1+ autofix):
 activeWindow.createEl('p');        // not activeDocument.createEl('p')
 activeWindow.createDiv();
 activeWindow.createFragment();

@@ -54,6 +54,33 @@ Applies to:
 - `.setAttribute()` for `aria-label`, `aria-description`, `title`, `placeholder`
 - `textContent`, `innerText` assignments
 
+### Handling Edge Cases: Plugin Names and Acronyms
+
+The sentence-case rule may flag text that intentionally contains uppercase words — plugin names, brand names, or acronyms. The rule is advisory and there are always edge cases, but you can whitelist known terms via `acronyms` and `brands` options instead of suppressing the rule entirely.
+
+❌ **INCORRECT** — suppressing the rule:
+```typescript
+// eslint-disable-next-line obsidianmd/ui/sentence-case
+.setName('Open TTRPG tools - controls')
+```
+
+✅ **CORRECT** — configure the rule with your project's terms:
+```javascript
+'obsidianmd/ui/sentence-case': ['warn', {
+  acronyms: ['TTRPG', 'API', 'URL', 'HTML'],
+  brands: [
+    'Style Settings',
+    'TTRPG Tools - Controls',
+    'TTRPG Tools',
+  ],
+}]
+```
+
+- **`acronyms`** — uppercase abbreviations that should stay uppercase (e.g., `API`, `URL`, `TTRPG`)
+- **`brands`** — proper names that should preserve their exact casing (e.g., plugin names like `Style Settings`, `Dataview`)
+
+When a plugin references other plugins or well-known tools in its UI text, add those names to `brands` rather than rewriting them to sentence case.
+
 ---
 
 ## Sentence Case for Locale Files

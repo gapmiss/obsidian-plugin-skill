@@ -210,8 +210,8 @@ function generatePackageJson(id, version, description, author) {
       "@eslint/json": "^0.14.0",
       "@types/node": "^22.15.17",
       "esbuild": "^0.28.1",
-      "eslint": "^9.30.1",
-      "eslint-plugin-obsidianmd": "^0.4.1",
+      "eslint": "^9.39.5",
+      "eslint-plugin-obsidianmd": "^0.4.2",
       "jiti": "^2.6.1",
       // obsidian is compile-time only — the app provides the runtime API.
       "obsidian": "latest",
@@ -307,23 +307,15 @@ function generateVersionsJson(version, minAppVersion) {
 // Generate eslint.config.mjs
 function generateEslintConfig() {
   return `import { defineConfig } from "eslint/config";
-import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default defineConfig([
-    { ignores: ["node_modules/**", "main.js", "*.mjs"] },
-    // Obsidian + TypeScript + security rules, bundled (mirrors the community scanner).
-    // Includes typescript-eslint recommendedTypeChecked, import, sdl, depend,
-    // no-unsanitized, and eslint-comments — no need to add them separately.
+    { ignores: ["main.js", "*.mjs"] },
     ...obsidianmd.configs.recommended,
-    // Point the type-checked rules at your tsconfig.
     {
-        files: ["**/*.ts"],
         languageOptions: {
-            parser: tseslint.parser,
             parserOptions: {
-                project: "./tsconfig.json",
-                sourceType: "module",
+                projectService: true,
             },
         },
     },

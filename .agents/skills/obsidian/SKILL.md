@@ -1,9 +1,9 @@
 ---
 name: obsidian
-description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.4.1, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.4.2, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.10.1
+  version: 1.11.0
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -24,7 +24,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 
 ---
 
-## Rules Reference (eslint-plugin-obsidianmd v0.4.1)
+## Rules Reference (eslint-plugin-obsidianmd v0.4.2)
 
 ### Submission & Naming
 | # | Rule | ✅ Do | ❌ Don't |
@@ -52,7 +52,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 ### UI/UX
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 11 | UI text | Sentence case — "Advanced settings" | Title Case — "Advanced Settings" |
+| 11 | UI text | Sentence case — "Advanced settings"; use `acronyms`/`brands` options for proper names | Title Case — "Advanced Settings" |
 | 12 | JSON locale | Sentence case in JSON locale files (`recommendedWithLocalesEn`) | Title case in locale JSON |
 | 13 | TS/JS locale | Sentence case in TS/JS locale modules | Title case in locale modules |
 
