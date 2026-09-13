@@ -6,7 +6,7 @@ A comprehensive agent skill for developing high-quality Obsidian plugins that fo
 
 This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
-- ESLint rules from `eslint-plugin-obsidianmd` v0.4.1
+- ESLint rules from `eslint-plugin-obsidianmd` v0.4.2
 - Declarative settings (`getSettingDefinitions()`), the Obsidian 1.13 settings API
 - Official Plugin Guidelines from Obsidian documentation
 - Submission via community.obsidian.md and Scorecard optimization
@@ -225,7 +225,7 @@ Your agent will automatically use the Obsidian skill guidelines while helping yo
 
 ## What's Covered
 
-### Most Critical Rules (eslint-plugin-obsidianmd v0.4.1)
+### Most Critical Rules (eslint-plugin-obsidianmd v0.4.2)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
@@ -464,36 +464,34 @@ Use this checklist before submitting your plugin:
 
 ## ESLint Integration
 
-For automatic checking, install the official ESLint plugin **and** typescript-eslint:
+For automatic checking, install the official ESLint plugin:
 
 ```bash
-npm install --save-dev eslint typescript-eslint @typescript-eslint/parser eslint-plugin-obsidianmd
+npm install --save-dev eslint eslint-plugin-obsidianmd
 ```
 
-**Important:** The community plugin scanner uses **both** `eslint-plugin-obsidianmd` AND `typescript-eslint` type-checked rules. Most submission failures come from missing the typescript-eslint setup.
+The `recommended` config bundles `typescript-eslint` (type-checked), security plugins, and all Obsidian rules — no separate typescript-eslint setup needed.
 
 See the **[complete ESLint setup guide](.agents/skills/obsidian/reference/eslint-setup.md)** for:
 - Full `eslint.config.mjs` that matches the community scanner
-- How `recommended` bundles the type-checked rules (v0.4.0)
+- How `recommended` bundles the type-checked rules
 - Common violations and how to fix them
 
-Quick config example (v0.4.0 — `recommended` bundles `typescript-eslint` recommendedTypeChecked plus the security and import rules):
+Quick config example (`recommended` bundles `typescript-eslint` recommendedTypeChecked plus security and import rules):
 
 ```javascript
 // eslint.config.mjs
 import { defineConfig } from "eslint/config";
-import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default defineConfig([
-  { ignores: ["node_modules/**", "main.js", "*.mjs"] },
+  { ignores: ["main.js", "*.mjs"] },
   ...obsidianmd.configs.recommended,
-  // Point the bundled type-checked rules at your tsconfig
   {
-    files: ["**/*.ts"],
     languageOptions: {
-      parser: tseslint.parser,
-      parserOptions: { project: "./tsconfig.json" },
+      parserOptions: {
+        projectService: true,
+      },
     },
   },
 ]);
@@ -574,4 +572,4 @@ This structure allows your coding agent to load the essential information quickl
 
 ---
 
-Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.4.1 and the community.obsidian.md Scorecard system. The plugin and portal are under active development and may evolve.
+Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.4.2 and the community.obsidian.md Scorecard system. The plugin and scanner are under active development and may evolve.
