@@ -268,14 +268,14 @@ The main SKILL.md file highlights the most important rules organized by category
 21. Use `Vault.getAbstractFileByPath()` instead of iterating files
 22. Use `normalizePath()` for user paths
 23. Use `Platform` API for OS detection
-24. Use `requestUrl()` instead of `fetch()`
+24. Use `requestUrl()` instead of `fetch()`; parse `response.text` and cast once at the API boundary (`response.json` is `any`)
 25. No console.log in onload/onunload in production
 26. Use built-in `AbstractInputSuggest`
 27. Check `minAppVersion` for API compatibility
 
 **Popout Window Compatibility:**
 28. Use `activeDocument`/`activeWindow` instead of globals (`prefer-active-doc`, still off by default — enable manually)
-29. Use `activeWindow.setTimeout()` for timers
+29. Use `window.setTimeout()` for timers — not bare `setTimeout()` or `activeWindow.setTimeout()` (`prefer-window-timers`)
 
 **Event Handling:**
 30. Check `evt.defaultPrevented` in editor-drop/paste handlers

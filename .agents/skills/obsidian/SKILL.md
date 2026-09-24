@@ -3,7 +3,7 @@ name: obsidian
 description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.4.2, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.11.0
+  version: 1.11.1
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -86,6 +86,7 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 | 22 | User paths | Use `normalizePath()` | Hardcode `.obsidian` path; use raw user paths |
 | 23 | OS detection | Use `Platform` API | Use `navigator.platform`/`userAgent` |
 | 24 | Network requests | Use `requestUrl()` | Use `fetch()` |
+| 24a | Response typing | Parse `response.text` and validate/cast once at the API boundary | Pass `response.json` (typed `any`) into plugin code |
 | 25 | Logging | Minimize console logging; none in `onload`/`onunload` in production | Use `console.log` in `onload`/`onunload` |
 | 26 | Input suggest | Use built-in `AbstractInputSuggest` | Copy Liam's `TextInputSuggest` implementation |
 | 27 | API compatibility | Check `minAppVersion` for API availability (e.g., `getSettingDefinitions()` requires 1.13.0) | Use APIs not available in declared minAppVersion |
@@ -96,7 +97,7 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 |---|------|--------|----------|
 | 29 | Document/Window | Use `activeDocument` and `activeWindow` | Use global `document` and `window` |
 | 29a | Getter capture | Capture `activeDocument` in a variable when the same document is needed later | Call `activeDocument` at setup and again at cleanup — it follows focus and may return different documents |
-| 30 | Timers | Use `activeWindow.setTimeout()`, `setInterval()`, etc. | Use bare `setTimeout()`, `setInterval()` |
+| 30 | Timers | Use `window.setTimeout()`, `window.setInterval()`, `window.requestAnimationFrame()`, etc. (exception to rule 29) | Use bare `setTimeout()`/`setInterval()`, or `activeWindow.setTimeout()` — `prefer-window-timers` flags both |
 | 31 | Main workspace UI | Use `this.app.workspace.containerEl.ownerDocument` from settings | Use `activeDocument` to update main workspace from settings window |
 
 > **Note (v0.4.0):** `prefer-active-doc` remains disabled by default — the only Obsidian rule shipped as `off`. Enable it manually for popout window support.

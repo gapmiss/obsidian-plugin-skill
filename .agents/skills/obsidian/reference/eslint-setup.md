@@ -522,12 +522,14 @@ For popout window compatibility, use `activeDocument` and `activeWindow`:
 ```typescript
 // Bad
 document.createElement('div');
-window.setTimeout(() => {}, 100);
+window.addEventListener('resize', onResize);
 
 // Good
 activeWindow.createEl('div');
-activeWindow.setTimeout(() => {}, 100);
+this.registerDomEvent(activeWindow, 'resize', onResize);
 ```
+
+`prefer-active-doc` deliberately skips `window.setTimeout()`, `window.setInterval()`, and related timer calls. Timers belong on `window`, not `activeWindow` — see `prefer-window-timers` below.
 
 > **v0.4.1 fix:** The `prefer-create-el` autofix now correctly rewrites `activeDocument.createElement()` → `activeWindow.createEl()` (not `activeDocument.createEl()`). `activeDocument` is a `Document` and doesn't have Obsidian's DOM helpers — those live on `Window`. The rule also handles arbitrary `Document`-typed variables via their `.win` property (e.g. `doc.createElement('p')` → `doc.win.createEl('p')`).
 
@@ -541,11 +543,14 @@ activeWindow.setTimeout(() => {}, 100);
 // Bad
 setTimeout(() => {}, 100);
 setInterval(() => {}, 1000);
+activeWindow.setTimeout(() => {}, 100);   // also flagged
 
 // Good
-activeWindow.setTimeout(() => {}, 100);
-activeWindow.setInterval(() => {}, 1000);
+window.setTimeout(() => {}, 100);
+window.setInterval(() => {}, 1000);
 ```
+
+The rule covers `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, and `requestAnimationFrame`. It autofixes both bare calls and `activeWindow.*` calls to `window.*`. Locally declared functions with those names are not flagged.
 
 ### Obsidian Events callback typing
 
@@ -702,8 +707,8 @@ Type-checked linting is slower than basic linting because it loads the TypeScrip
 4. No `require()` calls in source (check with `grep -r "require(" src/ --include="*.ts"`)
 5. No `console.log` or `console.info` calls
 6. No unhandled promises (search for `MarkdownRenderer.render`, `clipboard.writeText`, `workspace.revealLeaf` without `void`/`await`)
-7. No bare `document`/`window` usage (use `activeDocument`/`activeWindow`)
-8. No bare `setTimeout`/`setInterval` (use `activeWindow.setTimeout()` etc.)
+7. No bare `document`/`window` usage (use `activeDocument`/`activeWindow`), except timers
+8. No bare `setTimeout`/`setInterval` and no `activeWindow.setTimeout()` (use `window.setTimeout()` etc.)
 9. Use `getLanguage()` instead of `localStorage.getItem('language')` for i18n
 10. DOM listeners on `document`/`window`/long-lived elements use `registerDomEvent()` — the linter does not flag manual `addEventListener` (check with `grep -rn "addEventListener" src/`)
 

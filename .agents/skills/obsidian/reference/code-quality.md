@@ -125,7 +125,7 @@ Rationale: Avoid using the `navigator` API to detect the operating system. Use O
 
 ---
 
-### Use activeWindow.setTimeout and activeWindow.setInterval
+### Use window.setTimeout and window.setInterval
 Rule: `obsidianmd/prefer-window-timers` (named `prefer-active-window-timers` before v0.4.0)
 
 ❌ **INCORRECT**:
@@ -137,24 +137,29 @@ const timer: NodeJS.Timeout = setTimeout(() => {
 const interval = setInterval(() => {
   // do something
 }, 1000);
+
+// Also flagged — autofixed to window.setTimeout()
+const other: number = activeWindow.setTimeout(() => {
+  // do something
+}, 1000);
 ```
 
 ✅ **CORRECT**:
 ```typescript
-const timer: number = activeWindow.setTimeout(() => {
+const timer: number = window.setTimeout(() => {
   // do something
 }, 1000);
 
-const interval: number = activeWindow.setInterval(() => {
+const interval: number = window.setInterval(() => {
   // do something
 }, 1000);
 
 // Clear them with:
-activeWindow.clearTimeout(timer);
-activeWindow.clearInterval(interval);
+window.clearTimeout(timer);
+window.clearInterval(interval);
 ```
 
-Rationale: Use `activeWindow.setTimeout/setInterval` for popout window compatibility. Also use `number` type instead of `NodeJS.Timeout` for browser compatibility.
+Rationale: Timers are the one exception to "use `activeWindow` instead of `window`". `prefer-window-timers` flags both bare calls and `activeWindow.*` calls for `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, and `requestAnimationFrame`, and autofixes both to `window.*`. `prefer-active-doc` deliberately skips `window.<timer>()`, so the two rules agree. `activeWindow` follows focus, so a timer scheduled on it could be scheduled on a popout that later closes, and a later `activeWindow.clearTimeout()` could target a different window than the one that owns the ID. Also use `number` type instead of `NodeJS.Timeout` for browser compatibility.
 
 ---
 
@@ -201,6 +206,37 @@ const data = response.json;
 ```
 
 Rationale: Don't use `fetch()`. Use Obsidian's `requestUrl()` instead to bypass CORS restrictions. The browser's fetch API is subject to CORS policies, but `requestUrl()` bypasses these restrictions.
+
+---
+
+### Type requestUrl() Responses at the Boundary
+Rule: Best practice (supports `@typescript-eslint/no-unsafe-*` and no-`any` guidance)
+
+`RequestUrlResponse.json` is typed `any` in `obsidian.d.ts`, so reading it lets `any` leak silently into the rest of the plugin.
+
+❌ **INCORRECT**:
+```typescript
+const response = await requestUrl({ url, throw: false });
+const items = response.json.results; // any — no type checking from here on
+```
+
+✅ **CORRECT**:
+```typescript
+interface ListingsResponse {
+  count: number;
+  results: Listing[];
+}
+
+const response = await requestUrl({ url, throw: false });
+if (response.status >= 400) {
+  throw new ApiResponseError(response.status, response.text);
+}
+// Parse and cast once, in the API layer only
+const data = JSON.parse(response.text) as ListingsResponse;
+const items = data.results; // Listing[]
+```
+
+Rationale: Parse `response.text` and cast (or validate with a type guard) in one place, the API client. Everything above that layer then gets real types, with no `any`. Use `throw: false` so you can inspect `status` and `headers` (e.g. `retry-after` on 429) instead of catching an opaque exception.
 
 ---
 
