@@ -270,7 +270,7 @@ The main SKILL.md file highlights the most important rules organized by category
 23. Use `Platform` API for OS detection
 24. Use `requestUrl()` instead of `fetch()`; parse `response.text` and cast once at the API boundary (`response.json` is `any`)
 25. No console.log in onload/onunload in production
-26. Use built-in `AbstractInputSuggest`
+26. Use built-in `AbstractInputSuggest`; use built-in `ConfirmationModal` (1.13.0+) and `FileManager.promptForDeletion()` instead of custom confirm modals
 27. Check `minAppVersion` for API compatibility
 
 **Popout Window Compatibility:**
@@ -316,6 +316,7 @@ The main SKILL.md file highlights the most important rules organized by category
 - Sentence case enforcement
 - Command naming conventions
 - Settings and configuration best practices
+- Confirmation dialogs (`ConfirmationModal`, `promptForDeletion()`)
 
 **[File & Vault Operations](.agents/skills/obsidian/reference/file-operations.md)**
 - View access patterns

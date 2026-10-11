@@ -8,6 +8,7 @@ Consistent UI/UX is essential for a native-feeling Obsidian plugin experience.
 - [Command Naming Conventions](#command-naming-conventions)
 - [Settings & Configuration](#settings--configuration)
 - [Declarative Settings (Obsidian 1.13+)](#declarative-settings-obsidian-113)
+- [Confirmation Dialogs](#confirmation-dialogs)
 
 ---
 
@@ -508,3 +509,151 @@ Prefer reshaping your data over this. An override is a second persistence path t
 - Heading rules (`no-manual-html-headings`, `no-problematic-settings-headings`) apply to legacy `display()` implementations
 - Sentence case still applies to `name`, `desc`, and `options` values in declarative definitions
 - Settings window opened in a new window since 1.13 — see [Target Main Workspace from Settings](../reference/code-quality.md#target-main-workspace-from-settings-v1130)
+
+---
+
+## Confirmation Dialogs
+
+### Use `ConfirmationModal` Instead of a Custom Confirm Modal
+Rule: API best practice - MANDATORY when `minAppVersion >= 1.13.0`
+
+Obsidian 1.13.0 ships `ConfirmationModal`, a `Modal` subclass for "are you sure?" prompts. It renders the native button row, handles button order and spacing, closes itself after a button's click handler resolves, and lets you choose which button gets initial focus. Do not hand-build a `Modal` subclass with its own button row for this.
+
+❌ **INCORRECT**:
+```typescript
+class ConfirmDeleteModal extends Modal {
+  constructor(app: App, private onConfirm: () => void) {
+    super(app);
+  }
+
+  onOpen() {
+    this.setTitle('Delete template');
+    this.contentEl.createEl('p', { text: 'This cannot be undone.' });
+    const buttons = this.contentEl.createDiv({ cls: 'modal-button-container' });
+    new ButtonComponent(buttons)
+      .setButtonText('Delete')
+      .setWarning()
+      .onClick(() => {
+        this.onConfirm();
+        this.close();
+      });
+    new ButtonComponent(buttons)
+      .setButtonText('Cancel')
+      .onClick(() => this.close());
+  }
+
+  onClose() {
+    this.contentEl.empty();
+  }
+}
+```
+
+✅ **CORRECT**:
+```typescript
+import { ConfirmationModal } from 'obsidian';
+
+new ConfirmationModal(this.app)
+  .setTitle('Delete template')
+  .setContent('This cannot be undone.')
+  .addButton(btn => btn
+    .setButtonText('Delete')
+    .setDestructive()
+    .setCta()
+    .onClick(async () => {
+      await this.plugin.deleteTemplate(id);
+    }))
+  .addCancelButton()
+  .open();
+```
+
+**API summary** (all `@since 1.13.0`):
+
+| Member | Purpose |
+|--------|---------|
+| `addButton(cb)` | Add a `ConfirmationButton` to the button row |
+| `addCancelButton(text?)` | Add the dismissal button, with an optional label |
+| `addCheckbox(label, cb)` | Add a checkbox, e.g. "Don't ask again" |
+| `addClass(cls)` | Add a CSS class to the modal |
+| `buttonContainerEl` | The button row element |
+| `ConfirmationButton.onClick(handler)` | Runs the handler, then closes the modal. Return a truthy value to keep it open (e.g. to show a validation error) |
+| `ConfirmationButton.setInitialFocus()` | Focus this button when the modal opens |
+| `ConfirmationButton.setSecondary()` | Place a tertiary action apart from the primary/cancel pair |
+| `ConfirmationButton.setCancel()` | Style a custom button as the dismissal action |
+
+`setTitle()` and `setContent()` are inherited from `Modal`. `setContent()` accepts a `string` or a `DocumentFragment`. For richer bodies, write to `contentEl` directly.
+
+### Awaiting the User's Choice
+
+When calling code needs a `boolean`, wrap `ConfirmationModal` in a promise and resolve from `onClose`. That way Escape, clicking outside the modal, and the cancel button all resolve `false`.
+
+❌ **INCORRECT**:
+```typescript
+// Resolves only when Confirm is clicked. Escape or Cancel leaves the promise pending forever.
+function confirm(app: App, message: string): Promise<boolean> {
+  return new Promise(resolve => {
+    new ConfirmationModal(app)
+      .setContent(message)
+      .addButton(btn => btn.setButtonText('Confirm').setCta().onClick(() => resolve(true)))
+      .addCancelButton()
+      .open();
+  });
+}
+```
+
+✅ **CORRECT**:
+```typescript
+function confirm(app: App, message: string, confirmText: string): Promise<boolean> {
+  return new Promise(resolve => {
+    let confirmed = false;
+    const modal = new ConfirmationModal(app)
+      .setContent(message)
+      .addCancelButton()
+      .addButton(btn => btn
+        .setButtonText(confirmText)
+        .setCta()
+        .setInitialFocus()
+        .onClick(() => {
+          confirmed = true;
+        }));
+    modal.onClose = () => resolve(confirmed);
+    modal.open();
+  });
+}
+```
+
+### Deleting Files: Use `promptForDeletion()`
+
+To ask the user before deleting a vault file or folder, call `FileManager.promptForDeletion()` (since 0.15.0). It runs Obsidian's native deletion flow, the same one the core file explorer uses: confirmation dialog first, then deletion. It resolves `true` if the user confirmed and `false` if they cancelled. It works on every supported `minAppVersion`.
+
+❌ **INCORRECT**:
+```typescript
+if (await confirm(this.app, `Delete "${file.name}"?`, 'Delete')) {
+  await this.app.fileManager.trashFile(file);
+}
+```
+
+✅ **CORRECT**:
+```typescript
+// Shows the native prompt and deletes the file if confirmed. Do not call trashFile() afterwards.
+await this.app.fileManager.promptForDeletion(file);
+```
+
+### Supporting Obsidian Below 1.13.0
+
+`ConfirmationModal` does not exist before 1.13.0. If `minAppVersion` is lower, either raise `minAppVersion` to `1.13.0` or keep a small `Modal`-based fallback, and delete the fallback when you raise `minAppVersion`. Do not import `ConfirmationModal` while declaring an older `minAppVersion` (see rule 27 in `SKILL.md`).
+
+❌ **INCORRECT**:
+```json
+{ "minAppVersion": "1.5.0" }
+```
+```typescript
+import { ConfirmationModal } from 'obsidian'; // undefined at runtime on 1.5–1.12
+```
+
+✅ **CORRECT**:
+```json
+{ "minAppVersion": "1.13.0" }
+```
+```typescript
+import { ConfirmationModal } from 'obsidian';
+```

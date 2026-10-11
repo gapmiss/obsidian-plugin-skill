@@ -147,6 +147,7 @@ export class MyModal extends Modal {
 - Trap focus within modals (prevent Tab from leaving modal)
 - Return focus to the trigger element when closing modals
 - Define focus styles in CSS using `:focus-visible`
+- For yes/no prompts, use `ConfirmationModal` (1.13.0+) instead of a custom `Modal`. It renders the native button row, and `ConfirmationButton.setInitialFocus()` picks the button that receives focus on open. See [Confirmation Dialogs](ui-ux.md#confirmation-dialogs)
 
 ---
 

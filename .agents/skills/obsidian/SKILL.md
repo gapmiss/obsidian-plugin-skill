@@ -89,6 +89,7 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 | 24a | Response typing | Parse `response.text` and validate/cast once at the API boundary | Pass `response.json` (typed `any`) into plugin code |
 | 25 | Logging | Minimize console logging; none in `onload`/`onunload` in production | Use `console.log` in `onload`/`onunload` |
 | 26 | Input suggest | Use built-in `AbstractInputSuggest` | Copy Liam's `TextInputSuggest` implementation |
+| 26a | Confirm dialogs | Use built-in `ConfirmationModal` (1.13.0+); use `FileManager.promptForDeletion()` to confirm and delete files | Hand-build a `Modal` subclass with its own confirm/cancel button row |
 | 27 | API compatibility | Check `minAppVersion` for API availability (e.g., `getSettingDefinitions()` requires 1.13.0) | Use APIs not available in declared minAppVersion |
 | 28 | Language detection | Use Obsidian's `getLanguage()` | Use `localStorage.getItem('language')` or `i18next-browser-languagedetector` |
 
@@ -167,6 +168,7 @@ For comprehensive information on specific topics, see the reference files:
 - Command naming conventions (no "command", no plugin name, no plugin ID)
 - Settings and configuration best practices
 - Declarative settings API (1.13+): migration paths, control types, pitfalls
+- Confirmation dialogs: `ConfirmationModal` (1.13+), awaiting the user's choice, `promptForDeletion()`
 
 ### [File & Vault Operations](reference/file-operations.md)
 - View access patterns
@@ -270,6 +272,7 @@ Use this checklist for code review and implementation:
 11. **Touch targets**: Are all interactive elements at least 44×44px?
 12. **Focus styles**: Using `:focus-visible` and proper CSS variables?
 13. **Settings**: Using declarative `getSettingDefinitions()` on 1.13+? All saved data co-located in `plugin.settings`?
+14. **Confirm dialogs**: Using `ConfirmationModal` or `promptForDeletion()` instead of a custom confirm modal?
 
 ---
 
