@@ -85,6 +85,7 @@ Rule: `obsidianmd/regex-lookbehind`
 ❌ **INCORRECT**:
 ```typescript
 const pattern = /(?<=@)\w+/;  // Not supported on some iOS versions
+const notAfter = /(?<!\\)\$/;  // Negative lookbehind — also reported (v0.5.0)
 ```
 
 ✅ **CORRECT**:
@@ -94,7 +95,7 @@ const match = text.match(pattern);
 const username = match?.[1];
 ```
 
-Rationale: Regex lookbehind not supported on iOS versions before 16.4.
+Rationale: Regex lookbehind — positive `(?<=…)` and negative `(?<!…)` — is not supported on iOS versions before 16.4. Desktop-only plugins (`"isDesktopOnly": true`) are exempt.
 
 ---
 
@@ -126,7 +127,7 @@ Rationale: Avoid using the `navigator` API to detect the operating system. Use O
 ---
 
 ### Use window.setTimeout and window.setInterval
-Rule: `obsidianmd/prefer-window-timers` (named `prefer-active-window-timers` before v0.4.0)
+Rule: `obsidianmd/prefer-window-timers`
 
 ❌ **INCORRECT**:
 ```typescript
@@ -138,7 +139,7 @@ const interval = setInterval(() => {
   // do something
 }, 1000);
 
-// Also flagged — autofixed to window.setTimeout()
+// Also flagged — fixed to window.setTimeout()
 const other: number = activeWindow.setTimeout(() => {
   // do something
 }, 1000);
@@ -159,7 +160,7 @@ window.clearTimeout(timer);
 window.clearInterval(interval);
 ```
 
-Rationale: Timers are the one exception to "use `activeWindow` instead of `window`". `prefer-window-timers` flags both bare calls and `activeWindow.*` calls for `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, and `requestAnimationFrame`, and autofixes both to `window.*`. `prefer-active-doc` deliberately skips `window.<timer>()`, so the two rules agree. `activeWindow` follows focus, so a timer scheduled on it could be scheduled on a popout that later closes, and a later `activeWindow.clearTimeout()` could target a different window than the one that owns the ID. Also use `number` type instead of `NodeJS.Timeout` for browser compatibility.
+Rationale: Timers are the one exception to "use `activeWindow` instead of `window`". `prefer-window-timers` flags both bare calls and `activeWindow.*` calls for `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `requestAnimationFrame`, and `cancelAnimationFrame`. `--fix` rewrites them to `window.*` only where no type can change; a stored timer (like `timer` above) gets an editor suggestion instead, because its `NodeJS.Timeout` type must change to `number` with it. `prefer-active-doc` deliberately skips `window.<timer>()`, so the two rules agree. `activeWindow` follows focus, so a timer scheduled on it could be scheduled on a popout that later closes, and a later `activeWindow.clearTimeout()` could target a different window than the one that owns the ID. Also use `number` type instead of `NodeJS.Timeout` for browser compatibility.
 
 ---
 
@@ -403,7 +404,7 @@ Rationale: async/await is more readable and maintainable. Use Obsidian's `sleep(
 ## DOM Helpers
 
 ### Use Obsidian DOM Helpers
-Rule: Prefer Obsidian API over vanilla DOM
+Rule: `obsidianmd/prefer-create-el`
 
 ❌ **INCORRECT**:
 ```typescript
@@ -424,17 +425,18 @@ const div = createDiv();
 const span = createSpan();
 const fragment = createFragment();
 
-// activeDocument → activeWindow (v0.4.1+ autofix):
-activeWindow.createEl('p');        // not activeDocument.createEl('p')
-activeWindow.createDiv();
-activeWindow.createFragment();
-
-// Document-typed variables use .win:
-const doc = this.app.workspace.containerEl.ownerDocument;
-doc.win.createEl('p');             // not doc.createEl('p')
+// In a popout, create on a parent that already lives in that window:
+const row = containerEl.createDiv({ cls: 'my-row' });
+row.createEl('p', { text: 'Hello' });
 ```
 
-Rationale: Obsidian's helper functions (`createDiv()`, `createSpan()`, `createEl()`, `createFragment()`) are more concise and integrate better with the API. `activeDocument` is a `Document` and doesn't have these helpers — they live on `Window`/`activeWindow`. For `Document`-typed variables, access helpers via the `.win` property.
+❌ **INCORRECT** — does not compile:
+```typescript
+activeWindow.createEl('p');   // TS2339: 'createEl' does not exist on type 'Window'
+el.doc.win.createDiv();       // same: Node.win is typed as a plain Window
+```
+
+Rationale: Obsidian's helper functions (`createDiv()`, `createSpan()`, `createEl()`, `createFragment()`) are more concise and integrate better with the API. They are declared as globals and on every `Node`/`HTMLElement` — **not** on `Window`, so `activeWindow.createEl()` and `doc.win.createEl()` fail type-checking. `prefer-create-el` v0.5.0 offers `activeDocument.createElement()` → `activeWindow.createEl()` only as an editor suggestion for this reason; rewrite to a parent-element helper instead.
 
 ---
 
@@ -563,48 +565,72 @@ Rationale: For plugins with multiple files, organize them into folders to improv
 ---
 
 ### Validate manifest.json
-Rule: `obsidianmd/validate-manifest`
+Rule: `obsidianmd/validate-manifest` (`warn`; runs on `manifest.json` since v0.5.0 — it never ran before)
 
-Ensure your `manifest.json` is valid:
+The rule follows the community scanner's manifest review:
+
+- **Fields:** `id`, `name`, `version`, `minAppVersion`, `description`, `author`, `isDesktopOnly` required; `authorUrl`, `fundingUrl`, `helpUrl` optional; any other key (or a duplicate key) is reported
+- **`id`:** no "obsidian"; must not end with "plugin" ("plugin" elsewhere is fine)
+- **`name`:** no "Obsidian", no parts of it ("obsi", "sidian", or a leading "ob"), no "Plugin" anywhere
+- **`description`:** 10–250 characters; ends with `.`, `!`, or `?`; no "Obsidian"; doesn't refer to itself ("This plugin", "This tool", "A plugin that", "The plugin …"); isn't the same as and doesn't start with the name. A lowercase start, emoji, and mentioning plugins in general are fine
+
+❌ **INCORRECT**:
 ```json
 {
-  "id": "unique-plugin-id",
-  "name": "Plugin Name",
+  "id": "obsidian-task-plugin",
+  "name": "Task Plugin",
+  "description": "Task Plugin: this plugin manages tasks (beta)",
   "version": "1.0.0",
-  "minAppVersion": "0.15.0",
-  "description": "Short description",
+  "minAppVersion": "1.13.0",
   "author": "Your Name",
-  "authorUrl": "https://...",
   "isDesktopOnly": false
 }
 ```
 
+✅ **CORRECT**:
+```json
+{
+  "id": "task-board",
+  "name": "Task Board",
+  "version": "1.0.0",
+  "minAppVersion": "1.13.0",
+  "description": "Track tasks across notes on a drag-and-drop board.",
+  "author": "Your Name",
+  "authorUrl": "https://github.com/your-name",
+  "isDesktopOnly": false
+}
+```
+
+For a published id containing "obsidian" (it can never change), accept it in a block scoped to the manifest instead of renaming: `{ files: ["manifest.json"], rules: { "obsidianmd/validate-manifest": ["warn", { allowedWords: { id: ["obsidian"] } }] } }`.
+
 ---
 
 ### Validate LICENSE
-Rule: `obsidianmd/validate-license`
+Rule: `obsidianmd/validate-license` (`warn`; runs on `LICENSE`, `LICENSE.md`, `LICENSE.txt` since v0.5.0 — it never ran before)
 
-Your plugin must include a valid LICENSE file. The rule checks two things:
+The rule catches the sample plugin's `LICENSE` left unedited:
 
-1. **Copyright holder**: The holder must not be "Dynalist Inc." (the Obsidian sample plugin's default). Change it to your name.
-2. **Copyright year**: The year must be current. Update it when the year changes.
+1. **Copyright holder**: A holder of "Dynalist Inc." (the sample plugin's default) is reported. Change it to your name.
+2. **Copyright year**: Only while the holder is still "Dynalist Inc." is an outdated year also reported. Your own notice does **not** need the current year, and the FSF's own notice inside GPL-family licenses is not reported.
 
 ❌ **INCORRECT** (unchanged sample plugin LICENSE):
 ```
-Copyright (C) 2021 by Dynalist Inc.
+Copyright (C) 2020-2025 by Dynalist Inc.
 ```
 
-✅ **CORRECT**:
+✅ **CORRECT** (any year is fine once the holder is yours):
 ```
-Copyright (C) 2024 by Your Name
+Copyright (c) 2024 Your Name
 ```
 
 Rule options:
 ```javascript
-"obsidianmd/validate-license": ["error", {
-  currentYear: 2026,           // Override the year check (defaults to current year)
-  disableUnchangedYear: false, // Set true to skip year validation
+"obsidianmd/validate-license": ["warn", {
+  currentYear: 2026,           // Year to compare an unedited sample line against (defaults to current year)
+  disableUnchangedYear: false, // Set true to skip the year check on an unedited sample line
 }]
 ```
 
-Rationale: The Obsidian sample plugin ships with Dynalist Inc. as copyright holder and an old year. Forgetting to update this before submission is a common mistake.
+Recognized forms: `Copyright (C) 2020 by Name`, `Copyright (c) 2020-2025 Name`, `Copyright © 2020 Name`. File names are matched case-sensitively next to your ESLint config, so `License` or `COPYING` is not linted.
+
+Rationale: The Obsidian sample plugin ships with Dynalist Inc. as copyright holder. Forgetting to update this before submission is a common mistake.

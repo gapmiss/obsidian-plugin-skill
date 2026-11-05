@@ -15,9 +15,13 @@ Consistent UI/UX is essential for a native-feeling Obsidian plugin experience.
 ## Sentence Case for UI Text
 
 ### Enforce Sentence Case for UI Text
-Rule: `obsidianmd/ui/sentence-case` (auto-fixable)
+Rule: `obsidianmd/ui/sentence-case` (fixable with `allowAutoFix: true`)
 
-> **Note (v0.4.0):** This rule is now enabled (`warn`) in the `recommended` config with `{ enforceCamelCaseLower: true }` — it was disabled in v0.3.0.
+> **Note (v0.5.0):** This rule is **off** in `recommended` and `recommendedWithLocalesEn` (0.3.0 meant to turn it off, but it stayed on through 0.4.2). The scanner doesn't run it either. Sentence case is still the Obsidian UI convention — opt in to have it checked:
+>
+> ```javascript
+> { files: ["**/*.ts"], rules: { "obsidianmd/ui/sentence-case": ["warn", { enforceCamelCaseLower: true }] } }
+> ```
 
 Use sentence case (first word capitalized, rest lowercase except proper nouns) for all UI text.
 
@@ -40,11 +44,14 @@ new Notice('File successfully saved')
 Configuration options:
 ```javascript
 'obsidianmd/ui/sentence-case': ['warn', {
-  brands: ['Obsidian', 'GitHub'],      // Preserve brand names
-  acronyms: ['API', 'URL', 'HTML'],    // Preserve acronyms
-  enforceCamelCaseLower: true,         // Fix camelCase to sentence case
+  brands: ['Obsidian', 'GitHub'],      // Preserve brand names (replaces the built-in list)
+  acronyms: ['API', 'URL', 'HTML'],    // Preserve acronyms (replaces the built-in list)
+  enforceCamelCaseLower: true,         // Flag CamelCase words like "AutoReveal"
+  allowAutoFix: true,                  // Let --fix rewrite the text (no fix without it)
 }]
 ```
+
+> **`brands` and `acronyms` replace the built-in lists** (which include `Obsidian`, `GitHub`, `URL`, `PDF`) rather than adding to them — list every brand and acronym your UI text uses.
 
 Applies to:
 - `.setName()`, `.setDesc()`, `.setText()`, `.setTitle()`
@@ -89,7 +96,7 @@ When a plugin references other plugins or well-known tools in its UI text, add t
 Plugins that externalize UI strings into locale files must also enforce sentence case.
 
 ### Sentence Case for JSON Locale Files
-Rule: `obsidianmd/ui/sentence-case-json` (auto-fixable)
+Rule: `obsidianmd/ui/sentence-case-json` (`warn` in `recommendedWithLocalesEn`; fixable with `allowAutoFix: true`)
 
 Enforces sentence case for English locale strings stored in JSON files (e.g. `en.json`, `locales/en.json`).
 
@@ -114,7 +121,7 @@ Enforces sentence case for English locale strings stored in JSON files (e.g. `en
 ---
 
 ### Sentence Case for TypeScript/JavaScript Locale Modules
-Rule: `obsidianmd/ui/sentence-case-locale-module` (auto-fixable)
+Rule: `obsidianmd/ui/sentence-case-locale-module` (`warn` in `recommendedWithLocalesEn`; fixable with `allowAutoFix: true`)
 
 Enforces sentence case for English locale strings exported from TS/JS modules (e.g. `en.ts`, `locales/en.js`).
 
@@ -138,21 +145,30 @@ export default {
 
 ### Enable Locale Checks with recommendedWithLocalesEn
 
-To enable all three sentence-case rules (TypeScript sources + JSON + TS/JS locale modules), use the `recommendedWithLocalesEn` config instead of `recommended`:
+To check English locale files, use the `recommendedWithLocalesEn` config instead of `recommended`:
 
 ```javascript
 // eslint.config.mjs
+import { defineConfig, globalIgnores } from "eslint/config";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
-export default [
-  // Use this config to also lint en*.json, en*.ts, en*.js locale files
+export default defineConfig([
+  globalIgnores(["node_modules", "dist", "main.js", "esbuild.config.mjs", "version-bump.mjs"]),
+  // Also lints en.json, en-US.ts, en/*.json, ... locale files
   ...obsidianmd.configs.recommendedWithLocalesEn,
-];
+  {
+    languageOptions: {
+      parserOptions: { projectService: { allowDefaultProject: ["eslint.config.*"] } },
+    },
+  },
+]);
 ```
 
-The `recommended` config only checks `ui/sentence-case` (inline TypeScript strings). The `recommendedWithLocalesEn` config additionally enables:
-- `ui/sentence-case-json` — checks `en*.json` and `en/**/*.json`
-- `ui/sentence-case-locale-module` — checks `en*.ts`, `en*.js`, and `en/**/*`
+`recommendedWithLocalesEn` adds, on top of `recommended`:
+- `ui/sentence-case-json` — JSON files named `en`, `en-*`, `en_*`, or `en.*` (any case), or under a directory named so (`en/`, `en-US/`)
+- `ui/sentence-case-locale-module` — `.ts`/`.js`/`.cjs`/`.mjs` modules matched the same way
+
+`english.json`, `entries.json`, and `env.json` are not matched. Inline `ui/sentence-case` stays off in both configs; opt in as shown above.
 
 ---
 

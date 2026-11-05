@@ -153,18 +153,23 @@ Rule: `obsidianmd/vault/iterate`
 
 ❌ **INCORRECT**:
 ```typescript
-// Iterating all files to find one
-const files = this.app.vault.getMarkdownFiles();
-const target = files.find(f => f.path === targetPath);
+// Iterating all files to find one (reported by vault/iterate)
+const target = this.app.vault.getFiles().find(f => f.path === targetPath);
+
+// Same problem, but not linted — getMarkdownFiles().find() is out of the rule's scope
+const note = this.app.vault.getMarkdownFiles().find(f => f.path === targetPath);
 ```
 
 ✅ **CORRECT**:
 ```typescript
 // Direct lookup
 const target = this.app.vault.getAbstractFileByPath(targetPath);
+
+// Or, when you need a TFile (Obsidian 1.5.7+) — returns null if missing or a folder
+const file = this.app.vault.getFileByPath(targetPath);
 ```
 
-Rationale: Use direct lookup methods instead of iterating all files for better performance.
+Rationale: Use direct lookup methods instead of iterating all files for better performance. v0.5.0 offers an editor suggestion to `getFileByPath()` when your `minAppVersion` allows it. Note it returns `null` where `.find()` returned `undefined`.
 
 ---
 

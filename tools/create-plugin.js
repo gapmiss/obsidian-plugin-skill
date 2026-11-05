@@ -196,7 +196,7 @@ function generatePackageJson(id, version, description, author) {
     "scripts": {
       "dev": "node esbuild.config.mjs",
       "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-      "lint": "eslint src/",
+      "lint": "eslint .",
       "version": "node version-bump.mjs && git add manifest.json versions.json"
     },
     "keywords": [
@@ -206,18 +206,16 @@ function generatePackageJson(id, version, description, author) {
     "author": author,
     "license": "MIT",
     "devDependencies": {
-      "@eslint/js": "^9.30.1",
-      "@eslint/json": "^0.14.0",
       "@types/node": "^22.15.17",
       "esbuild": "^0.28.1",
       "eslint": "^9.39.5",
-      "eslint-plugin-obsidianmd": "^0.4.2",
+      "eslint-plugin-obsidianmd": "^0.5.0",
       "jiti": "^2.6.1",
       // obsidian is compile-time only — the app provides the runtime API.
       "obsidian": "latest",
       "tslib": "^2.4.0",
       "typescript": "^5.9.2",
-      "typescript-eslint": "^8.35.1"
+      "typescript-eslint": "^8.70.1"
     },
     "allowScripts": {
       "esbuild": true
@@ -306,16 +304,19 @@ function generateVersionsJson(version, minAppVersion) {
 
 // Generate eslint.config.mjs
 function generateEslintConfig() {
-  return `import { defineConfig } from "eslint/config";
+  return `import { defineConfig, globalIgnores } from "eslint/config";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default defineConfig([
-    { ignores: ["main.js", "*.mjs"] },
+    // Build output and Node build scripts are not plugin code.
+    globalIgnores(["node_modules", "dist", "main.js", "esbuild.config.mjs", "version-bump.mjs"]),
     ...obsidianmd.configs.recommended,
     {
         languageOptions: {
             parserOptions: {
-                projectService: true,
+                projectService: {
+                    allowDefaultProject: ["eslint.config.*"],
+                },
             },
         },
     },
@@ -415,29 +416,38 @@ function validateMetadata(id, name, description) {
     errors.push('Plugin ID must only contain lowercase letters, numbers, dashes, and underscores');
   }
 
-  // Plugin name validation
+  // Plugin name validation (mirrors obsidianmd/validate-manifest v0.5.0)
   if (/obsidian/i.test(name)) {
     errors.push('Plugin name cannot contain "Obsidian"');
+  } else if (/obsi|sidian/i.test(name) || /^ob/i.test(name)) {
+    errors.push('Plugin name cannot contain parts of "Obsidian" ("obsi", "sidian", or a leading "ob")');
   }
-  if (/plugin$/i.test(name)) {
-    errors.push('Plugin name cannot end with "Plugin"');
-  }
-  if (/^obsi/i.test(name) || /dian$/i.test(name)) {
-    errors.push('Plugin name cannot start with "Obsi" or end with "dian"');
+  if (/plugin/i.test(name)) {
+    errors.push('Plugin name cannot contain "Plugin"');
   }
 
-  // Description validation
-  if (/obsidian/i.test(description)) {
+  // Description validation (mirrors obsidianmd/validate-manifest v0.5.0)
+  const desc = description.trim();
+  if (/obsidian/i.test(desc)) {
     errors.push('Description cannot include "Obsidian"');
   }
-  if (/this plugin|this is a plugin|this plugin allows/i.test(description)) {
-    errors.push('Description cannot use phrases like "This plugin", "This is a plugin", etc.');
+  if (/\b(this\s+(obsidian\s+)?(plugin|tool|extension|add-?on|mod)\b|an?\s+(obsidian\s+)?plugin\s+(that|for|to|which)\b|the\s+plugin\s+\w)/i.test(desc)) {
+    errors.push('Description cannot refer to itself ("This plugin", "A plugin that", "This tool", etc.)');
   }
-  if (!/[.?!)]$/.test(description)) {
-    errors.push('Description must end with punctuation: . ? ! or )');
+  if (desc.length < 10) {
+    errors.push('Description must be at least 10 characters');
   }
-  if (description.length > 250) {
-    warnings.push(`Description is ${description.length} characters (recommended max: 250)`);
+  if (desc.length > 250) {
+    errors.push(`Description is ${desc.length} characters (max: 250)`);
+  }
+  if (!/[.!?]$/.test(desc)) {
+    errors.push('Description must end with punctuation: . ! or ?');
+  }
+  const nameLower = name.trim().toLowerCase();
+  if (nameLower && desc.toLowerCase() === nameLower) {
+    errors.push('Description cannot be the same as the plugin name');
+  } else if (nameLower && desc.toLowerCase().startsWith(nameLower)) {
+    errors.push('Description cannot start with the plugin name');
   }
 
   return { errors, warnings };

@@ -1,9 +1,9 @@
 ---
 name: obsidian
-description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.4.2, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.5.0, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.11.1
+  version: 1.12.0
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -24,16 +24,16 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 
 ---
 
-## Rules Reference (eslint-plugin-obsidianmd v0.4.2)
+## Rules Reference (eslint-plugin-obsidianmd v0.5.0)
 
 ### Submission & Naming
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
 | 1 | Plugin ID | Omit "obsidian"; don't end with "plugin" | Include "obsidian" or end with "plugin" |
-| 2 | Plugin name | Omit "Obsidian"; don't end with "Plugin" | Include "Obsidian" or end with "Plugin" |
-| 3 | Plugin name | Don't start with "Obsi" or end with "dian" | Start with "Obsi" or end with "dian" |
-| 4 | Description | Omit "Obsidian", "This plugin", etc. | Use "Obsidian" or "This plugin" |
-| 5 | Description | End with `.?!)` punctuation | Leave description without terminal punctuation |
+| 2 | Plugin name | Omit "Obsidian" and "Plugin" | Include "Obsidian" or "Plugin" anywhere in the name |
+| 3 | Plugin name | Avoid parts of "Obsidian" | Use "obsi", "sidian", or a leading "ob" |
+| 4 | Description | Say what it does; don't repeat or start with the name | Use "Obsidian", "This plugin", "A plugin that", or start with the name |
+| 5 | Description | 10–250 chars, ending with `.`, `!`, or `?` | End with `)` or no punctuation |
 
 ### Memory & Lifecycle
 | # | Rule | ✅ Do | ❌ Don't |
@@ -55,12 +55,12 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 11 | UI text | Sentence case — "Advanced settings"; use `acronyms`/`brands` options for proper names | Title Case — "Advanced Settings" |
 | 12 | JSON locale | Sentence case in JSON locale files (`recommendedWithLocalesEn`) | Title case in locale JSON |
 | 13 | TS/JS locale | Sentence case in TS/JS locale modules | Title case in locale modules |
-
-> **Note (v0.4.0):** `ui/sentence-case` is now enabled (`warn`) and enforced on inline UI strings — it was disabled in v0.3.0. Use the `recommendedWithLocalesEn` config to also check English locale files (rules 12–13).
 | 14 | Command names | Omit "command" in command names/IDs | Include "command" in names/IDs |
 | 15 | Command IDs | Omit plugin ID/name from command IDs/names | Duplicate plugin ID in command IDs |
 | 16 | Hotkeys | No default hotkeys | Set default hotkeys |
 | 17 | Settings headings | Use `.setHeading()` | Create manual HTML headings; use "General", "settings", or plugin name in headings |
+
+> **Note (v0.5.0):** `ui/sentence-case` is **off** in `recommended` (and the scanner doesn't run it) — sentence case is still the convention, so opt in with `"obsidianmd/ui/sentence-case": ["warn", { enforceCamelCaseLower: true }]`. `recommendedWithLocalesEn` checks English locale files (rules 12–13).
 
 ### Declarative Settings (1.13.0+)
 
@@ -101,7 +101,7 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 | 30 | Timers | Use `window.setTimeout()`, `window.setInterval()`, `window.requestAnimationFrame()`, etc. (exception to rule 29) | Use bare `setTimeout()`/`setInterval()`, or `activeWindow.setTimeout()` — `prefer-window-timers` flags both |
 | 31 | Main workspace UI | Use `this.app.workspace.containerEl.ownerDocument` from settings | Use `activeDocument` to update main workspace from settings window |
 
-> **Note (v0.4.0):** `prefer-active-doc` remains disabled by default — the only Obsidian rule shipped as `off`. Enable it manually for popout window support.
+> **Note (v0.5.0):** `prefer-active-doc` now warns in `recommended` (it was `off` through v0.4.2). It reports the global `document` and offers an editor suggestion, not an autofix. Test and web worker files are exempt.
 
 > **Note (v1.13.0):** Settings now open in a new window. `activeDocument` from settings callbacks points to the settings window, not the main vault. Use `this.app.workspace.containerEl.ownerDocument` to target main workspace UI.
 
@@ -124,8 +124,8 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 ### Security & Compatibility
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 35 | DOM creation | Use Obsidian DOM helpers (`createEl()`, `createDiv()`, `createSpan()`, `createSvg()`, `createFragment()`) via `prefer-create-el`; linter autofixes `activeDocument.createElement()` → `activeWindow.createEl()` (v0.4.1) | Use `document.createElement()`, `document.createDocumentFragment()`, etc. |
-| 36 | Node.js modules | Guard Node.js imports with `Platform.isDesktop` check (`no-nodejs-modules`) | Import Node.js modules without platform guard |
+| 35 | DOM creation | Use Obsidian DOM helpers (`createEl()`, `createDiv()`, `createSpan()`, `createSvg()`, `createFragment()`) via `prefer-create-el`; in popouts, create on a parent element (`containerEl.createEl('p')`) | Use `document.createElement()`; use `activeWindow.createEl()` — `Window` doesn't declare the helpers, so it fails `tsc` |
+| 36 | Node.js modules | Load Node.js modules with `import()`/`require()` inside a `Platform.isDesktop` guard (`no-nodejs-modules`) | Static `import` of a Node built-in in a plugin that isn't `isDesktopOnly` |
 | 37 | iOS compat | Avoid regex lookbehind (iOS < 16.4 incompatibility) | Use regex lookbehind |
 
 ### Accessibility (MANDATORY)
@@ -140,8 +140,8 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 |------|--------|----------|
 | Sample code | Remove all sample/template code | Keep class names like MyPlugin, SampleModal |
 | Object.assign | `Object.assign({}, defaults, overrides)` (`object-assign`) | `Object.assign(defaultsVar, other)` — mutates defaults |
-| LICENSE | Copyright holder must not be "Dynalist Inc."; year must be current (`validate-license`) | Leave "Dynalist Inc." as holder or use an outdated year |
-| Async | Use async/await | Use Promise chains |
+| LICENSE | Replace the sample's "Dynalist Inc." holder with your name (`validate-license`) | Leave the sample plugin's `Copyright (C) 2020-2025 by Dynalist Inc.` line |
+| Async | Use async/await; `void` fire-and-forget promises in void callbacks (`obsidianmd/no-misused-promises`) | Use Promise chains; disable the old `@typescript-eslint/no-misused-promises` name |
 | Deprecated packages | Replace flagged npm packages with Node.js built-ins (e.g., `builtin-modules` → `import { builtinModules } from "node:module"`) | Use packages the scanner flags as replaceable |
 
 ---
@@ -219,6 +219,8 @@ For comprehensive information on specific topics, see the reference files:
 
 ### [ESLint Setup Guide](reference/eslint-setup.md)
 - Complete ESLint config for community scanner compliance
+- Upgrading from v0.4.x (breaking changes and fixes)
+- Scoping overrides with `files`; test and web worker file exemptions
 - Why `typescript-eslint` recommendedTypeChecked is required
 - Common violations and fixes (floating promises, require imports, etc.)
 - Popout window compatibility rules
@@ -229,9 +231,9 @@ For comprehensive information on specific topics, see the reference files:
 
 Before submitting a plugin, follow this sequence:
 
-1. **Run ESLint** — `npx eslint .` using `eslint-plugin-obsidianmd`; fix all errors AND warnings (warnings affect your Scorecard)
-2. **Validate manifest** — Confirm `id`, `name`, `description`, `version`, and `minAppVersion` meet naming and formatting rules (rules 1–5)
-3. **Check LICENSE** — Copyright holder must not be "Dynalist Inc." and the year must be current
+1. **Run ESLint** — `npx eslint .` **from the project root** using `eslint-plugin-obsidianmd` (`eslint src` skips `manifest.json`, `LICENSE`, and `package.json`); fix all errors AND warnings (warnings affect your Scorecard)
+2. **Validate manifest** — `validate-manifest` checks `id`, `name`, and `description` (rules 1–5); confirm `version` and `minAppVersion` yourself
+3. **Check LICENSE** — `validate-license` reports the sample's "Dynalist Inc." holder; put your own name there
 4. **Test on mobile** — Verify no regex lookbehind, no `fetch()`, and touch targets ≥ 44×44px (skip only if plugin is declared desktop-only)
 5. **Keyboard accessibility audit** — Tab through all interactive elements; confirm focus indicators and ARIA labels are present
 6. **Create GitHub Release** — Tag must match `manifest.json` version; attach `main.js`, `manifest.json`, and `styles.css` (optional)
@@ -249,6 +251,7 @@ Published plugins receive a **Scorecard** visible on community.obsidian.md. The 
 - Aim for 90%+ overall score
 - Fix ALL ESLint warnings, not just errors — warnings are publicly visible
 - Use `typescript-eslint/recommendedTypeChecked` for type-aware checks
+- New submissions get the scanner's strictest layer: `no-static-styles-assignment`, `no-unsupported-api`, `sample-names`, and other rules are hard errors, and every `eslint-disable` needs a `-- description`
 - Add GitHub artifact attestation to releases
 
 See [Community Plugin Scanner](reference/community-scanner.md) for full details on scanner checks, Health metrics, Review checks, common warnings, and improvement tips.

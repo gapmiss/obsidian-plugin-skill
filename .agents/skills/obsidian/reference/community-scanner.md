@@ -1,19 +1,19 @@
 # Community Plugin Scanner
 
-> **Last verified:** 2026-09-13, against `eslint-plugin-obsidianmd` v0.4.2.
+> **Last verified:** 2026-11-05, against `eslint-plugin-obsidianmd` v0.5.0.
 > The scanner is new and under active development. This file is the single source of truth for scanner behavior — when the scanner changes, update this file. Other docs link here rather than duplicating.
 
 The community.obsidian.md scanner analyzes every plugin release and publishes the results as a [Scorecard](#scorecard-system). For the ESLint configuration that satisfies it, see [eslint-setup.md](eslint-setup.md). For the submission process itself, see [submission.md](submission.md).
 
 ## What the Scanner Runs
 
-As of `eslint-plugin-obsidianmd` **v0.4.2**, the scanner ruleset is published *as* the plugin's `recommended` config (the "Community scanners ruleset"). A single `...obsidianmd.configs.recommended` reproduces what the scanner runs locally — it bundles:
+The scanner runs a configuration built on `eslint-plugin-obsidianmd`'s `recommended` config, so a single `...obsidianmd.configs.recommended` reproduces most of it locally. It bundles:
 
-1. **`eslint-plugin-obsidianmd`** — 41 Obsidian-specific rules (DOM safety, command naming, platform APIs, popout window compatibility, declarative settings, etc.)
-2. **`typescript-eslint` recommended type-checked** — Standard type-aware TypeScript rules (`no-floating-promises`, `no-require-imports`, `restrict-template-expressions`, `no-unnecessary-type-assertion`, etc.)
+1. **`eslint-plugin-obsidianmd`** — 42 Obsidian-specific rules (DOM safety, command naming, platform APIs, popout window compatibility, declarative settings, etc.)
+2. **`typescript-eslint` recommended type-checked** — Standard type-aware TypeScript rules (`no-floating-promises`, `restrict-template-expressions`, `no-unnecessary-type-assertion`, etc.), with `@typescript-eslint/no-misused-promises` swapped for `obsidianmd/no-misused-promises` (Obsidian's chaining `then` on `Setting`/components isn't treated as a Promise)
 3. **Security & hygiene plugins** — `@microsoft/eslint-plugin-sdl` and `no-unsanitized` (DOM injection), `eslint-plugin-depend` (replaceable dependencies, checked against `package.json`), `eslint-plugin-import`, and `eslint-comments` (disable-directive discipline).
 
-In older versions you had to compose the obsidianmd rules and the typescript-eslint type-checked rules yourself; that mistake is now moot. The only thing you supply is `parserOptions` with `projectService` so the type-aware rules can load type information — see [eslint-setup.md](eslint-setup.md) for the complete config.
+The only thing you supply locally is `parserOptions` with `projectService` so the type-aware rules can load type information — see [eslint-setup.md](eslint-setup.md) for the complete config. The scanner itself sets `projectService: true` and `tsconfigRootDir` to the plugin root; files no `tsconfig.json`/`jsconfig.json` covers are linted **without** type information (type-aware rules off) rather than failing, so a JavaScript plugin without a tsconfig is still reviewed.
 
 ### Scanner Ignored Patterns
 
@@ -23,20 +23,43 @@ The scanner only lints plugin source code. These patterns are excluded:
 - `.obsidian`, `**/.obsidian/**` — vault config directories
 - `test-vault` — test vault directories
 - `esbuild.config.mjs`, `version-bump.mjs` — common build scripts
-- `**/*.test.*`, `**/*.spec.*`, `**/test/**`, `**/tests/**`, `**/__tests__/**` — test files/directories
+- `**/*.test.*`, `**/*.tests.*`, `**/*.spec.*`, `**/*.specs.*`, `**/test/**`, `**/tests/**`, `**/__tests__/**` — test files/directories
 - `**/mocks/**`, `**/__mocks__/**`, `**/testUtils**` — test utilities
 - `**/*.cjs`, `**/*.mjs`, `**/*.cts`, `**/*.mts` — non-`.ts`/`.js` extensions (typically config files)
 - `**/vite*`, `**/scripts/**`, `**/docs/**` — config, build, and documentation
-- `**/i18n/**`, `**/locale/**`, `**/locales/**`, `**/translations/**`, `**/l10n/**` — localization files
-- `.pnpm-store`, `automation/**`, `e2e-tests/**` — cache, CI, and end-to-end tests
+- `**/i18n/**`, `**/i18next/**`, `**/locale/**`, `**/locales/**`, `**/translations/**`, `**/l10n/**` — localization files
+- `.pnpm-store`, `automation/**` — cache and CI
+- `**/e2e/**`, `**/e2e-tests/**`, `**/*.e2e.*`, `**/wdio.conf.*`, `**/wdio.*.conf.*`, `**/playwright.config.*` — end-to-end tests
+- Tool configs by name: `**/{astro,babel,commitlint,docusaurus,esbuild,eslint,jest,oxlint,postcss,prettier,rolldown,rollup,stylelint,svelte,tailwind,tsdown,tsup,uno,webpack}.config.*`, `**/{eslint,jest}.*.config.*`, `**/jest.setup.*`, `**/.{babelrc,eslintrc,mocharc,prettierrc}.*` — a plugin's own `config.ts` or `settings.config.ts` is still linted
+- **Bundled/minified JavaScript** — `*.min.js`, files under `node_modules`/`dist`/`build`/`out`/`release` at any depth, and (in TypeScript projects) the root `main.js` or files outside your source whose first 500 bytes hold a bundler banner or fewer than two line breaks. JavaScript inside your source, and every file of a JavaScript plugin, is always linted
 
 ### Scanner Rule Adjustments
 
 The scanner adjusts severities compared to the `recommended` config:
 
-- **Security rules kept as `error`:** `no-eval`, `no-implied-eval`, `no-unsanitized/method`, `no-unsanitized/property`, `obsidianmd/regex-lookbehind`, `obsidianmd/no-forbidden-elements`
-- **Rules disabled by scanner:** `no-undef`, `@typescript-eslint/no-unsafe-*`, `restrict-template-expressions`, `no-base-to-string`, `import/no-unresolved`, `validate-manifest`, `validate-license`, `commands/no-command-in-command-id`, `commands/no-plugin-id-in-command-id`
+- **Security rules kept as `error`:** `no-eval`, `no-unsanitized/method`, `no-unsanitized/property`, `obsidianmd/regex-lookbehind`, `obsidianmd/no-forbidden-elements`, and implied eval (core `no-implied-eval` in JS, `@typescript-eslint/no-implied-eval` in TS)
+- **Security findings:** `no-eval`, `no-implied-eval`, `@typescript-eslint/no-implied-eval`, `no-new-func`, `no-unsanitized/method`, and `no-unsanitized/property` are filed as security findings and are always errors. `no-new-func` runs inside `obsidianmd/rule-custom-message`; a `[no-new-func]` message is filed as a security error, while `[no-console]` stays a code-quality warning
+- **Rules disabled by scanner:** `no-undef`, `@typescript-eslint/no-unsafe-*`, `restrict-template-expressions`, `no-base-to-string`, `import/no-unresolved`, `validate-manifest`, `validate-license` (the scanner reviews the manifest separately), `commands/no-command-in-command-id`, `commands/no-plugin-id-in-command-id`, and the three sentence-case rules
+- **Recommendations (weigh less than warnings):** `@typescript-eslint/no-deprecated`, `@typescript-eslint/no-unused-vars`, `@typescript-eslint/no-namespace`, `@typescript-eslint/prefer-as-const`, `@typescript-eslint/prefer-namespace-keyword`, `obsidianmd/prefer-abstract-input-suggest`
 - Most other rules are downgraded to `warn`
+- **Disable comments** are honored, and unused ones are not reported. `eslint-comments/no-unlimited-disable` is always `error`
+- **Missing dependencies:** if the plugin's dependencies can't be installed (no `package.json`, or the install fails), type-aware rules and `obsidianmd/no-misused-promises` are switched off
+
+### Stricter Layers for Newer Submissions
+
+Plugins are checked with one of four layers depending on when they were submitted. **The newest layer (what a plugin submitted today gets)** adds on top of the base:
+
+- `eslint-comments/require-description`, `disable-enable-pair`, and `no-restricted-disable` at `error` (the two oldest layers have them at `warn`)
+- `@typescript-eslint/no-unsafe-*` and the two command-id rules back at `warn`
+- These obsidianmd rules at `error`: `settings-tab/no-manual-html-headings`, `settings-tab/no-problematic-settings-headings`, `sample-names`, `no-sample-code`, `platform`, `no-plugin-as-component`, `detach-leaves`, `no-static-styles-assignment`, `no-view-references-in-plugin`, `no-unsupported-api`
+
+❌ **INCORRECT** — assuming the scanner downgrades everything to `warn`, and shipping `el.setCssStyles({ color: "red" })` (`no-static-styles-assignment`) or an `eslint-disable` without a `-- description`.
+
+✅ **CORRECT** — treat the list above as hard errors for a new submission; fix them, and give every disable comment a description.
+
+### Committed Build Output
+
+The scanner warns when a TypeScript project commits a root `main.js` whose first 500 bytes hold the sample plugin's esbuild banner — build output belongs in the release, not the repository. Add `main.js` to `.gitignore`. In a JavaScript plugin, `main.js` is the source and is not reported.
 
 ## Checks Beyond ESLint
 
@@ -87,7 +110,7 @@ Automated scans of your latest release. **ESLint violations become publicly visi
 - Direct style manipulation via `setAttribute` or `element.style`
 - Missing `activeDocument`/`activeWindow` usage
 - Floating promises (must be awaited or voided)
-- Unused variables (prefix with `_` if intentional)
+- Unused variables (filed as recommendations; `_`-prefixed caught errors and destructured array elements are ignored, but a dead `_x` variable is still reported)
 - Deprecated packages (e.g., `builtin-modules`, `indent-str`)
 - `setInterval` combined with network calls (periodic data transmission concern)
 - Plugin description missing punctuation

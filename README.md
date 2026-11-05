@@ -6,7 +6,7 @@ A comprehensive agent skill for developing high-quality Obsidian plugins that fo
 
 This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
-- ESLint rules from `eslint-plugin-obsidianmd` v0.4.2
+- ESLint rules from `eslint-plugin-obsidianmd` v0.5.0
 - Declarative settings (`getSettingDefinitions()`), the Obsidian 1.13 settings API
 - Official Plugin Guidelines from Obsidian documentation
 - Submission via community.obsidian.md and Scorecard optimization
@@ -149,9 +149,9 @@ your-plugin/
 
 **Interactive prompts:**
 1. Target directory (default: current directory)
-2. Plugin name (validates: no "Obsidian", can't end with "Plugin")
+2. Plugin name (validates: no "Obsidian" or parts of it, no "Plugin")
 3. Plugin ID (validates: no "obsidian", can't end with "plugin", lowercase only)
-4. Description (validates: no "Obsidian"/"This plugin", must end with punctuation)
+4. Description (validates: no "Obsidian", no self-reference, 10–250 chars, ends with `.`, `!`, or `?`, doesn't start with the name)
 5. Author name
 6. GitHub username (optional, auto-generates authorUrl)
 7. Minimum Obsidian version (default `1.13.0`)
@@ -160,8 +160,8 @@ your-plugin/
 ```
 ❌ Validation Errors:
    • Plugin ID cannot contain "obsidian"
-   • Plugin name cannot end with "Plugin"
-   • Description must end with punctuation: . ? ! or )
+   • Plugin name cannot contain "Plugin"
+   • Description must end with punctuation: . ! or ?
 ```
 
 ---
@@ -225,16 +225,16 @@ Your agent will automatically use the Obsidian skill guidelines while helping yo
 
 ## What's Covered
 
-### Most Critical Rules (eslint-plugin-obsidianmd v0.4.2)
+### Most Critical Rules (eslint-plugin-obsidianmd v0.5.0)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
 **Submission & Naming:**
 1. Plugin ID: no "obsidian", can't end with "plugin"
-2. Plugin name: no "Obsidian", can't end with "Plugin"
-3. Plugin name: can't start with "Obsi" or end with "dian"
-4. Description: no "Obsidian", "This plugin", etc.
-5. Description must end with `.?!)` punctuation
+2. Plugin name: no "Obsidian", no "Plugin"
+3. Plugin name: no parts of "Obsidian" ("obsi", "sidian", or a leading "ob")
+4. Description: no "Obsidian", "This plugin", "A plugin that", etc.; doesn't start with the name
+5. Description: 10–250 characters, ends with `.`, `!`, or `?`
 
 **Memory & Lifecycle:**
 6. Use `registerEvent()` for automatic cleanup
@@ -246,7 +246,7 @@ The main SKILL.md file highlights the most important rules organized by category
 10. Use `.instanceOf(T)` for cross-window DOM checks
 
 **UI/UX:**
-11. Use sentence case for all UI text (`ui/sentence-case`, enabled as `warn` in v0.4.0)
+11. Use sentence case for all UI text (`ui/sentence-case` is off by default in v0.5.0 — opt in)
 12. Sentence case in locale JSON files
 13. Sentence case in TS/JS locale modules
 14. No "command" in command names/IDs
@@ -274,7 +274,7 @@ The main SKILL.md file highlights the most important rules organized by category
 27. Check `minAppVersion` for API compatibility
 
 **Popout Window Compatibility:**
-28. Use `activeDocument`/`activeWindow` instead of globals (`prefer-active-doc`, still off by default — enable manually)
+28. Use `activeDocument`/`activeWindow` instead of globals (`prefer-active-doc`, `warn` since v0.5.0)
 29. Use `window.setTimeout()` for timers — not bare `setTimeout()` or `activeWindow.setTimeout()` (`prefer-window-timers`)
 
 **Event Handling:**
@@ -433,11 +433,12 @@ Use this checklist before submitting your plugin:
 
 **Submission Validation (will fail bot checks if incorrect):**
 - [ ] Plugin ID: no "obsidian", doesn't end with "plugin", lowercase only
-- [ ] Plugin name: no "Obsidian", doesn't end with "Plugin"
-- [ ] Plugin name: doesn't start with "Obsi" or end with "dian"
-- [ ] Description: no "Obsidian" or "This plugin" phrases
-- [ ] Description ends with proper punctuation (. ? ! or ))
-- [ ] Description under 250 characters (recommended)
+- [ ] Plugin name: no "Obsidian", no "Plugin"
+- [ ] Plugin name: no parts of "Obsidian" ("obsi", "sidian", or a leading "ob")
+- [ ] Description: no "Obsidian" or self-reference ("This plugin", "A plugin that")
+- [ ] Description ends with `.`, `!`, or `?`
+- [ ] Description is 10–250 characters and doesn't start with the plugin name
+- [ ] `npx eslint .` from the project root is clean (checks `manifest.json` and `LICENSE` too)
 - [ ] manifest.json ID, name, description match submission entry
 
 **Code Quality:**
@@ -468,8 +469,10 @@ Use this checklist before submitting your plugin:
 For automatic checking, install the official ESLint plugin:
 
 ```bash
-npm install --save-dev eslint eslint-plugin-obsidianmd
+npm install --save-dev eslint typescript typescript-eslint obsidian eslint-plugin-obsidianmd
 ```
+
+v0.5.0 requires Node.js 20.19+, 22.13+, or 24+, and no longer installs `obsidian` for you. Upgrading from v0.4.x? See [Upgrading from v0.4.x](.agents/skills/obsidian/reference/eslint-setup.md#upgrading-from-v04x).
 
 The `recommended` config bundles `typescript-eslint` (type-checked), security plugins, and all Obsidian rules — no separate typescript-eslint setup needed.
 
@@ -482,26 +485,32 @@ Quick config example (`recommended` bundles `typescript-eslint` recommendedTypeC
 
 ```javascript
 // eslint.config.mjs
-import { defineConfig } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default defineConfig([
-  { ignores: ["main.js", "*.mjs"] },
+  globalIgnores(["node_modules", "dist", "main.js", "esbuild.config.mjs", "version-bump.mjs"]),
   ...obsidianmd.configs.recommended,
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ["eslint.config.*"],
+        },
       },
     },
   },
 ]);
 ```
 
+Run it from the project root (`eslint .`, not `eslint src`) so `manifest.json`, `LICENSE`, and `package.json` are checked too.
+
 Many rules are auto-fixable with:
 ```bash
 npx eslint --fix .
 ```
+
+Since v0.5.0, rewrites that could break type-checking are offered as editor suggestions instead of `--fix` autofixes.
 
 ## Resources
 
@@ -563,7 +572,7 @@ This skill is based on:
 
 This skill follows **Agent Skills standard best practices**:
 
-- **Progressive Disclosure**: Main SKILL.md (~325 lines) provides overview; reference files contain details
+- **Progressive Disclosure**: Main SKILL.md (~370 lines) provides overview; reference files contain details
 - **Context Window Efficiency**: "The context window is a public good" - optimized token usage
 - **One-Level-Deep References**: All reference files directly under `reference/` (no nesting)
 - **Topic-Based Organization**: Each reference file focuses on a specific domain
@@ -573,4 +582,4 @@ This structure allows your coding agent to load the essential information quickl
 
 ---
 
-Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.4.2 and the community.obsidian.md Scorecard system. The plugin and scanner are under active development and may evolve.
+Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.5.0 and the community.obsidian.md Scorecard system. The plugin and scanner are under active development and may evolve.

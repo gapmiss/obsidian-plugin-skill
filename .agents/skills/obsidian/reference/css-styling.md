@@ -24,12 +24,16 @@ Rule: `obsidianmd/no-static-styles-assignment`
 element.style.color = 'red';
 element.style.fontSize = '14px';
 element.setAttribute('style', 'margin: 10px;');
+element.setCssStyles({ color: 'red' });   // also reported since v0.5.0 (unquoted keys)
 ```
 
 ✅ **CORRECT**:
 ```typescript
 // Add class in TypeScript
 element.addClass('my-custom-element');
+
+// Values that change at runtime: set a CSS variable, consume it in styles.css
+element.setCssProps({ '--my-width': `${width}px` });
 
 // Define styles in styles.css using Obsidian CSS variables
 .my-custom-element {
@@ -39,7 +43,7 @@ element.addClass('my-custom-element');
 }
 ```
 
-Rationale: Move all styles to CSS for better theme/snippet adaptability. Use Obsidian's CSS variables for theme consistency.
+Rationale: Move all styles to CSS for better theme/snippet adaptability. Use Obsidian's CSS variables for theme consistency. This rule is an `error` and, for new submissions, a hard error in the scanner. v0.5.0 checks unquoted keys in `setCssStyles()`/`setCssProps()` too — in a run over community plugins this was the largest new source of errors.
 
 ---
 

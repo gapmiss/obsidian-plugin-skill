@@ -17,27 +17,29 @@ your-plugin/
 
 ## Naming and Description Guidelines
 
-The Obsidian release validation bot (`validate-plugin-entry.yml`) enforces these rules:
+These rules come from the developer docs' manifest reference and the community review. `obsidianmd/validate-manifest` (v0.5.0) checks them locally on `manifest.json` — run `npx eslint .` from the project root to catch them before submitting:
 
 ### Plugin ID (Required)
 - **Cannot contain "obsidian"** (case-insensitive)
-- **Cannot end with "plugin"**
+- **Cannot end with "plugin"** ("plugin" elsewhere in the id is fine)
 - **Must use only**: lowercase alphanumeric characters, dashes (`-`), and underscores (`_`)
 - Must be unique (not used by existing or removed plugins)
 - Keep it short and simple (used for plugin folder name)
 
 ### Plugin Name (Required)
 - **Cannot contain "Obsidian"** (case-insensitive)
-- **Cannot end with "Plugin"**
-- **Cannot start with "Obsi" or end with "dian"**
+- **Cannot contain "Plugin"** anywhere
+- **Cannot contain parts of "Obsidian"**: "obsi", "sidian", or a leading "ob"
 - Must be unique among existing plugins
 - Use a clear, descriptive name
 
 ### Description (Required)
 - **Cannot include "Obsidian"** (case-insensitive)
-- **Cannot use phrases**: "This plugin", "This is a plugin", "This plugin allows"
-- **Must end with punctuation**: `.`, `?`, `!`, or `)`
-- **Recommended max 250 characters** (longer descriptions trigger readability warnings)
+- **Cannot refer to itself**: "This plugin", "This tool", "This extension", "A plugin that/for/to", "The plugin …"
+- **Must end with punctuation**: `.`, `!`, or `?` (a closing `)` is not accepted)
+- **10–250 characters**
+- **Cannot be the same as, or start with, the plugin name**
+- A lowercase first letter, emoji, and mentioning plugins in general ("Reload plugins in development.") are fine
 - Focus on what the plugin does, not what it is
 
 ### Author (Required)
@@ -71,8 +73,8 @@ The Obsidian release validation bot (`validate-plugin-entry.yml`) enforces these
 ```json
 {
   "id": "obsidian-daily-notes-plugin",  // Contains "obsidian" and ends with "plugin"
-  "name": "Obsidian Daily Notes Plugin", // Contains "Obsidian" and ends with "Plugin"
-  "description": "This is an Obsidian plugin that helps with daily notes" // Contains "Obsidian" and "This is...plugin", no punctuation
+  "name": "Obsidian Daily Notes Plugin", // Contains "Obsidian" and "Plugin"
+  "description": "This is an Obsidian plugin that helps with daily notes" // Contains "Obsidian", refers to itself ("an ... plugin that"), no punctuation
 }
 ```
 
