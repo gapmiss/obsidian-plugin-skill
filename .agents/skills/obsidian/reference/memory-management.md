@@ -183,7 +183,7 @@ onunload() {
 }
 ```
 
-Rationale: Obsidian handles leaf cleanup automatically. Manual detachment can cause issues.
+Rationale: Obsidian handles leaf cleanup automatically. Manual detachment can cause issues. Since v0.5.1 the rule reports (and autofixes) only the `onunload()` of a class that extends `Plugin` — a `Component` that detaches the leaves of a view type it then unregisters is not reported.
 
 ---
 

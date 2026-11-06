@@ -17,7 +17,7 @@ your-plugin/
 
 ## Naming and Description Guidelines
 
-These rules come from the developer docs' manifest reference and the community review. `obsidianmd/validate-manifest` (v0.5.0) checks them locally on `manifest.json` — run `npx eslint .` from the project root to catch them before submitting:
+These rules come from the developer docs' manifest reference and the community review. `obsidianmd/validate-manifest` (v0.5.1) checks them locally on `manifest.json` (the `id` rules only with `checkId: true` — turn it on before your first submission) — run `npx eslint .` from the project root to catch them before submitting:
 
 ### Plugin ID (Required)
 - **Cannot contain "obsidian"** (case-insensitive)

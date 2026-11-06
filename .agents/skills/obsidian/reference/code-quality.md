@@ -160,7 +160,7 @@ window.clearTimeout(timer);
 window.clearInterval(interval);
 ```
 
-Rationale: Timers are the one exception to "use `activeWindow` instead of `window`". `prefer-window-timers` flags both bare calls and `activeWindow.*` calls for `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `requestAnimationFrame`, and `cancelAnimationFrame`. `--fix` rewrites them to `window.*` only where no type can change; a stored timer (like `timer` above) gets an editor suggestion instead, because its `NodeJS.Timeout` type must change to `number` with it. `prefer-active-doc` deliberately skips `window.<timer>()`, so the two rules agree. `activeWindow` follows focus, so a timer scheduled on it could be scheduled on a popout that later closes, and a later `activeWindow.clearTimeout()` could target a different window than the one that owns the ID. Also use `number` type instead of `NodeJS.Timeout` for browser compatibility.
+Rationale: Timers are the one exception to "use `activeWindow` instead of `window`". `prefer-window-timers` flags both bare calls and `activeWindow.*` calls for `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `requestAnimationFrame`, and `cancelAnimationFrame` — except `activeWindow.requestAnimationFrame()`/`cancelAnimationFrame()` (v0.5.1): a frame callback runs when its own window paints, and a minimized main window doesn't paint, so `window.requestAnimationFrame()` would stall a popout's animation. `--fix` rewrites them to `window.*` only where no type can change; a stored timer (like `timer` above) gets an editor suggestion instead, because its `NodeJS.Timeout` type must change to `number` with it. `prefer-active-doc` deliberately skips `window.<timer>()`, so the two rules agree. `activeWindow` follows focus, so a timer scheduled on it could be scheduled on a popout that later closes, and a later `activeWindow.clearTimeout()` could target a different window than the one that owns the ID. Also use `number` type instead of `NodeJS.Timeout` for browser compatibility.
 
 ---
 
@@ -428,6 +428,9 @@ const fragment = createFragment();
 // In a popout, create on a parent that already lives in that window:
 const row = containerEl.createDiv({ cls: 'my-row' });
 row.createEl('p', { text: 'Hello' });
+
+// Or, for a detached element in the focused window's document (not reported since v0.5.1):
+const p = activeDocument.createElement('p');
 ```
 
 ❌ **INCORRECT** — does not compile:
@@ -436,7 +439,7 @@ activeWindow.createEl('p');   // TS2339: 'createEl' does not exist on type 'Wind
 el.doc.win.createDiv();       // same: Node.win is typed as a plain Window
 ```
 
-Rationale: Obsidian's helper functions (`createDiv()`, `createSpan()`, `createEl()`, `createFragment()`) are more concise and integrate better with the API. They are declared as globals and on every `Node`/`HTMLElement` — **not** on `Window`, so `activeWindow.createEl()` and `doc.win.createEl()` fail type-checking. `prefer-create-el` v0.5.0 offers `activeDocument.createElement()` → `activeWindow.createEl()` only as an editor suggestion for this reason; rewrite to a parent-element helper instead.
+Rationale: Obsidian's helper functions (`createDiv()`, `createSpan()`, `createEl()`, `createFragment()`) are more concise and integrate better with the API. They are declared as globals and on every `Node`/`HTMLElement` — **not** on `Window`, so `activeWindow.createEl()` and `doc.win.createEl()` fail type-checking. Since v0.5.1, `prefer-create-el` no longer reports `activeDocument.createElement()` or `el.doc.createElement()` — with Obsidian's types they are the right calls for a detached element in a popout window's document ([#240](https://github.com/obsidianmd/eslint-plugin/issues/240)). Don't call `activeDocument.createEl()`: on a node, `createEl()` appends the new element, and a document can't take a second root element.
 
 ---
 
@@ -570,7 +573,7 @@ Rule: `obsidianmd/validate-manifest` (`warn`; runs on `manifest.json` since v0.5
 The rule follows the community scanner's manifest review:
 
 - **Fields:** `id`, `name`, `version`, `minAppVersion`, `description`, `author`, `isDesktopOnly` required; `authorUrl`, `fundingUrl`, `helpUrl` optional; any other key (or a duplicate key) is reported
-- **`id`:** no "obsidian"; must not end with "plugin" ("plugin" elsewhere is fine)
+- **`id`** (only with `checkId: true`, v0.5.1+): no "obsidian"; must not end with "plugin" ("plugin" elsewhere is fine). Off by default because a published id can never change and the scanner doesn't check it
 - **`name`:** no "Obsidian", no parts of it ("obsi", "sidian", or a leading "ob"), no "Plugin" anywhere
 - **`description`:** 10–250 characters; ends with `.`, `!`, or `?`; no "Obsidian"; doesn't refer to itself ("This plugin", "This tool", "A plugin that", "The plugin …"); isn't the same as and doesn't start with the name. A lowercase start, emoji, and mentioning plugins in general are fine
 
@@ -601,7 +604,7 @@ The rule follows the community scanner's manifest review:
 }
 ```
 
-For a published id containing "obsidian" (it can never change), accept it in a block scoped to the manifest instead of renaming: `{ files: ["manifest.json"], rules: { "obsidianmd/validate-manifest": ["warn", { allowedWords: { id: ["obsidian"] } }] } }`.
+Before your first submission, turn the `id` check on in a block scoped to the manifest: `{ files: ["manifest.json"], rules: { "obsidianmd/validate-manifest": ["warn", { checkId: true }] } }`. Remove it once the plugin is published. A published id containing "obsidian" needs no `allowedWords` entry since v0.5.1 — delete one you added for v0.5.0.
 
 ---
 

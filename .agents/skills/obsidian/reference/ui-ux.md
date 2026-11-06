@@ -193,7 +193,15 @@ this.addCommand({
   id: 'open-settings',
   name: 'Open settings',
 });
+
+// "command" as what the command acts on is fine (not reported since v0.5.1)
+this.addCommand({
+  id: 'copy-command-id',
+  name: 'Copy URI for command',
+});
 ```
+
+Rationale: Commands are already listed as commands. Since v0.5.1 these rules report "command" only as a redundant label — after a separator or in brackets at the start or end ("Command: open note"), or as the last word after a name that reads without it ("Open settings command").
 
 ---
 
@@ -219,7 +227,7 @@ this.addCommand({
 });
 ```
 
-Rationale: Obsidian automatically namespaces commands with the plugin ID.
+Rationale: Obsidian automatically namespaces commands with the plugin ID. Since v0.5.1, `no-plugin-id-in-command-id` reports the plugin ID only where it **starts** the command ID: `show-calendar-view` in a plugin with id `calendar` names what the command acts on and is fine. Accepting a rename suggestion breaks users' hotkeys, `executeCommandById()` calls, `obsidian://` URIs, and other plugins that use the old ID — only rename before the first release.
 
 ---
 
@@ -244,7 +252,7 @@ this.addCommand({
 });
 ```
 
-Rationale: Avoid hotkey conflicts. Let users choose their own shortcuts.
+Rationale: Avoid hotkey conflicts. Let users choose their own shortcuts. `hotkeys: []` sets no hotkey and is not reported (v0.5.1).
 
 ---
 
@@ -314,7 +322,7 @@ containerEl.createEl('h3', { text: 'Appearance' });
 new Setting(containerEl).setName('Appearance').setHeading();
 ```
 
-Rationale: Use Obsidian's built-in heading API for consistency.
+Rationale: Use Obsidian's built-in heading API for consistency. Since v0.5.1 the rule reports only headings created on the settings tab's `containerEl` — not those inside a container of your own, a setting's name or description, or a `Notice` fragment.
 
 ---
 
@@ -332,7 +340,7 @@ new Setting(containerEl)
   .setHeading();
 
 new Setting(containerEl)
-  .setName('My Plugin preferences')  // Don't include plugin name
+  .setName('My Plugin settings')  // Don't use the plugin name as the heading
   .setHeading();
 ```
 
@@ -354,7 +362,9 @@ new Setting(containerEl)
 Rationale: Avoid redundant words in settings headings:
 - Don't use "settings" or "options" (user already knows they're in settings)
 - Don't use generic "General" heading
-- Don't include the plugin name (already shown in settings tab title)
+- Don't use the plugin name as the heading (already shown in settings tab title)
+
+Since v0.5.1 "settings" and "options" match as whole words only, and "General" or the plugin name are reported only when they are the whole heading apart from "settings"/"options" — so "Inline Numerals" in a plugin named Numerals is fine.
 
 ---
 

@@ -90,12 +90,13 @@ The old `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` (v5-7
 ### Version Requirements
 
 Versions at time of writing:
-- `eslint-plugin-obsidianmd` 0.5.0
+- `eslint-plugin-obsidianmd` 0.5.1
 - **Node.js 20.19+, 22.13+, or 24+** (Node.js 18 is no longer supported — upgrade locally and in CI)
 - `eslint` 9.19+ (flat config). `defineConfig`/`globalIgnores` from `eslint/config` need 9.22+
 - `typescript-eslint` 8.35.1+ (8.70.1+ recommended — fixes a `no-unnecessary-type-assertion` false positive on `{}` asserted to a `Record` alias)
 - `typescript` 4.8.4+, up to 6.x. **Not TypeScript 7.**
 - `obsidian` installed as a devDependency
+- A `minimatch` override in `package.json` until the toolchain ships `minimatch` 11 — see [`npm audit`: moderate vulnerabilities in `minimatch`](#npm-audit-moderate-vulnerabilities-in-minimatch-ghsa-g3hv-75wg-m249)
 
 Peer dependencies are `eslint >=9.19.0`, `typescript >=4.8.4`, and `typescript-eslint ^8.35.1`. Everything else the config needs — `@eslint/json`, `eslint-plugin-import`, `@microsoft/eslint-plugin-sdl`, `eslint-plugin-depend`, `eslint-plugin-no-unsanitized`, `eslint-comments` — ships as a dependency of the plugin, so you don't install those yourself.
 
@@ -105,6 +106,22 @@ Peer dependencies are `eslint >=9.19.0`, `typescript >=4.8.4`, and `typescript-e
 - `moduleResolution: "node"` shows a deprecation warning on 5.9+ and stops `tsc` on TypeScript 6 → use `"bundler"` for esbuild projects
 - `baseUrl` is deprecated (removed in TS 7.0) → remove if not using path aliases
 - TypeScript 6 defaults `types` to `[]`, so `eslint.config.mts` linted via `allowDefaultProject` has no Node types and `tsconfigRootDir: import.meta.dirname` is reported by `no-unsafe-assignment`. Add `"types": ["node"]` to `compilerOptions`
+
+## Upgrading from v0.5.0
+
+v0.5.1 needs no config change. It fixes false positives and fixes/suggestions that changed what correct code does, found by linting 600 community plugins: about 16% fewer findings overall. New findings come from two rules.
+
+| Change | What to do |
+|--------|------------|
+| `prefer-instanceof` reports `e.target instanceof HTMLElement` (also `relatedTarget`, `currentTarget`, `srcElement`) | Never autofixed. Use `e.targetNode?.instanceOf(HTMLElement)` — see [below](#using-instanceof-on-an-events-target) |
+| `no-unsupported-api` checks APIs with no `@since` against the first typings that declare them | Guard them or raise `minAppVersion`: `activeDocument`/`activeWindow` 0.15.0, `targetNode`/`instanceOf()`/`el.doc`/`el.win` 0.15.3, `createSvg()` 1.1.0, `setCssStyles()`/`setCssProps()`/`nextFrame()` 1.1.7, `Modal.setTitle()` 1.5.1 |
+| `validate-manifest` checks `id` only with `checkId: true` | Delete an `allowedWords: { id: [...] }` entry you added for 0.5.0. Turn `checkId` on only for an unpublished plugin |
+| `no-static-styles-assignment` reports at the first fixed-value property of `setCssStyles()`/`setCssProps()`, not at the call | Move an `eslint-disable-next-line` above a multi-line call to sit above that property |
+| `prefer-active-doc` reports changes to `document.body`/`documentElement`/`head` with a new message and no suggestion | Apply and undo the change in each window's document — see [below](#using-document-or-window-directly) |
+| Tool configs, `scripts/`, test setup files and helpers are exempt like test files | Delete overrides you added for them (see [Test, tooling and web worker files](#test-tooling-and-web-worker-files-automatic)) |
+| `activeDocument.createElement()` is no longer reported by `prefer-create-el` | Delete disable comments for it — they are now reported as unused |
+
+Rules that now report nothing below the `minAppVersion` their replacement needs: `prefer-get-language` (1.8.7), `prefer-abstract-input-suggest` (1.4.10), `prefer-file-manager-trash-file` (1.6.6), `prefer-instanceof` (0.15.0; no fix below 0.15.3), and `prefer-create-el` for each helper (`createDiv()` 0.10.0, `createSvg()` 1.1.0).
 
 ## Upgrading from v0.4.x
 
@@ -136,7 +153,7 @@ v0.5.0 is a breaking release that lints more files and needs newer tooling. Expe
 
 You add two things: a `globalIgnores` entry for build output, and a `parserOptions` block so the type-checked rules can access your TypeScript project.
 
-✅ **CORRECT** (v0.5.0):
+✅ **CORRECT** (v0.5.x):
 ```js
 // eslint.config.mjs
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -288,24 +305,65 @@ ESLint has no `"obsidianmd/*": "off"`. Use `ruleConfigs` to generate the overrid
 
 For code that only runs on desktop but has no manifest (a CLI, tooling), scope the `isDesktopOnly` option instead of disabling the rule: `{ files: ["cli/**"], rules: { "obsidianmd/no-nodejs-modules": ["warn", { isDesktopOnly: true }] } }`.
 
-#### Test and web worker files (automatic)
+#### Test, tooling and web worker files (automatic)
 
-The recommended config exempts test and worker files from the rules about code running inside Obsidian — you don't need overrides for the standard paths:
+The recommended config exempts test, tooling and worker files from the rules about code running inside Obsidian — you don't need overrides for the standard paths:
 
-- **Test files** — `**/*.{test,tests,spec,specs}.*`, `**/testUtils*`, anything under `test/`, `tests/`, `__tests__/`, `mocks/`, `__mocks__/`, top-level `automation/` or `test-vault/`, and e2e tests (`**/*.e2e.*`, `e2e/`, `e2e-tests/`, `wdio.conf.*`, `playwright.config.*`). Off there: `no-global-this`, `prefer-active-doc`, `prefer-create-el`, `prefer-instanceof`, `prefer-window-timers`, `no-nodejs-modules`, `no-tfile-tfolder-cast`, `hardcoded-config-path`, `no-unsupported-api`, `regex-lookbehind`.
-- **Web worker files** — `**/*.worker.*` and anything under `workers/`. Off there: `no-global-this`, `prefer-active-doc`, `prefer-create-el`, `prefer-instanceof`, `prefer-window-timers`. Worker globals replace the browser/Obsidian ones.
+- **Test files** — `**/*.{test,tests,spec,specs,e2e,setup,testing}.*`, `**/testUtils*`, anything under `test/`, `tests/`, `__tests__/`, `mocks/`, `__mocks__/`, `e2e/`, `e2e-tests/`, `test-helpers/`, `test_helpers/`, `test-support/`, `test-utils/`, `test_utils/`, top-level `automation/` or `test-vault/`, test runner setup files (`**/test-setup.*`, `**/setupTests.*`, `**/global-setup.*`, `**/*-global-setup.*`), and `wdio.conf.*`, `playwright.config.*`.
+- **Tooling files** (v0.5.1) — configs named after their tool (`eslint.config.*`, `vite.config.*`, `vitest.config.*`, `jest.config.*`, `rollup.config.*`, `esbuild.config.*`, `webpack.config.*`, `svelte.config.*`, `postcss.config.*`, `tailwind.config.*`, and others; also `vitest.*.config.*` and `.eslintrc.*`/`.prettierrc.*`), `esbuild.*`, `version-bump.*`, and anything under `scripts/`. A plugin's own `config.ts` or `settings.config.ts` is **not** a tooling file.
+- **Web worker files** — `**/*.worker.*`, `**/*-worker.*`, `**/*_worker.*` (v0.5.1), and anything under `workers/`. Worker globals replace the browser/Obsidian ones.
 
-Security rules still apply to both. For tests or workers under other names (e.g. `integration-tests/`), add the same `"off"` overrides for that path or put it in `globalIgnores`.
+| Rule | Test & tooling files | Worker files |
+|------|---------------------|--------------|
+| `no-global-this`, `prefer-active-doc`, `prefer-create-el`, `prefer-instanceof`, `prefer-window-timers`, `platform` | off | off |
+| `no-nodejs-modules`, `no-tfile-tfolder-cast`, `hardcoded-config-path`, `no-unsupported-api`, `regex-lookbehind`, `no-forbidden-elements`, `no-static-styles-assignment`, `prefer-file-manager-trash-file`, `prefer-get-language` | off | on |
+| `rule-custom-message` | `no-new-func` only — `console.log` is allowed | full |
 
-#### Manifest escape hatch
+Security rules, including `no-new-func`, still apply everywhere. Still ignore the sample plugin's `esbuild.config.mjs` and `version-bump.mjs` in `globalIgnores`: they are in no `tsconfig.json`, so otherwise they need `allowDefaultProject`.
 
-A published plugin id containing "obsidian" can never change. Accept it in a block scoped to the manifest (a JSON manifest can't carry a disable comment):
+For tests or tooling under other names (e.g. `integration-tests/`, `tools/`), add the same `"off"` overrides for that path or put it in `globalIgnores`. To allow `console` there without losing `no-new-func`, restate `rule-custom-message` with only its `no-new-func` entry:
 
+❌ **INCORRECT** — also drops the `Function`-constructor check:
+```js
+{ files: ["tools/**"], rules: { "obsidianmd/rule-custom-message": "off" } }
+```
+
+✅ **CORRECT**:
+```js
+{
+    files: ["tools/**"],
+    rules: {
+        "obsidianmd/rule-custom-message": ["error", {
+            "no-new-func": {
+                messages: {
+                    "The Function constructor is eval": "Using the `Function` constructor is dangerous because it executes arbitrary code, similar to `eval()`",
+                },
+            },
+        }],
+    },
+}
+```
+
+#### Manifest options
+
+Since v0.5.1, `validate-manifest` checks the `id` (no "obsidian", not ending in "plugin") **only** with `checkId: true`. A published plugin's id can never change and the scanner doesn't check it, so leave `checkId` off once you've submitted. Turn it on for a plugin you haven't submitted yet. Options live in a block scoped to the manifest (a JSON manifest can't carry a disable comment):
+
+❌ **INCORRECT** — a published plugin; `allowedWords.id` does nothing without `checkId` since v0.5.1:
 ```js
 {
     files: ["manifest.json"],
     rules: {
         "obsidianmd/validate-manifest": ["warn", { allowedWords: { id: ["obsidian"] } }],
+    },
+}
+```
+
+✅ **CORRECT** — an unsubmitted plugin, so its id can still change:
+```js
+{
+    files: ["manifest.json"],
+    rules: {
+        "obsidianmd/validate-manifest": ["warn", { checkId: true }],
     },
 }
 ```
@@ -337,9 +395,9 @@ import obsidianmd from "eslint-plugin-obsidianmd";
 }
 ```
 
-With `ruleConfigs` instead of `configs.recommended`, you must declare Obsidian globals (`activeDocument`, `activeWindow`, `createEl`, `sleep`, etc.) yourself; test/worker files are not exempted; third-party plugins (`@microsoft/sdl`, `import`, `no-unsanitized`, `depend`, `eslint-comments`) are not included; and `manifest.json`/`LICENSE` need their own blocks (`language: "json/json"` with `@eslint/json` 2.x, and `language: "obsidianmd/plain-text"`). Most users should stick with `configs.recommended`.
+With `ruleConfigs` instead of `configs.recommended`, you must declare Obsidian globals (`activeDocument`, `activeWindow`, `createEl`, `sleep`, etc.) yourself; test, tooling, and worker files are not exempted (and `rule-custom-message` keeps `no-console` there); third-party plugins (`@microsoft/sdl`, `import`, `no-unsanitized`, `depend`, `eslint-comments`) are not included; and `manifest.json`/`LICENSE` need their own blocks (`language: "json/json"` with `@eslint/json` 2.x, and `language: "obsidianmd/plain-text"`). Most users should stick with `configs.recommended`.
 
-### Default severities (v0.5.0)
+### Default severities (v0.5.1)
 
 Most Obsidian rules are **`warn`** (warnings are publicly visible on your Scorecard, so fix them too). These are the exceptions:
 
@@ -351,9 +409,9 @@ Most Obsidian rules are **`warn`** (warnings are publicly visible on your Scorec
 
 † `no-nodejs-modules` reads your `manifest.json`: it reports nothing when `"isDesktopOnly": true` (only a literal `true` counts). Override with the `isDesktopOnly` option.
 
-### Fixes vs. suggestions (v0.5.0)
+### Fixes vs. suggestions (v0.5.x)
 
-`--fix` now applies a rewrite only where it can't break type-checking. Elsewhere the same rewrite is an **editor suggestion** (💡) — review and apply it in your editor; `--fix` never applies suggestions. Rules that only reported now offer suggestions: `prefer-active-doc`, `prefer-file-manager-trash-file`, `prefer-get-language`, `object-assign`, `vault/iterate`, the `commands/*` rules, and `no-default-hotkeys`. Suggestions that need a newer Obsidian than your `minAppVersion` are not offered (`activeDocument` 0.15.0, `getFileByPath()` 1.5.7, `trashFile()` 1.6.6, `getLanguage()` 1.8.7). Renaming a command ID drops users' hotkeys for it — think before accepting that suggestion.
+`--fix` applies a rewrite only where it can't break type-checking. Elsewhere the same rewrite is an **editor suggestion** (💡) — review and apply it in your editor; `--fix` never applies suggestions. Rules that only reported now offer suggestions: `prefer-active-doc`, `prefer-file-manager-trash-file`, `prefer-get-language`, `object-assign`, `vault/iterate`, the `commands/*` rules, and `no-default-hotkeys`. Suggestions that need a newer Obsidian than your `minAppVersion` are not offered (`activeDocument` 0.15.0, `instanceOf()` 0.15.3, `getFileByPath()` 1.5.7, `trashFile()` 1.6.6, `getLanguage()` 1.8.7). Where no `minAppVersion` is known, `prefer-instanceof` and `prefer-create-el` still fix, and the suggestion names the version it needs. Renaming a command ID breaks users' hotkeys, `executeCommandById()` calls, `obsidian://` URIs, and other plugins that use the old ID — think before accepting that suggestion.
 
 ### Why type-aware linting matters (now bundled)
 
@@ -544,7 +602,7 @@ void this.app.workspace.revealLeaf(leaf);
 
 **Rule:** `obsidianmd/no-misused-promises` (`error`; replaced `@typescript-eslint/no-misused-promises` in v0.5.0)
 
-Same as typescript-eslint's rule, except Obsidian's chaining `then` (on `Setting` and components) no longer counts as a Promise — so returning a `Setting` chain from a callback is no longer a false positive. Real Promises are still reported. Async callbacks in `addEventListener` or other void-expecting contexts:
+Same as typescript-eslint's rule, except Obsidian's chaining `then` (on `Setting` and components) no longer counts as a Promise — so returning a `Setting` chain from a callback is no longer a false positive. Real Promises are still reported. `async onload()` in a `Plugin` subclass is fine (v0.5.1 also accepts it with `obsidian` typings older than 1.7.2); `async onunload()` is still reported, because Obsidian doesn't await it. Async callbacks in `addEventListener` or other void-expecting contexts:
 
 ```typescript
 // Bad
@@ -681,17 +739,51 @@ For popout window compatibility, use `activeDocument` (or an element's own `el.d
 
 ```typescript
 // Bad
-document.body.addClass('my-plugin');
 const hit = document.querySelector('.my-plugin');
 window.addEventListener('resize', onResize);   // not linted, but leaks across popouts
 
 // Good
-activeDocument.body.addClass('my-plugin');
 const hit = containerEl.doc.querySelector('.my-plugin'); // the element's own document
 this.registerDomEvent(activeWindow, 'resize', onResize);
 ```
 
-The rule reports only the bare global `document` — not `window`, `window.document`, type positions, property names, or local bindings named `document`. It has **no autofix**: it offers an editor suggestion (`document` → `activeDocument`), because whether code should follow the focused window or a specific element's window depends on what it does. No suggestion is offered after an environment check (`typeof document`), where `document` is compared (`e.target === document`) or stored for later, or when `minAppVersion` is below 0.15.0. Test and web worker files are exempt.
+The rule reports only the bare global `document` — not `window`, `window.document`, type positions, property names, or local bindings named `document`. It has **no autofix**: it offers an editor suggestion (`document` → `activeDocument`), because whether code should follow the focused window or a specific element's window depends on what it does. `document.contains(el)` suggests `el.isConnected` instead. No suggestion is offered after an environment check (`typeof document`), where `document` is compared (`e.target === document`) or handed on as a value (an argument, array element, assignment, return), for `document.dispatchEvent()`, or when `minAppVersion` is below 0.15.0. Test, tooling and web worker files are exempt.
+
+Not reported (v0.5.1): `document` in a listener on the main window's `document` or `window` (it handles that window's events, so its `document` is right), `document` as the fallback to `activeDocument` (`activeDocument ?? document`), `document` listed with other documents (`[document, ...popoutDocs]`), and lookups of UI only the main window has (`status-bar`, `workspace-ribbon`, `side-dock-ribbon`, `mod-left-split`, `mod-right-split`).
+
+**State of the whole window (v0.5.1).** A change to the main window's `<body>`, `<html>`, or `<head>` — a class, attribute, CSS variable, or appended `<style>` — is reported with its own message and **no suggestion**. `activeDocument` would change whichever window has focus, so a class added in one window could be removed from another and left behind. Apply the change, and undo it, in every window's document:
+
+```typescript
+// Bad — main window only; popouts never get the class
+document.body.addClass('my-plugin-on');
+
+// Bad — whichever window has focus at onload/onunload; may add and remove in different windows
+activeDocument.body.addClass('my-plugin-on');
+activeDocument.body.removeClass('my-plugin-on');
+
+// Good — every window, now and later; undone in exactly the documents it touched
+private styledDocs = new Set<Document>();
+
+private styleDoc(doc: Document) {
+    doc.body.addClass('my-plugin-on');
+    this.styledDocs.add(doc);
+}
+
+onload() {
+    this.app.workspace.onLayoutReady(() => {
+        this.styleDoc(this.app.workspace.containerEl.doc);                               // main window
+        this.app.workspace.iterateAllLeaves((leaf) => this.styleDoc(leaf.view.containerEl.doc)); // open popouts
+    });
+    this.registerEvent(this.app.workspace.on('window-open', (win) => this.styleDoc(win.doc)));
+}
+
+onunload() {
+    for (const doc of this.styledDocs) doc.body.removeClass('my-plugin-on');
+    this.styledDocs.clear();
+}
+```
+
+Prefer a scoped class on your own container (`this.containerEl.addClass(...)`) when the styling only affects your view — then no window-wide state is needed.
 
 `document.createElement()` and the other calls `prefer-create-el` reports are left to that rule in type-checked TypeScript files, so they aren't reported twice.
 
@@ -714,9 +806,11 @@ window.setTimeout(() => {}, 100);
 window.setInterval(() => {}, 1000);
 ```
 
-The rule covers `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `requestAnimationFrame`, and (v0.5.0) `cancelAnimationFrame`. Locally declared functions with those names are not flagged, and test and web worker files are exempt.
+The rule covers `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `requestAnimationFrame`, and (v0.5.0) `cancelAnimationFrame`. Locally declared functions with those names are not flagged, and test, tooling, and web worker files are exempt.
 
-**Fix vs. suggestion (v0.5.0):** with `@types/node` installed, bare `setTimeout()` returns `NodeJS.Timeout`, while `window.setTimeout()` returns `number`. So `--fix` rewrites only where no type can change — a discarded `setTimeout()`/`setInterval()` result, a `clear*()` with a `number` argument, `requestAnimationFrame()`/`cancelAnimationFrame()`, and `activeWindow.*` calls. A stored timer gets a suggestion instead; change its type to `number` when you accept it:
+**Exception (v0.5.1):** `activeWindow.requestAnimationFrame()` and `activeWindow.cancelAnimationFrame()` are **not** reported. A frame callback runs when its own window paints, and a hidden or minimized main window doesn't paint — so `window.requestAnimationFrame()` would stall a popout's animation until the main window is shown. Keep the cancel on the same window as the request.
+
+**Fix vs. suggestion (v0.5.0):** with `@types/node` installed, bare `setTimeout()` returns `NodeJS.Timeout`, while `window.setTimeout()` returns `number`. So `--fix` rewrites only where no type can change — a discarded `setTimeout()`/`setInterval()` result, a `clear*()` with a `number` argument, bare `requestAnimationFrame()`/`cancelAnimationFrame()`, and `activeWindow.setTimeout()`-style calls. A stored timer gets a suggestion instead; change its type to `number` when you accept it:
 
 ```typescript
 // Bad — reported, suggestion only (fixing would break a NodeJS.Timeout field)
@@ -808,7 +902,6 @@ Obsidian provides DOM helper methods that are cleaner and more consistent. The m
 // Bad
 const div = document.createElement('div');
 const frag = document.createDocumentFragment();
-const p = activeDocument.createElement('p');
 const p2 = activeWindow.createEl('p');      // TS2339: 'createEl' does not exist on type 'Window'
 
 // Good
@@ -816,11 +909,36 @@ const div2 = containerEl.createDiv({ cls: 'my-class' }); // child of an element 
 const p3 = containerEl.createEl('p');
 const div = createDiv();                                  // detached, global helper
 const frag = createFragment();
+const p = activeDocument.createElement('p');              // detached, in the focused window's document
 ```
 
-**`activeWindow.createEl()` does not compile.** Obsidian's typings declare `activeWindow` (and `el.win`, `doc.win`) as a plain `Window`; the DOM helpers are declared only as globals and on `Node`/`HTMLElement`. That's why v0.5.0 no longer autofixes `activeDocument.createElement()` → `activeWindow.createEl()` — it offers it only as an editor suggestion, which you should **not** accept as-is. Rewrite to a parent-element helper instead (`containerEl.createEl('p')`).
+**`activeWindow.createEl()` does not compile.** Obsidian's typings declare `activeWindow` (and `el.win`, `doc.win`) as a plain `Window`; the DOM helpers are declared only as globals and on `Node`/`HTMLElement`. Since v0.5.1, `activeDocument.createElement()` and `el.doc.createElement()` are **not reported** — they are the right calls for a detached element in a popout window's document ([#240](https://github.com/obsidianmd/eslint-plugin/issues/240)). Don't use `activeDocument.createEl()` either: `createEl()` on a node appends to it, and a document takes no second root element. When a parent is at hand, a parent-element helper is still simplest (`containerEl.createEl('p')`).
 
-What `--fix` does in v0.5.0: global `document.createElement('p')` → `createEl('p')` and `createEl('div')` → `createDiv()` are fixed when the types prove the helper exists; tag names typed as plain `string`, custom elements, and deprecated tags are reported with no fix. Elements created in an iframe's document (`iframe.contentDocument`) are not reported. Test and web worker files are exempt.
+What `--fix` does: global `document.createElement('p')` → `createEl('p')` and `createEl('div')` → `createDiv()` are fixed when the types prove the helper exists; tag names typed as plain `string`, custom elements, and deprecated tags are reported with no fix. A replacement that needs a newer Obsidian than your `minAppVersion` is not reported (`createDiv()`/`createSpan()` 0.10.0, `createSvg()` 1.1.0). Elements created in an iframe's document (`iframe.contentDocument`) and code inside a function named after a helper (a polyfill or test fake) are not reported. Test, tooling, and web worker files are exempt.
+
+### Using `instanceof` on an event's target
+
+**Rule:** `obsidianmd/prefer-instanceof` (`warn`; needs type information)
+
+Every window has its own constructors, so a node from a popout is never `instanceof` the main window's `HTMLElement`. Since v0.5.1 the rule also reports `instanceof` on an event's `target`, `relatedTarget`, `currentTarget`, or `srcElement` — a handler in a view, modal, menu, or editor extension otherwise takes the wrong branch in a popout:
+
+```typescript
+// Bad — false for any element of a popout window
+this.registerDomEvent(el, 'click', (e) => {
+    if (!(e.target instanceof HTMLElement)) return;
+    e.target.closest('.icon');
+});
+
+// Good — Obsidian's targetNode is the same value as target, typed Node | null
+this.registerDomEvent(el, 'click', (e) => {
+    if (!e.targetNode?.instanceOf(HTMLElement)) return;
+    e.targetNode.closest('.icon');
+});
+```
+
+Event-target checks are **never autofixed**: an `EventTarget` may be a window (the target of `focus`/`resize` on `window`), which has no `instanceOf()`, and the check narrows `e.target` for later code. For mouse, pointer, drag, touch, wheel, keyboard, input, and composition events the editor suggests `e.targetNode?.instanceOf(…)` and rewrites the other `e.target` reads in the function to match. For `FocusEvent`, plain `Event`, and `currentTarget`, it only reports. `targetNode` and `instanceOf()` need `minAppVersion` 0.15.3.
+
+Not reported: checks against a constructor from the node's own window (`el.ownerDocument.defaultView?.HTMLElement`, also held in a `const`), `instanceof` inside an `instanceOf()` polyfill, and React's synthetic events.
 
 ### Using Node.js modules without platform guard
 
@@ -844,7 +962,7 @@ if (Platform.isDesktop) {
 }
 ```
 
-Also counted as guarded: the `else` of `if (!Platform.isDesktop)`, the right side of `Platform.isDesktop && …` or `!Platform.isDesktop || …`, and the body of a function whose first statement is `if (!Platform.isDesktop) return;` (but not its default parameters). Type-only imports (`import type { Stats } from 'fs'`) are not reported. v0.5.0 also reports `window.require('fs')`, `activeWindow.require('fs')`, `export … from 'fs'`, and `import fs = require('fs')`.
+Also counted as guarded: the `else` of `if (!Platform.isDesktop)`, the right side of `Platform.isDesktop && …` or `!Platform.isDesktop || …`, and code after an early exit such as `if (!Platform.isDesktop) return;` anywhere before the call (v0.5.1; it was first statement only). `Platform.isDesktopApp`, `!Platform.isMobile`, and `!Platform.isMobileApp` count as `Platform.isDesktop` (v0.5.1). Type-only imports (`import type { Stats } from 'fs'`) are not reported. v0.5.0 also reports `window.require('fs')`, `activeWindow.require('fs')`, `export … from 'fs'`, and `import fs = require('fs')`. v0.5.1 doesn't report a `require()` or awaited `import()` in a `try` with a `catch`, an optional call (`window.require?.('fs')`), or `.d.ts` files.
 
 ### Restricted HTTP/util imports (use Obsidian built-ins)
 
@@ -1012,6 +1130,52 @@ If using the older `project` approach instead, ensure your tsconfig.json include
 
 **Cause:** Three bundled plugins (`@microsoft/eslint-plugin-sdl`, `eslint-plugin-import`, `eslint-plugin-react`) don't declare ESLint 10 support yet. Linting works; ignore the warnings. With `strict-peer-deps` the install fails — turn the setting off or use ESLint 9.
 
+### npm `deprecated eslint@9.39.5: This version is no longer supported`
+
+**Cause:** npm marks ESLint 9 deprecated now that ESLint 10 is current. Linting works. Moving to ESLint 10 trades this one warning for the three `ERESOLVE` warnings above, so ESLint 9 is still the quieter choice until the bundled plugins declare ESLint 10 support.
+
+### `npm audit`: moderate vulnerabilities in `minimatch` (GHSA-g3hv-75wg-m249)
+
+**Cause:** `minimatch` before 11.0.1 has a denial-of-service advisory, and the toolchain doesn't ship a patched version yet: `typescript-eslint`'s `typescript-estree` depends on `minimatch ^10`, and `@microsoft/eslint-plugin-sdl` (bundled by `eslint-plugin-obsidianmd`) pins `eslint-plugin-n` 17.10.3, which uses `minimatch ^9`. One advisory shows up as about 10 findings along those chains. It is dev-time only — nothing reaches `main.js` — but the scanner's Review lists "No known vulnerable dependencies".
+
+❌ **INCORRECT** — npm's suggested "fix" downgrades to `eslint-plugin-obsidianmd` 0.0.2 and `typescript-eslint` 8.36.0:
+```bash
+npm audit fix --force
+```
+
+✅ **CORRECT** — force the patched `minimatch` with a scoped override in `package.json`, then reinstall:
+```json
+{
+    "overrides": {
+        "minimatch@>=7 <11.0.1": "^11.0.5"
+    }
+}
+```
+
+The range `>=7 <11.0.1` matches only the vulnerable versions, so ESLint 9's own `minimatch` 3.x is left alone. JSON has no comments; to explain the override in the project, add a top-level `"//"` key, which npm ignores (the `create-plugin` tool does this):
+
+```json
+{
+    "//": ["overrides.minimatch: temporary fix for GHSA-g3hv-75wg-m249; remove once upstream depends on minimatch 11."],
+    "overrides": {
+        "minimatch@>=7 <11.0.1": "^11.0.5"
+    }
+}
+```
+
+For an existing project, add the override, then reinstall from scratch so the lockfile picks it up: `rm -rf node_modules package-lock.json && npm install`. Other package managers: pnpm uses `"pnpm": { "overrides": { "minimatch@>=7 <11.0.1": "^11.0.5" } }`; Yarn uses `"resolutions": { "minimatch": "^11.0.5" }`, which applies to every copy, including ESLint 9's `minimatch` 3.x — run `npx eslint .` afterwards to confirm it still works.
+
+Verified with `eslint-plugin-obsidianmd` 0.5.1, `typescript-eslint` 8.72.1, and ESLint 9.39.5 (2026-11-06): `npm audit` reports 0 vulnerabilities, and type-aware rules and `allowDefaultProject` (the code in `typescript-estree` that uses `minimatch`) still work.
+
+**When to remove it.** The override forces a major version past the range the toolchain declares, so delete it (and the `"//"` note) as soon as upstream no longer needs it. Check both chains:
+
+```bash
+npm view @typescript-eslint/typescript-estree dependencies.minimatch   # needs ^11
+npm view @microsoft/eslint-plugin-sdl dependencies.eslint-plugin-n     # 17.10.3 pulls minimatch ^9
+```
+
+When `typescript-estree` asks for `^11` and `eslint-plugin-sdl` depends on an `eslint-plugin-n` that no longer uses `minimatch` 9/10 (or `eslint-plugin-obsidianmd` drops it), remove the override, reinstall from scratch, and confirm `npm audit` still reports 0. If a future `typescript-eslint` breaks with `minimatch` 11 before then (errors from `allowDefaultProject` or "was not found by the project service"), remove the override and accept the advisory until upstream ships a fix.
+
 ### `file not found in project` errors
 
 **Cause:** The file being linted isn't included in your tsconfig.json's `include` pattern.
@@ -1022,6 +1186,12 @@ If using the older `project` approach instead, ensure your tsconfig.json include
     "include": ["src/**/*.ts"]
 }
 ```
+
+### `… was included by allowDefaultProject but also was found in the project service`
+
+**Cause:** A file matched by `allowDefaultProject` is also in a `tsconfig.json`. Usually `eslint.config.*` with a tsconfig whose `include` takes in root files (`["**/*.ts", "**/*.mts"]`, or `["**/*"]` with `allowJs`).
+
+**Fix:** Do one or the other, not both — drop the pattern from `allowDefaultProject` (the tsconfig already gives the file type information), or leave the file out of the tsconfig's `include`. `allowDefaultProject` is for files in no tsconfig only.
 
 ### Package manager conflicts (pnpm/npm/yarn mixing)
 

@@ -40,6 +40,14 @@ Once the boilerplate is created (either way):
    - Testing in Obsidian
    - Common next steps
 
+## Dependency Notes
+
+The generated `package.json` contains a temporary `overrides` entry forcing `minimatch` to `^11.0.5`, explained by a `"//"` key next to it. It fixes advisory GHSA-g3hv-75wg-m249 in the lint toolchain (`typescript-eslint` and `@microsoft/eslint-plugin-sdl`, bundled by `eslint-plugin-obsidianmd`, still depend on vulnerable `minimatch` 10 and 9).
+
+- ✅ Keep the override and the `"//"` note. Remove both only after checking that upstream depends on `minimatch` 11 (see the skill's `reference/eslint-setup.md`, "npm audit: moderate vulnerabilities in minimatch").
+- ❌ Don't delete the override because it looks unusual, and never run `npm audit fix --force` — it downgrades `eslint-plugin-obsidianmd` to 0.0.2.
+- `npm warn deprecated eslint@9.39.5` on install is expected; don't switch to ESLint 10 to silence it (it adds peer-dependency warnings and more audit findings).
+
 ## Important Reminders
 
 - Always apply the Obsidian Plugin Development Skill guidelines

@@ -6,7 +6,7 @@ A comprehensive agent skill for developing high-quality Obsidian plugins that fo
 
 This skill provides your coding agent with deep knowledge of Obsidian plugin development standards, including:
 
-- ESLint rules from `eslint-plugin-obsidianmd` v0.5.0
+- ESLint rules from `eslint-plugin-obsidianmd` v0.5.1
 - Declarative settings (`getSettingDefinitions()`), the Obsidian 1.13 settings API
 - Official Plugin Guidelines from Obsidian documentation
 - Submission via community.obsidian.md and Scorecard optimization
@@ -128,6 +128,7 @@ node /path/to/obsidian-plugin-skill/tools/create-plugin.js
 - Prompts for target directory to avoid overwriting existing files
 - Detects existing projects and only adds missing files
 - All generated code follows the skill's best practices automatically
+- `package.json` overrides `minimatch` to `^11.0.5`, so `npm audit` reports 0 vulnerabilities — see [below](#minimatch-override)
 
 **What it creates:**
 ```
@@ -138,7 +139,7 @@ your-plugin/
 ├── manifest.json         # Validated plugin metadata
 ├── styles.css           # CSS with Obsidian variables
 ├── tsconfig.json        # TypeScript configuration
-├── package.json         # Dependencies
+├── package.json         # Dependencies, plus a temporary minimatch override
 ├── esbuild.config.mjs   # Build configuration
 ├── eslint.config.mjs    # ESLint configuration
 ├── version-bump.mjs     # Version management script
@@ -163,6 +164,20 @@ your-plugin/
    • Plugin name cannot contain "Plugin"
    • Description must end with punctuation: . ! or ?
 ```
+
+#### minimatch override
+
+`minimatch` before 11.0.1 has a denial-of-service advisory ([GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)). The lint toolchain still depends on vulnerable versions — `typescript-eslint` on `minimatch ^10`, and `eslint-plugin-obsidianmd` via `@microsoft/eslint-plugin-sdl` → `eslint-plugin-n` on `^9` — so a plain install reports about 10 moderate vulnerabilities. The generated `package.json` forces the patched version:
+
+```json
+"overrides": {
+  "minimatch@>=7 <11.0.1": "^11.0.5"
+}
+```
+
+It is dev-only (nothing reaches `main.js`), but the community scanner's Review lists "No known vulnerable dependencies". Linting and type-aware rules are verified to work with it. A `"//"` key in the generated `package.json` (npm ignores it) explains the override in the project itself. Remove both once upstream moves to `minimatch` 11 — see the [troubleshooting entry](.agents/skills/obsidian/reference/eslint-setup.md#npm-audit-moderate-vulnerabilities-in-minimatch-ghsa-g3hv-75wg-m249) for how to check. Don't run `npm audit fix --force`: it downgrades `eslint-plugin-obsidianmd` to 0.0.2.
+
+The remaining install warning, `npm warn deprecated eslint@9.39.5`, is expected: ESLint 10 currently adds peer-dependency warnings from bundled plugins instead.
 
 ---
 
@@ -225,12 +240,12 @@ Your agent will automatically use the Obsidian skill guidelines while helping yo
 
 ## What's Covered
 
-### Most Critical Rules (eslint-plugin-obsidianmd v0.5.0)
+### Most Critical Rules (eslint-plugin-obsidianmd v0.5.1)
 
 The main SKILL.md file highlights the most important rules organized by category:
 
 **Submission & Naming:**
-1. Plugin ID: no "obsidian", can't end with "plugin"
+1. Plugin ID: no "obsidian", can't end with "plugin" (checked with `validate-manifest`'s `checkId: true` — turn it on before first submission)
 2. Plugin name: no "Obsidian", no "Plugin"
 3. Plugin name: no parts of "Obsidian" ("obsi", "sidian", or a leading "ob")
 4. Description: no "Obsidian", "This plugin", "A plugin that", etc.; doesn't start with the name
@@ -243,13 +258,13 @@ The main SKILL.md file highlights the most important rules organized by category
 
 **Type Safety:**
 9. Use `instanceof` instead of type casting for TFile/TFolder
-10. Use `.instanceOf(T)` for cross-window DOM checks
+10. Use `.instanceOf(T)` for cross-window DOM checks, and `e.targetNode?.instanceOf(T)` for event targets
 
 **UI/UX:**
-11. Use sentence case for all UI text (`ui/sentence-case` is off by default in v0.5.0 — opt in)
+11. Use sentence case for all UI text (`ui/sentence-case` is off by default since v0.5.0 — opt in)
 12. Sentence case in locale JSON files
 13. Sentence case in TS/JS locale modules
-14. No "command" in command names/IDs
+14. No "command" as a redundant label in command names/IDs
 15. No plugin ID/name in command IDs/names
 16. No default hotkeys
 17. Use `.setHeading()` for settings headings
@@ -274,11 +289,11 @@ The main SKILL.md file highlights the most important rules organized by category
 27. Check `minAppVersion` for API compatibility
 
 **Popout Window Compatibility:**
-28. Use `activeDocument`/`activeWindow` instead of globals (`prefer-active-doc`, `warn` since v0.5.0)
+28. Use `activeDocument`/`activeWindow` instead of globals (`prefer-active-doc`, `warn` since v0.5.0); apply window-wide `<body>` classes and styles in every window's document
 29. Use `window.setTimeout()` for timers — not bare `setTimeout()` or `activeWindow.setTimeout()` (`prefer-window-timers`)
 
 **Event Handling:**
-30. Check `evt.defaultPrevented` in editor-drop/paste handlers
+30. Check `evt.defaultPrevented` and call `evt.preventDefault()` in editor-drop/paste handlers that write to the editor
 
 **Styling:**
 31. Use Obsidian CSS variables
@@ -472,7 +487,7 @@ For automatic checking, install the official ESLint plugin:
 npm install --save-dev eslint typescript typescript-eslint obsidian eslint-plugin-obsidianmd
 ```
 
-v0.5.0 requires Node.js 20.19+, 22.13+, or 24+, and no longer installs `obsidian` for you. Upgrading from v0.4.x? See [Upgrading from v0.4.x](.agents/skills/obsidian/reference/eslint-setup.md#upgrading-from-v04x).
+v0.5.x requires Node.js 20.19+, 22.13+, or 24+, and no longer installs `obsidian` for you. Upgrading from v0.5.0? See [Upgrading from v0.5.0](.agents/skills/obsidian/reference/eslint-setup.md#upgrading-from-v050). From v0.4.x? See [Upgrading from v0.4.x](.agents/skills/obsidian/reference/eslint-setup.md#upgrading-from-v04x).
 
 The `recommended` config bundles `typescript-eslint` (type-checked), security plugins, and all Obsidian rules — no separate typescript-eslint setup needed.
 
@@ -582,4 +597,4 @@ This structure allows your coding agent to load the essential information quickl
 
 ---
 
-Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.5.0 and the community.obsidian.md Scorecard system. The plugin and scanner are under active development and may evolve.
+Note: Guidelines in this skill are based on `eslint-plugin-obsidianmd` v0.5.1 and the community.obsidian.md Scorecard system. The plugin and scanner are under active development and may evolve.

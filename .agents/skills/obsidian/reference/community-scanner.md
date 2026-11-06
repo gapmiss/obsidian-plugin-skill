@@ -1,6 +1,6 @@
 # Community Plugin Scanner
 
-> **Last verified:** 2026-11-05, against `eslint-plugin-obsidianmd` v0.5.0.
+> **Last verified:** 2026-11-06, against `eslint-plugin-obsidianmd` v0.5.1.
 > The scanner is new and under active development. This file is the single source of truth for scanner behavior — when the scanner changes, update this file. Other docs link here rather than duplicating.
 
 The community.obsidian.md scanner analyzes every plugin release and publishes the results as a [Scorecard](#scorecard-system). For the ESLint configuration that satisfies it, see [eslint-setup.md](eslint-setup.md). For the submission process itself, see [submission.md](submission.md).

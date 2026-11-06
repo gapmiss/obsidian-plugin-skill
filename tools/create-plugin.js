@@ -209,7 +209,7 @@ function generatePackageJson(id, version, description, author) {
       "@types/node": "^22.15.17",
       "esbuild": "^0.28.1",
       "eslint": "^9.39.5",
-      "eslint-plugin-obsidianmd": "^0.5.0",
+      "eslint-plugin-obsidianmd": "^0.5.1",
       "jiti": "^2.6.1",
       // obsidian is compile-time only — the app provides the runtime API.
       "obsidian": "latest",
@@ -219,6 +219,23 @@ function generatePackageJson(id, version, description, author) {
     },
     "allowScripts": {
       "esbuild": true
+    },
+    // GHSA-g3hv-75wg-m249: minimatch < 11.0.1 is vulnerable, and
+    // typescript-eslint (minimatch ^10) and @microsoft/eslint-plugin-sdl
+    // (via eslint-plugin-n, minimatch ^9) don't ship a patched version yet.
+    // Remove once both depend on minimatch 11. JSON has no comments, so the
+    // "//" key (which npm ignores) carries the explanation into the project.
+    // See reference/eslint-setup.md "npm audit: moderate vulnerabilities in
+    // minimatch" for how to check whether it is still needed.
+    "//": [
+      "overrides.minimatch: temporary fix for GHSA-g3hv-75wg-m249 (minimatch < 11.0.1, dev-only).",
+      "typescript-eslint and eslint-plugin-obsidianmd (via @microsoft/eslint-plugin-sdl) still depend on vulnerable minimatch 10/9.",
+      "Remove this override and the \"//\" key once `npm view @typescript-eslint/typescript-estree dependencies.minimatch` shows ^11",
+      "and `npm view @microsoft/eslint-plugin-sdl dependencies.eslint-plugin-n` no longer resolves to minimatch 9; then reinstall and run `npm audit`.",
+      "Never run `npm audit fix --force`: it downgrades eslint-plugin-obsidianmd to 0.0.2."
+    ],
+    "overrides": {
+      "minimatch@>=7 <11.0.1": "^11.0.5"
     }
   }, null, 2) + '\n';
 }
@@ -320,6 +337,14 @@ export default defineConfig([
             },
         },
     },
+    // Not submitted yet, so the id can still change: check it too.
+    // Remove this block once the plugin is published.
+    {
+        files: ["manifest.json"],
+        rules: {
+            "obsidianmd/validate-manifest": ["warn", { checkId: true }],
+        },
+    },
 ]);
 `;
 }
@@ -405,7 +430,8 @@ function validateMetadata(id, name, description) {
   const errors = [];
   const warnings = [];
 
-  // Plugin ID validation
+  // Plugin ID validation (validate-manifest checks these only with
+  // checkId: true, which the generated eslint.config.mjs turns on)
   if (/obsidian/i.test(id)) {
     errors.push('Plugin ID cannot contain "obsidian"');
   }
@@ -416,7 +442,7 @@ function validateMetadata(id, name, description) {
     errors.push('Plugin ID must only contain lowercase letters, numbers, dashes, and underscores');
   }
 
-  // Plugin name validation (mirrors obsidianmd/validate-manifest v0.5.0)
+  // Plugin name validation (mirrors obsidianmd/validate-manifest v0.5.1)
   if (/obsidian/i.test(name)) {
     errors.push('Plugin name cannot contain "Obsidian"');
   } else if (/obsi|sidian/i.test(name) || /^ob/i.test(name)) {
@@ -426,7 +452,7 @@ function validateMetadata(id, name, description) {
     errors.push('Plugin name cannot contain "Plugin"');
   }
 
-  // Description validation (mirrors obsidianmd/validate-manifest v0.5.0)
+  // Description validation (mirrors obsidianmd/validate-manifest v0.5.1)
   const desc = description.trim();
   if (/obsidian/i.test(desc)) {
     errors.push('Description cannot include "Obsidian"');
@@ -551,7 +577,10 @@ async function main() {
     console.log('  3. Enable the plugin in Obsidian settings');
     console.log('  4. Before submitting: npm run lint');
     console.log('\n💡 Tip: This boilerplate includes ESLint configured for community scanner compliance.');
-    console.log('   Run "npm run lint" to catch issues before submission!\n');
+    console.log('   Run "npm run lint" to catch issues before submission!');
+    console.log('\n🔒 package.json overrides minimatch to ^11.0.5 to fix GHSA-g3hv-75wg-m249 in the');
+    console.log('   lint toolchain (dev-only). See its "//" note for when to remove it, and never run');
+    console.log('   "npm audit fix --force" — it downgrades eslint-plugin-obsidianmd to 0.0.2.\n');
   } else {
     console.log('ℹ️  No new files were created (all files already exist).\n');
   }

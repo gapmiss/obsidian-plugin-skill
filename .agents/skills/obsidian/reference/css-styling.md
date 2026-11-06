@@ -24,7 +24,7 @@ Rule: `obsidianmd/no-static-styles-assignment`
 element.style.color = 'red';
 element.style.fontSize = '14px';
 element.setAttribute('style', 'margin: 10px;');
-element.setCssStyles({ color: 'red' });   // also reported since v0.5.0 (unquoted keys)
+element.setCssStyles({ color: 'red' });   // fixed value — reported since v0.5.0
 ```
 
 ✅ **CORRECT**:
@@ -33,7 +33,11 @@ element.setCssStyles({ color: 'red' });   // also reported since v0.5.0 (unquote
 element.addClass('my-custom-element');
 
 // Values that change at runtime: set a CSS variable, consume it in styles.css
-element.setCssProps({ '--my-width': `${width}px` });
+element.setCssProps({ '--my-width': `${width}px` });   // needs minAppVersion 1.1.7
+
+// Computed values and clearing a style are not reported (v0.5.1)
+element.setCssStyles({ top: `${y}px` });
+element.style.color = '';
 
 // Define styles in styles.css using Obsidian CSS variables
 .my-custom-element {
@@ -43,7 +47,7 @@ element.setCssProps({ '--my-width': `${width}px` });
 }
 ```
 
-Rationale: Move all styles to CSS for better theme/snippet adaptability. Use Obsidian's CSS variables for theme consistency. This rule is an `error` and, for new submissions, a hard error in the scanner. v0.5.0 checks unquoted keys in `setCssStyles()`/`setCssProps()` too — in a run over community plugins this was the largest new source of errors.
+Rationale: Move all styles to CSS for better theme/snippet adaptability. Use Obsidian's CSS variables for theme consistency. This rule is an `error` and, for new submissions, a hard error in the scanner. v0.5.0 checks `setCssStyles()`/`setCssProps()` too. Since v0.5.1 it reports only properties with a fixed value (a computed value like `` `${y}px` `` is allowed), reports at that property rather than at the call — move an `eslint-disable-next-line` above a multi-line call to the property — and allows `style.setProperty('--name', …)` with any value. `setCssStyles()` and `setCssProps()` need `minAppVersion` 1.1.7, which `no-unsupported-api` checks since v0.5.1.
 
 ---
 

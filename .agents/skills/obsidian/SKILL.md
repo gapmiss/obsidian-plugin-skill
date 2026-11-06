@@ -1,9 +1,9 @@
 ---
 name: obsidian
-description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.5.0, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
+description: Comprehensive guidelines for Obsidian.md plugin development including ESLint rules from eslint-plugin-obsidianmd v0.5.1, TypeScript best practices, memory management, API usage (requestUrl vs fetch), UI/UX standards, popout window compatibility, community.obsidian.md submission process, and Scorecard optimization. Use when working with Obsidian plugins, main.ts files, manifest.json, Plugin class, MarkdownView, TFile, vault operations, or any Obsidian API development.
 license: MIT
 metadata: 
-  version: 1.12.0
+  version: 1.12.1
 ---
 
 # Obsidian Plugin Development Guidelines
@@ -24,12 +24,12 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 
 ---
 
-## Rules Reference (eslint-plugin-obsidianmd v0.5.0)
+## Rules Reference (eslint-plugin-obsidianmd v0.5.1)
 
 ### Submission & Naming
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 1 | Plugin ID | Omit "obsidian"; don't end with "plugin" | Include "obsidian" or end with "plugin" |
+| 1 | Plugin ID | Omit "obsidian"; don't end with "plugin" (checked only with `validate-manifest`'s `checkId: true` — turn it on before first submission) | Include "obsidian" or end with "plugin"; rename a published plugin's id |
 | 2 | Plugin name | Omit "Obsidian" and "Plugin" | Include "Obsidian" or "Plugin" anywhere in the name |
 | 3 | Plugin name | Avoid parts of "Obsidian" | Use "obsi", "sidian", or a leading "ob" |
 | 4 | Description | Say what it does; don't repeat or start with the name | Use "Obsidian", "This plugin", "A plugin that", or start with the name |
@@ -47,7 +47,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
 | 9 | TFile/TFolder | Use `instanceof` for type checking | Cast to TFile/TFolder; use `any`; use `var` |
-| 10 | DOM instanceof | Use `.instanceOf(T)` for DOM Nodes/UIEvents | Use `instanceof` for cross-window DOM checks |
+| 10 | DOM instanceof | Use `.instanceOf(T)` for DOM Nodes/UIEvents; `e.targetNode?.instanceOf(T)` for event targets | Use `instanceof` for cross-window DOM checks, including `e.target instanceof HTMLElement` |
 
 ### UI/UX
 | # | Rule | ✅ Do | ❌ Don't |
@@ -55,7 +55,7 @@ Recommend the boilerplate generator when users ask how to create a new plugin, w
 | 11 | UI text | Sentence case — "Advanced settings"; use `acronyms`/`brands` options for proper names | Title Case — "Advanced Settings" |
 | 12 | JSON locale | Sentence case in JSON locale files (`recommendedWithLocalesEn`) | Title case in locale JSON |
 | 13 | TS/JS locale | Sentence case in TS/JS locale modules | Title case in locale modules |
-| 14 | Command names | Omit "command" in command names/IDs | Include "command" in names/IDs |
+| 14 | Command names | Omit "command" as a redundant label; "Run command" or `copy-command-id` (what the command acts on) is fine | Add "command" as a label — "Command: open note", "Open settings command" |
 | 15 | Command IDs | Omit plugin ID/name from command IDs/names | Duplicate plugin ID in command IDs |
 | 16 | Hotkeys | No default hotkeys | Set default hotkeys |
 | 17 | Settings headings | Use `.setHeading()` | Create manual HTML headings; use "General", "settings", or plugin name in headings |
@@ -81,7 +81,7 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 |---|------|--------|----------|
 | 18 | Active file edits | Use Editor API | Use `Vault.modify()` for active file edits |
 | 19 | Background file mods | Use `Vault.process()` | Use `Vault.modify()` for background modifications |
-| 20 | File deletion | Use `FileManager.trashFile()` | Use `Vault.trash()` or `Vault.delete()` directly |
+| 20 | File deletion | Use `FileManager.trashFile()` (1.6.6+), which follows the user's "Deleted files" setting | Use `Vault.trash()` or `Vault.delete()` with a fixed destination |
 | 21 | File lookup | Use `Vault.getAbstractFileByPath()` | Iterate all files with `Vault.getFiles().find()` |
 | 22 | User paths | Use `normalizePath()` | Hardcode `.obsidian` path; use raw user paths |
 | 23 | OS detection | Use `Platform` API | Use `navigator.platform`/`userAgent` |
@@ -90,18 +90,19 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 | 25 | Logging | Minimize console logging; none in `onload`/`onunload` in production | Use `console.log` in `onload`/`onunload` |
 | 26 | Input suggest | Use built-in `AbstractInputSuggest` | Copy Liam's `TextInputSuggest` implementation |
 | 26a | Confirm dialogs | Use built-in `ConfirmationModal` (1.13.0+); use `FileManager.promptForDeletion()` to confirm and delete files | Hand-build a `Modal` subclass with its own confirm/cancel button row |
-| 27 | API compatibility | Check `minAppVersion` for API availability (e.g., `getSettingDefinitions()` requires 1.13.0) | Use APIs not available in declared minAppVersion |
+| 27 | API compatibility | Check `minAppVersion` for API availability (e.g., `getSettingDefinitions()` 1.13.0, `setCssProps()` 1.1.7, `instanceOf()` 0.15.3) | Use APIs not available in declared minAppVersion |
 | 28 | Language detection | Use Obsidian's `getLanguage()` | Use `localStorage.getItem('language')` or `i18next-browser-languagedetector` |
 
 ### Popout Window Compatibility
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
 | 29 | Document/Window | Use `activeDocument` and `activeWindow` | Use global `document` and `window` |
-| 29a | Getter capture | Capture `activeDocument` in a variable when the same document is needed later | Call `activeDocument` at setup and again at cleanup — it follows focus and may return different documents |
-| 30 | Timers | Use `window.setTimeout()`, `window.setInterval()`, `window.requestAnimationFrame()`, etc. (exception to rule 29) | Use bare `setTimeout()`/`setInterval()`, or `activeWindow.setTimeout()` — `prefer-window-timers` flags both |
+| 29a | Window-wide state | Add and remove `<body>`/`<html>`/`<head>` classes, CSS variables, and styles in **each** window's document (`window-open` + open windows) | `document.body.addClass()` (main window only) or `activeDocument.body.addClass()` (whichever window has focus) |
+| 29b | Getter capture | Capture `activeDocument` in a variable when the same document is needed later | Call `activeDocument` at setup and again at cleanup — it follows focus and may return different documents |
+| 30 | Timers | Use `window.setTimeout()`, `window.setInterval()`, etc. (exception to rule 29); `activeWindow.requestAnimationFrame()` is fine for a popout's frames | Use bare `setTimeout()`/`setInterval()`, or `activeWindow.setTimeout()` — `prefer-window-timers` flags both |
 | 31 | Main workspace UI | Use `this.app.workspace.containerEl.ownerDocument` from settings | Use `activeDocument` to update main workspace from settings window |
 
-> **Note (v0.5.0):** `prefer-active-doc` now warns in `recommended` (it was `off` through v0.4.2). It reports the global `document` and offers an editor suggestion, not an autofix. Test and web worker files are exempt.
+> **Note (v0.5.1):** `prefer-active-doc` warns in `recommended`. It reports the global `document` and offers an editor suggestion, not an autofix. Changes to `document.body`/`documentElement`/`head` get their own message and no suggestion (rule 29a). `document` in a listener on the main window's `document`/`window`, as the fallback in `activeDocument ?? document`, and lookups of main-window-only UI (status bar, ribbons) are not reported. Test, tooling, and web worker files are exempt.
 
 > **Note (v1.13.0):** Settings now open in a new window. `activeDocument` from settings callbacks points to the settings window, not the main vault. Use `this.app.workspace.containerEl.ownerDocument` to target main workspace UI.
 
@@ -110,7 +111,7 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 ### Event Handling
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 31 | Editor drop/paste | Check `evt.defaultPrevented` and call `evt.preventDefault()` | Handle editor-drop/paste without checking defaultPrevented |
+| 31 | Editor drop/paste | When the handler writes to the editor: return early on `evt.defaultPrevented`, then call `evt.preventDefault()` | Write to the editor without both checks; call `preventDefault()` in a handler that only observes (cancels Obsidian's insertion) |
 
 ### Styling
 | # | Rule | ✅ Do | ❌ Don't |
@@ -124,7 +125,7 @@ All four `settings-tab` rules ship as `warn` in `recommended`. Rules 17a/17c/17d
 ### Security & Compatibility
 | # | Rule | ✅ Do | ❌ Don't |
 |---|------|--------|----------|
-| 35 | DOM creation | Use Obsidian DOM helpers (`createEl()`, `createDiv()`, `createSpan()`, `createSvg()`, `createFragment()`) via `prefer-create-el`; in popouts, create on a parent element (`containerEl.createEl('p')`) | Use `document.createElement()`; use `activeWindow.createEl()` — `Window` doesn't declare the helpers, so it fails `tsc` |
+| 35 | DOM creation | Use Obsidian DOM helpers (`createEl()`, `createDiv()`, `createSpan()`, `createSvg()`, `createFragment()`) via `prefer-create-el`; in popouts, create on a parent element (`containerEl.createEl('p')`) or detached with `activeDocument.createElement()` | Use global `document.createElement()`; use `activeWindow.createEl()` — `Window` doesn't declare the helpers, so it fails `tsc` |
 | 36 | Node.js modules | Load Node.js modules with `import()`/`require()` inside a `Platform.isDesktop` guard (`no-nodejs-modules`) | Static `import` of a Node built-in in a plugin that isn't `isDesktopOnly` |
 | 37 | iOS compat | Avoid regex lookbehind (iOS < 16.4 incompatibility) | Use regex lookbehind |
 
@@ -219,8 +220,8 @@ For comprehensive information on specific topics, see the reference files:
 
 ### [ESLint Setup Guide](reference/eslint-setup.md)
 - Complete ESLint config for community scanner compliance
-- Upgrading from v0.4.x (breaking changes and fixes)
-- Scoping overrides with `files`; test and web worker file exemptions
+- Upgrading from v0.5.0 (new findings, fewer false positives) and from v0.4.x (breaking changes)
+- Scoping overrides with `files`; test, tooling, and web worker file exemptions
 - Why `typescript-eslint` recommendedTypeChecked is required
 - Common violations and fixes (floating promises, require imports, etc.)
 - Popout window compatibility rules
@@ -232,7 +233,7 @@ For comprehensive information on specific topics, see the reference files:
 Before submitting a plugin, follow this sequence:
 
 1. **Run ESLint** — `npx eslint .` **from the project root** using `eslint-plugin-obsidianmd` (`eslint src` skips `manifest.json`, `LICENSE`, and `package.json`); fix all errors AND warnings (warnings affect your Scorecard)
-2. **Validate manifest** — `validate-manifest` checks `id`, `name`, and `description` (rules 1–5); confirm `version` and `minAppVersion` yourself
+2. **Validate manifest** — `validate-manifest` checks `name` and `description` (rules 2–5), and `id` (rule 1) only with `checkId: true`; confirm `version` and `minAppVersion` yourself
 3. **Check LICENSE** — `validate-license` reports the sample's "Dynalist Inc." holder; put your own name there
 4. **Test on mobile** — Verify no regex lookbehind, no `fetch()`, and touch targets ≥ 44×44px (skip only if plugin is declared desktop-only)
 5. **Keyboard accessibility audit** — Tab through all interactive elements; confirm focus indicators and ARIA labels are present
